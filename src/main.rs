@@ -13,6 +13,7 @@ fn greet(req: &HttpRequest) -> impl Responder {
 }
 
 fn main() {
+    println!("Starting...");
     // Get the port number to listen on.
     let port = env::var("PORT")
         .unwrap_or_else(|_| "3000".to_string())
