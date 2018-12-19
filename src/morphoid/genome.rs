@@ -1,28 +1,37 @@
+extern crate itertools;
 
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-type HashType = u32;
+use self::itertools::Itertools;
+
+type HashType = u64;
 type GeneType = u32;
 
+static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
+const GENE_LENGTH: usize = 64;
+
+const PHOTOSYNTHESYS: GeneType = 31;
+
 struct Genome {
-    genes: [GeneType; 64]
+    id: u64,
+    genes: [GeneType; GENE_LENGTH]
 }
 
 impl Genome {
     fn new_plant() -> Genome {
-        Genome {genes: [31; 64]}
+        Genome {id: HASH_COUNTER.fetch_add(1, Ordering::SeqCst) as u64, genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 
     pub fn hash(&self) -> HashType {
-        0
+        self.id
     }
 }
 
 impl fmt::Debug for Genome {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Genome genes: "); // TODO: process Result
-        self.genes[..].fmt(f)
+        write!(f, "Genome genes: {}", self.genes.iter().format(" "))
     }
 }
 
@@ -76,7 +85,7 @@ mod tests {
         let genome1 = Genome::new_plant();
         let genome2 = Genome::new_plant();
         assert_ne!(genome1.hash(), genome2.hash());
-        assert_eq!("xxxxx", format!("{:?}", genome1));
+        assert_eq!("Genome genes: 31 31 31", format!("{:?}", genome1).split_at(22).0);
     }
 
     #[test]
