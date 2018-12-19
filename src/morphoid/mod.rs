@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::LinkedList;
-use std::result::Iter;
+
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Entity {
@@ -13,6 +13,8 @@ pub struct World {
     height: u32,
     entities: Vec<Entity>,
 }
+
+mod genome;
 
 impl World {
     pub fn new(width:u32, height:u32) -> World {
@@ -100,21 +102,3 @@ trait Perceptor {}
 
 impl Perceptor for World {}
 impl Affector for World {}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_can_load_dictionary_and_translate() {
-//            let path = b"tests/locales/\0".as_ptr() as *const libc::c_char;
-//            librhino_initialize(path);
-//
-//            let locale = b"en-IE\0".as_ptr() as *const libc::c_char;
-//            let key = b"base.search_form.location_caption\0".as_ptr() as *const libc::c_char;
-//            let result: *const libc::c_char = librhino_translate(locale, key);
-//
-//            let str_slice: &str = CStr::from_ptr(result).to_str().unwrap();
-//            assert_eq!(str_slice, "City, county or province");
-    }
-}
