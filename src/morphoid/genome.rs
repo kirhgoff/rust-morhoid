@@ -44,27 +44,6 @@ impl PartialEq for Genome {
     }
 }
 
-struct GenomeStorage {
-    genomes: HashMap<HashType,Genome>
-}
-
-impl GenomeStorage {
-    fn new() -> GenomeStorage {
-        GenomeStorage {genomes: HashMap::new()}
-    }
-
-    fn put(&mut self, genome:Genome) -> HashType {
-        let hash = genome.hash();
-        self.genomes.insert(hash, genome);
-        hash
-    }
-
-    fn get(&self, hash:HashType) -> Option<&Genome> {
-        self.genomes.get(&hash)
-    }
-}
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -86,20 +65,5 @@ mod tests {
         let genome2 = Genome::new_plant();
         assert_ne!(genome1.hash(), genome2.hash());
         assert_eq!("Genome genes: 31 31 31", format!("{:?}", genome1).split_at(22).0);
-    }
-
-    #[test]
-    fn it_can_read_and_write_genomes() {
-        let mut storage = GenomeStorage::new();
-        let genome = Genome::new_plant();
-        let genome_hash = genome.hash();
-
-        let hash = storage.put(genome);
-        assert_ne!(hash, 0);
-        assert_eq!(genome_hash, hash);
-
-        let found_genome = storage.get(hash).unwrap();
-        assert_eq!(hash, found_genome.hash());
-        //assert_eq!(*found_genome, genome); // TODO: what about moving?
     }
 }

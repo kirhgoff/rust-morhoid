@@ -84,6 +84,7 @@ struct Processor {}
 
 impl Processor {
     fn new_entity<T : Action>(entity: Entity, perceptor: &Perceptor) -> (Entity, Vec<T>) {
+        let mut actions = vec![];
         let new_entity = match entity {
             Entity::Cell(gene_id) => Entity::Cell(gene_id + 1),
             otherwise => otherwise,
