@@ -4,7 +4,7 @@ use actix_web::{server, App, HttpRequest, Responder};
 use std::env;
 
 pub mod morphoid;
-use morphoid::World;
+use morphoid::world::World;
 
 fn greet(req: &HttpRequest) -> impl Responder {
 //    let to = req.match_info().get("name").unwrap_or("World");
