@@ -1,6 +1,5 @@
 extern crate itertools;
 
-use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 

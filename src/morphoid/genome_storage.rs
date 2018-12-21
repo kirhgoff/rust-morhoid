@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 struct GenomeStorage {
     genomes: HashMap<HashType,Genome>
 }
