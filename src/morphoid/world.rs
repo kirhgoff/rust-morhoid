@@ -44,7 +44,7 @@ impl World {
                     actions.push_back(action);
                 }
 
-                Processor::apply(&actions.iter(), self);
+                Processor::apply(&actions, self);
             }
         }
     }
