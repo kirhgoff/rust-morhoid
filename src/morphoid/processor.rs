@@ -1,9 +1,8 @@
 use morphoid::entity::Entity;
 use std::collections::linked_list::LinkedList;
-use morphoid::action::Action;
-use morphoid::world::Perceptor;
-use morphoid::world::Affector;
-use std::prelude::v1::Vec;
+use morphoid::action::*;
+use morphoid::world::*;
+use morphoid::genome::*;
 
 pub struct Processor {}
 
@@ -17,7 +16,34 @@ impl Processor {
         (new_entity, vec![])
     }
 
-    pub fn apply<T : Action>(mut entities: &Vec<Entity>, actions: &LinkedList<T>, affector: &Affector) {
+    pub fn apply<T : Action>(actions: &Iterator<Item=&T>, affector: &mut Affector) {
 
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn processor_can_do_simple_action() {
+        let mut world = World::new(1, 1);
+        let plant = Genome::new_plant();
+        let hash = plant.hash();
+        world.set_entity(0, 0, Entity::Cell(hash));
+        match world.get_entity(0, 0) {
+            Entity::Cell(old_hash) => assert_eq!(*old_hash, hash),
+            _ => panic!()
+        }
+
+        let kill_action = KillAction::new(0, 0);
+        Processor::apply(&vec![kill_action].iter(), &mut world);
+
+        let new_entity = world.get_entity(0, 0);
+        match new_entity {
+            Entity::Corpse(_) =>  {},
+            _ => panic!()
+        }
     }
 }

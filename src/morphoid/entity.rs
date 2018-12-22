@@ -1,5 +1,9 @@
+
+use morphoid::genome::HashType;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Entity {
     Nothing,
-    Cell(i64),
+    Cell(HashType),
+    Corpse(i64)
 }

@@ -5,21 +5,21 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use self::itertools::Itertools;
 
-type HashType = u64;
-type GeneType = u32;
+pub type HashType = u64;
+pub type GeneType = u32;
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
 const GENE_LENGTH: usize = 64;
 
 const PHOTOSYNTHESYS: GeneType = 31;
 
-struct Genome {
-    id: u64,
+pub struct Genome {
+    id: HashType,
     genes: [GeneType; GENE_LENGTH]
 }
 
 impl Genome {
-    fn new_plant() -> Genome {
+    pub fn new_plant() -> Genome {
         Genome {id: HASH_COUNTER.fetch_add(1, Ordering::SeqCst) as u64, genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 

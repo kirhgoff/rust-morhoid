@@ -5,15 +5,16 @@ use morphoid::entity::Entity;
 use morphoid::processor::Processor;
 use morphoid::action::Action;
 
+pub type Coords = u32;
 
 pub struct World {
-    width: u32,
-    height: u32,
+    width: Coords,
+    height: Coords,
     entities: Vec<Entity>,
 }
 
 impl World {
-    pub fn new(width:u32, height:u32) -> World {
+    pub fn new(width:Coords, height:Coords) -> World {
         let entities = (0..width * height)
             .map(|i| {
                 if i % 2 == 0 || i % 7 == 0 {
@@ -28,7 +29,6 @@ impl World {
 
     // TODO: synchronize
     fn tick<T : Action>(&mut self) {
-        let mut new_entities = self.entities.clone();
         // TODO move to processor
         let mut actions: LinkedList<T> = LinkedList::new();
 
@@ -36,23 +36,20 @@ impl World {
             for col in 0..self.width {
                 let idx = self.get_index(row, col);
                 let entity = self.entities[idx];
-                let (new_entity, action_batch) = Processor::new_entity(entity, self);
-
-                new_entities[idx] = new_entity;
+                //TODO: no need to return entities
+                let (_, action_batch) = Processor::new_entity(entity, self);
 
                 // TODO how to do it better (collect iterators?)
                 for action in action_batch {
                     actions.push_back(action);
                 }
 
-                Processor::apply(&new_entities, &actions, self);
+                Processor::apply(&actions.iter(), self);
             }
         }
-
-        self.entities = new_entities;
     }
 
-    fn get_index(&self, row: u32, column: u32) -> usize {
+    fn get_index(&self, row: Coords, column: Coords) -> usize {
         (row * self.width + column) as usize
     }
 }
@@ -72,9 +69,23 @@ impl fmt::Display for World {
     }
 }
 
-pub trait Affector {}
+pub trait Affector {
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity);
+}
 
-pub trait Perceptor {}
+impl Affector for World {
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity) {
+        let index = self.get_index(x, y);
+        self.entities[index] = entity;
+    }
+}
 
-impl Perceptor for World {}
-impl Affector for World {}
+pub trait Perceptor {
+    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
+}
+
+impl Perceptor for World {
+    fn get_entity(&self, x:Coords, y:Coords) -> &Entity {
+        &self.entities[self.get_index(x, y)]
+    }
+}
