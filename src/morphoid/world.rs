@@ -4,6 +4,8 @@ use std::collections::LinkedList;
 use morphoid::entity::Entity;
 use morphoid::processor::Processor;
 use morphoid::action::Action;
+use morphoid::genome_storage::GenomeStorage;
+use morphoid::cell_state_storage::CellStateStorage;
 
 pub type Coords = u32;
 
@@ -11,6 +13,8 @@ pub struct World {
     width: Coords,
     height: Coords,
     entities: Vec<Entity>,
+    genomes: GenomeStorage,
+    cell_states: CellStateStorage
 }
 
 impl World {
@@ -24,7 +28,14 @@ impl World {
                 }
             })
             .collect();
-        World {width, height, entities: entities}
+
+        World {
+            width: width,
+            height: height,
+            entities: entities,
+            genomes: GenomeStorage::new(),
+            cell_states: CellStateStorage::new()
+        }
     }
 
     // TODO: synchronize

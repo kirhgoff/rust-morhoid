@@ -6,7 +6,7 @@ use std::env;
 pub mod morphoid;
 use morphoid::world::World;
 
-fn greet(req: &HttpRequest) -> impl Responder {
+fn greet(_req: &HttpRequest) -> impl Responder {
 //    let to = req.match_info().get("name").unwrap_or("World");
 //    format!("Hello {}!", to)
     format!("{}", World::new(10, 10))

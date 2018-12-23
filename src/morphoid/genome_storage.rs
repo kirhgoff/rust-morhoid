@@ -1,11 +1,12 @@
 use std::collections::HashMap;
+use morphoid::genome::*;
 
-struct GenomeStorage {
+pub struct GenomeStorage {
     genomes: HashMap<HashType,Genome>
 }
 
 impl GenomeStorage {
-    fn new() -> GenomeStorage {
+    pub fn new() -> GenomeStorage {
         GenomeStorage {genomes: HashMap::new()}
     }
 
