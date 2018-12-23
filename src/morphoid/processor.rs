@@ -8,7 +8,7 @@ use std::collections::LinkedList;
 pub struct Processor {}
 
 impl Processor {
-    pub fn new_entity<T : Action>(entity: Entity, perceptor: &Perceptor) -> (Entity, Vec<T>) {
+    pub fn new_entity<T : Action>(entity: Entity, _perceptor: &Perceptor) -> (Entity, Vec<T>) {
         //let mut actions:Vec<Action> = Vec::new(); TODO: what to do?
         let new_entity = match entity {
             Entity::Cell(gene_id) => Entity::Cell(gene_id + 1),
