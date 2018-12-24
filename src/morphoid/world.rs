@@ -3,9 +3,12 @@ use std::collections::LinkedList;
 
 use morphoid::entity::Entity;
 use morphoid::processor::Processor;
-use morphoid::action::Action;
+use morphoid::action::*;
 use morphoid::genome_storage::GenomeStorage;
 use morphoid::cell_state_storage::CellStateStorage;
+use morphoid::genome::HashType;
+use morphoid::cell_state::HealthType;
+use morphoid::cell_state::CellState;
 
 pub type Coords = u32;
 
@@ -20,13 +23,7 @@ pub struct World {
 impl World {
     pub fn new(width:Coords, height:Coords) -> World {
         let entities = (0..width * height)
-            .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
-                    Entity::Cell(1)
-                } else {
-                    Entity::Nothing
-                }
-            })
+            .map(|_| Entity::Nothing)
             .collect();
 
         World {
@@ -81,22 +78,87 @@ impl fmt::Display for World {
 }
 
 pub trait Affector {
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity);
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>);
+    fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
 }
 
+
 impl Affector for World {
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity) {
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
+        match self.entities[index] {
+            Entity::Cell(hash) => {
+                self.cell_states.remove(hash);
+                self.genomes.remove(hash); // TODO: should we?
+            },
+            _ => {}
+        }
+        match entity {
+            Entity::Cell(hash) => {
+                self.cell_states.put(hash, initial_state.unwrap());
+            },
+            _ => {}
+        }
         self.entities[index] = entity;
+    }
+
+    fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType) {
+        match self.entities[self.get_index(x, y)] {
+            Entity::Cell(hash) => {
+                {
+                    // TODO: probably need to make it more tolerant
+                    let mut state = self.cell_states.get(hash).unwrap();
+                    state.health += health_delta;
+                }
+                if self.cell_states.get(hash).unwrap().health < 0 {
+                    self.set_entity(x, y, Entity::Corpse(10), None);
+                }
+            },
+            _ => {}
+        }
+
     }
 }
 
 pub trait Perceptor {
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
+    // TODO do I need this method?
+    fn get_state(&mut self, hash: HashType) -> Option<&mut CellState>;
 }
 
 impl Perceptor for World {
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity {
         &self.entities[self.get_index(x, y)]
+    }
+
+    // TODO: should not be mut
+    fn get_state(&mut self, hash: HashType) -> Option<&mut CellState> {
+        self.cell_states.get(hash)
+    }
+
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use morphoid::genome::Genome;
+
+    #[test]
+    fn processor_can_do_update_health() {
+        let mut world = World::new(1, 1);
+        let plant = Genome::new_plant();
+        let hash = plant.hash();
+        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState { health: 10 }));
+
+        let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
+        let mut list = LinkedList::new();
+        list.push_back(update_health_action);
+        Processor::apply(&list, &mut world);
+
+        let new_entity = world.get_entity(0, 0);
+        match new_entity {
+            Entity::Corpse(_) =>  {},
+            _ => panic!(format!("{:?}", new_entity))
+        }
     }
 }

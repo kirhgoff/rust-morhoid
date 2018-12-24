@@ -19,6 +19,10 @@ impl GenomeStorage {
     fn get(&self, hash:HashType) -> Option<&Genome> {
         self.genomes.get(&hash)
     }
+
+    pub fn remove(&mut self, hash:HashType) {
+        self.genomes.remove(&hash);
+    }
 }
 
 #[cfg(test)]
