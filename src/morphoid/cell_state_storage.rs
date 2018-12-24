@@ -15,8 +15,12 @@ impl CellStateStorage {
         self.states.insert(hash, cell_state);
     }
 
-    fn get(&mut self, hash:HashType) -> Option<&mut CellState> {
+    pub fn get(&mut self, hash:HashType) -> Option<&mut CellState> {
         self.states.get_mut(&hash)
+    }
+
+    pub fn remove(&mut self, hash:HashType) {
+        self.states.remove(&hash);
     }
 }
 

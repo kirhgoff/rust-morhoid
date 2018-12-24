@@ -28,13 +28,14 @@ impl Processor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use morphoid::cell_state::CellState;
 
     #[test]
-    fn processor_can_do_simple_action() {
+    fn processor_can_do_kill_entity_action() {
         let mut world = World::new(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState{health: 10}));
         match world.get_entity(0, 0) {
             Entity::Cell(old_hash) => assert_eq!(*old_hash, hash),
             _ => panic!()
