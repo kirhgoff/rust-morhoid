@@ -50,7 +50,7 @@ mod tests {
         let mut world = World::new(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState{health: 10}));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState{health: 10}));
         match world.get_entity(0, 0) {
             Entity::Cell(old_hash) => assert_eq!(*old_hash, hash),
             _ => panic!()
@@ -74,7 +74,7 @@ mod tests {
         let mut world = World::new(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState { health: 10 }));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
 
         let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
         let mut list: Vec<Box<Action>> = Vec::new();

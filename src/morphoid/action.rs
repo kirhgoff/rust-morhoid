@@ -22,7 +22,7 @@ impl KillAction {
 
 impl Action for KillAction {
     fn execute(&self, affector: &mut Affector) {
-        affector.set_entity(self.x, self.y, Entity::Corpse(10), None);
+        affector.set_entity(self.x, self.y, Entity::Corpse(10), None, None);
     }
 }
 
@@ -54,7 +54,7 @@ mod tests {
         let mut world = World::new(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState {health: 10}));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
         match world.get_state(hash) {
             CellState {health} => assert_eq!(*health, 10),
             _ => panic!()

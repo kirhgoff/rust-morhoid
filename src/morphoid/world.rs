@@ -73,13 +73,13 @@ impl fmt::Display for World {
 }
 
 pub trait Affector {
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>);
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
 }
 
 
 impl Affector for World {
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>) {
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
         println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
         match self.entities[index] {
@@ -107,7 +107,7 @@ impl Affector for World {
                     state.health += health_delta;
                 }
                 if self.cell_states.get(hash).health < 0 {
-                    self.set_entity(x, y, Entity::Corpse(10), None);
+                    self.set_entity(x, y, Entity::Corpse(10), None, None);
                 }
             },
             _ => {}
@@ -156,8 +156,8 @@ mod tests {
         let plant = Genome::new_plant();
         let hash = plant.hash();
 
-        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState { health: 10 }));
-        world.set_entity(1, 0, Entity::Nothing, None);
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
+        world.set_entity(1, 0, Entity::Nothing, None, None);
 
         // Settings: sun power = 5
         // new baby born: 20
