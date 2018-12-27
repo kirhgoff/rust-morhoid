@@ -52,8 +52,8 @@ impl World {
         processor.apply(&actions, self);
     }
 
-    fn get_index(&self, row: Coords, column: Coords) -> usize {
-        (row * self.width + column) as usize
+    fn get_index(&self, x: Coords, y: Coords) -> usize {
+        (y * self.width + x) as usize
     }
 }
 
@@ -81,6 +81,7 @@ pub trait Affector {
 impl Affector for World {
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
+        println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
         match self.entities[index] {
             Entity::Cell(hash) => {
                 self.cell_states.remove(hash);
@@ -167,5 +168,12 @@ mod tests {
         let new_entity = world.get_entity(0, 0);
         let cell_state = world.get_state(hash);
         assert_eq!(cell_state.health, 25);
+    }
+
+    #[test]
+    fn get_index_test() {
+        let mut world = World::new(2, 1);
+        assert_eq!(world.get_index(0,0), 0);
+        assert_eq!(world.get_index(1,0), 1);
     }
 }

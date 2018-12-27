@@ -57,7 +57,7 @@ mod tests {
         }
 
         let kill_action = KillAction::new(0, 0);
-        let mut list = Vec::new();
+        let mut list: Vec<Box<Action>> = Vec::new();
         list.push(Box::new(kill_action));
 
         Processor::new().apply(&list, &mut world);
@@ -77,7 +77,7 @@ mod tests {
         world.set_entity(0, 0, Entity::Cell(hash), Some(CellState { health: 10 }));
 
         let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
-        let mut list = Vec::new();
+        let mut list: Vec<Box<Action>> = Vec::new();
         list.push(Box::new(update_health_action));
 
         Processor::new().apply(&list, &mut world);

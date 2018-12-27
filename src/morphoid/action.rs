@@ -61,11 +61,10 @@ mod tests {
         }
 
         let update_heath_action = UpdateHealthAction { x:0, y:0, health_delta: 5};
-        let mut list = Vec::new();
+        let mut list:Vec<Box<Action>> = Vec::new();
         list.push(Box::new(update_heath_action));
 
-        let processor = Processor {};
-        processor.apply(&list, &mut world);
+        Processor::new().apply(&list, &mut world);
 
         match world.get_state(hash) {
             CellState {health} => assert_eq!(*health, 15),
