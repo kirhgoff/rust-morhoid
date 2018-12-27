@@ -39,14 +39,14 @@ impl World {
     fn tick(&mut self, processor: &Processor) {
         // TODO move to processor?
         // TODO use linked list for performance
-        let mut actions: Vec<Box<&Action>> = Vec::new();
+        let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
         for row in 0..self.height {
             for col in 0..self.width {
                 let idx = self.get_index(row, col);
                 let entity = self.entities[idx];
-                let action_batch = processor.process_entity(entity, self);
-                actions.append(action_batch);
+                let mut action_batch = processor.process_entity(entity, self);
+                actions.append(&mut action_batch);
             }
         }
         processor.apply(&actions, self);

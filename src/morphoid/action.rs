@@ -2,7 +2,7 @@ use morphoid::world::*;
 use morphoid::entity::Entity;
 use morphoid::cell_state::HealthType;
 
-pub trait Action : Sized {
+pub trait Action {
     // do something with stats or replace with dirt
     fn execute(&self, affector: &mut Affector);
 }
@@ -61,8 +61,8 @@ mod tests {
         }
 
         let update_heath_action = UpdateHealthAction { x:0, y:0, health_delta: 5};
-        let mut list = LinkedList::new();
-        list.push_back(Box::new(update_heath_action));
+        let mut list = Vec::new();
+        list.push(Box::new(update_heath_action));
 
         let processor = Processor {};
         processor.apply(&list, &mut world);

@@ -13,8 +13,8 @@ impl Processor {
         Processor {}
     }
 
-    pub fn process_entity(&self, entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<&Action>> {
-        let mut all_actions:Vec<Box<&Action>> = Vec::new();
+    pub fn process_entity(&self, entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<dyn Action>> {
+        let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
                 let genome = perceptor.get_genome(genome_id);
@@ -27,13 +27,13 @@ impl Processor {
         all_actions
     }
 
-    pub fn apply(&self, actions: &LinkedList<Box<&Action>>, affector: &mut Affector) {
+    pub fn apply(&self, actions: &Vec<Box<dyn Action>>, affector: &mut Affector) {
         for action in actions.iter() {
             action.execute(affector);
         }
     }
 
-    pub fn execute(&self, genome: &Genome, cell_state: &CellState) -> Vec<Box<&Action>> {
+    pub fn execute(&self, genome: &Genome, cell_state: &CellState) -> Vec<Box<dyn Action>> {
         //TODO
         vec![]
     }
@@ -57,8 +57,8 @@ mod tests {
         }
 
         let kill_action = KillAction::new(0, 0);
-        let mut list = LinkedList::new();
-        list.push_back(Box::new(kill_action));
+        let mut list = Vec::new();
+        list.push(Box::new(kill_action));
 
         Processor::new().apply(&list, &mut world);
 
@@ -77,8 +77,8 @@ mod tests {
         world.set_entity(0, 0, Entity::Cell(hash), Some(CellState { health: 10 }));
 
         let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
-        let mut list = LinkedList::new();
-        list.push_back(Box::new(update_health_action));
+        let mut list = Vec::new();
+        list.push(Box::new(update_health_action));
 
         Processor::new().apply(&list, &mut world);
 
