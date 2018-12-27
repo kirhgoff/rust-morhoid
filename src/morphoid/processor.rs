@@ -15,14 +15,14 @@ impl Processor {
 
     pub fn process_entity<T: Action>(&self, entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<T>> {
         let mut all_actions:Vec<Box<T>> = Vec::new();
-        let new_entity = match entity {
+        match entity {
             Entity::Cell(genome_id) => {
                 let genome = perceptor.get_genome(genome_id);
                 let state = perceptor.get_state(genome_id);
                 let mut actions = self.execute(genome, state);
                 all_actions.append(&mut actions);
             }
-            otherwise => {},
+            _ => {},
         };
         all_actions
     }
