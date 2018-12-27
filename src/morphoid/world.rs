@@ -1,5 +1,4 @@
 use std::fmt;
-use std::collections::LinkedList;
 
 use morphoid::entity::Entity;
 use morphoid::processor::Processor;
@@ -37,20 +36,17 @@ impl World {
     }
 
     // TODO: synchronize
-    fn tick<T : Action>(&mut self, processor: &Processor) {
-        // TODO move to processor
-        let mut actions: LinkedList<Box<T>> = LinkedList::new();
+    fn tick(&mut self, processor: &Processor) {
+        // TODO move to processor?
+        // TODO use linked list for performance
+        let mut actions: Vec<Box<&Action>> = Vec::new();
 
         for row in 0..self.height {
             for col in 0..self.width {
                 let idx = self.get_index(row, col);
                 let entity = self.entities[idx];
                 let action_batch = processor.process_entity(entity, self);
-
-                // TODO how to do it better (collect iterators?)
-                for action in action_batch {
-                    actions.push_back(action);
-                }
+                actions.append(action_batch);
             }
         }
         processor.apply(&actions, self);

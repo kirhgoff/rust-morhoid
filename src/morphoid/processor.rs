@@ -13,8 +13,8 @@ impl Processor {
         Processor {}
     }
 
-    pub fn process_entity<T: Action>(&self, entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<T>> {
-        let mut all_actions:Vec<Box<T>> = Vec::new();
+    pub fn process_entity(&self, entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<&Action>> {
+        let mut all_actions:Vec<Box<&Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
                 let genome = perceptor.get_genome(genome_id);
@@ -27,13 +27,13 @@ impl Processor {
         all_actions
     }
 
-    pub fn apply<T : Action>(&self, actions: &LinkedList<Box<T>>, affector: &mut Affector) {
+    pub fn apply(&self, actions: &LinkedList<Box<&Action>>, affector: &mut Affector) {
         for action in actions.iter() {
             action.execute(affector);
         }
     }
 
-    pub fn execute<T: Action>(&self, genome: &Genome, cell_state: &CellState) -> Vec<Box<T>> {
+    pub fn execute(&self, genome: &Genome, cell_state: &CellState) -> Vec<Box<&Action>> {
         //TODO
         vec![]
     }
