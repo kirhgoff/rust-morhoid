@@ -62,7 +62,7 @@ mod tests {
 
         let update_heath_action = UpdateHealthAction { x:0, y:0, health_delta: 5};
         let mut list = LinkedList::new();
-        list.push_back(update_heath_action);
+        list.push_back(Box::new(update_heath_action));
         Processor::apply(&list, &mut world);
 
         match world.get_state(hash) {

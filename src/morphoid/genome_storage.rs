@@ -16,7 +16,7 @@ impl GenomeStorage {
         hash
     }
 
-    fn get(&self, hash:HashType) -> Option<&Genome> {
+    pub fn get(&self, hash:HashType) -> Option<&Genome> {
         self.genomes.get(&hash)
     }
 

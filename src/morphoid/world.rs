@@ -9,6 +9,7 @@ use morphoid::cell_state_storage::CellStateStorage;
 use morphoid::genome::HashType;
 use morphoid::cell_state::HealthType;
 use morphoid::cell_state::CellState;
+use morphoid::genome::Genome;
 
 pub type Coords = u32;
 
@@ -38,23 +39,21 @@ impl World {
     // TODO: synchronize
     fn tick<T : Action>(&mut self) {
         // TODO move to processor
-        let mut actions: LinkedList<T> = LinkedList::new();
+        let mut actions: LinkedList<Box<T>> = LinkedList::new();
 
         for row in 0..self.height {
             for col in 0..self.width {
                 let idx = self.get_index(row, col);
                 let entity = self.entities[idx];
-                //TODO: no need to return entities
-                let (_, action_batch) = Processor::new_entity(entity, self);
+                let action_batch = Processor::process_entity(entity, self);
 
                 // TODO how to do it better (collect iterators?)
                 for action in action_batch {
                     actions.push_back(action);
                 }
-
-                Processor::apply(&actions, self);
             }
         }
+        Processor::apply(&actions, self);
     }
 
     fn get_index(&self, row: Coords, column: Coords) -> usize {
@@ -124,6 +123,7 @@ pub trait Perceptor {
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
     // TODO do I need this method?
     fn get_state(&mut self, hash: HashType) -> Option<&mut CellState>;
+    fn get_genome(&self, hash: HashType) -> &Genome;
 }
 
 impl Perceptor for World {
@@ -136,6 +136,9 @@ impl Perceptor for World {
         self.cell_states.get(hash)
     }
 
+    fn get_genome(&self, hash: HashType) -> &Genome {
+        self.genomes.get(hash).unwrap() // TODO: return Option?
+    }
 }
 
 #[cfg(test)]
@@ -152,7 +155,7 @@ mod tests {
 
         let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
         let mut list = LinkedList::new();
-        list.push_back(update_health_action);
+        list.push_back(Box::new(update_health_action));
         Processor::apply(&list, &mut world);
 
         let new_entity = world.get_entity(0, 0);

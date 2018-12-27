@@ -4,24 +4,36 @@ use morphoid::world::*;
 use morphoid::genome::*;
 use morphoid::action::KillAction;
 use std::collections::LinkedList;
+use morphoid::cell_state::CellState;
 
 pub struct Processor {}
 
 impl Processor {
-    pub fn new_entity<T : Action>(entity: Entity, _perceptor: &Perceptor) -> (Entity, Vec<T>) {
-        //let mut actions:Vec<Action> = Vec::new(); TODO: what to do?
+    pub fn process_entity<T: Action>(entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<T>> {
+        let mut all_actions:Vec<Box<Action>> = Vec::new();
         let new_entity = match entity {
-            Entity::Cell(gene_id) => Entity::Cell(gene_id + 1),
-            otherwise => otherwise,
+            Entity::Cell(genome_id) => {
+                let genome = perceptor.get_genome(genome_id);
+                let state = perceptor.get_state(genome_id).unwrap();
+                let actions = Processor::execute(genome, state);
+                actions.iter().map(|a| all_actions.push(a));
+            }
+            otherwise => {},
         };
-        (new_entity, vec![])
+        all_actions
     }
 
-    pub fn apply<T : Action>(actions: &LinkedList<T>, affector: &mut Affector) {
+    pub fn apply<T : Action>(actions: &LinkedList<Box<T>>, affector: &mut Affector) {
         for action in actions.iter() {
             action.execute(affector);
         }
     }
+
+    pub fn execute<T: Action>(genome: &Genome, cell_state: &mut CellState) -> Vec<Box<T>> {
+        //TODO
+        vec![]
+    }
+
 }
 
 
