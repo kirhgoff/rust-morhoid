@@ -2,9 +2,8 @@ use morphoid::world::*;
 use morphoid::entity::Entity;
 use morphoid::cell_state::HealthType;
 
-pub trait Action : Sized {
-    // do something with stats or replace with dirt
-    fn execute(&self, affector: &mut Affector);
+pub struct Action {
+    pub execute: Box<Fn(&mut Affector)-> !>,
 }
 
 // ---------------------------------
