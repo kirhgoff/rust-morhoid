@@ -15,8 +15,12 @@ impl CellStateStorage {
         self.states.insert(hash, cell_state);
     }
 
-    pub fn get(&mut self, hash:HashType) -> Option<&mut CellState> {
-        self.states.get_mut(&hash)
+    pub fn get_mut(&mut self, hash:HashType) -> &mut CellState {
+        self.states.get_mut(&hash).unwrap()
+    }
+
+    pub fn get(&self, hash:HashType) -> &CellState {
+        self.states.get(&hash).unwrap()
     }
 
     pub fn remove(&mut self, hash:HashType) {
@@ -36,13 +40,13 @@ mod tests {
         let hash: HashType = 1;
         storage.put(hash, cell_state);
         {
-            let mut state = storage.get(hash).unwrap();
+            let mut state = storage.get_mut(hash);
             assert_eq!(state.health, 10);
             state.health -= 5;
         }
 
 
-        let mut new_state = storage.get(hash).unwrap();
+        let mut new_state = storage.get(hash);
         assert_eq!(new_state.health, 5);
     }
 }

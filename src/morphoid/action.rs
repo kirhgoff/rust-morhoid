@@ -56,7 +56,7 @@ mod tests {
         let hash = plant.hash();
         world.set_entity(0, 0, Entity::Cell(hash), Some(CellState {health: 10}));
         match world.get_state(hash) {
-            Some(CellState {health}) => assert_eq!(*health, 10),
+            CellState {health} => assert_eq!(*health, 10),
             _ => panic!()
         }
 
@@ -66,7 +66,7 @@ mod tests {
         Processor::apply(&list, &mut world);
 
         match world.get_state(hash) {
-            Some(CellState {health}) => assert_eq!(*health, 15),
+            CellState {health} => assert_eq!(*health, 15),
             _ => panic!()
         }
     }

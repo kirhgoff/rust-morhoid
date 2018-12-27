@@ -106,10 +106,10 @@ impl Affector for World {
             Entity::Cell(hash) => {
                 {
                     // TODO: probably need to make it more tolerant
-                    let mut state = self.cell_states.get(hash).unwrap();
+                    let mut state = self.cell_states.get_mut(hash);
                     state.health += health_delta;
                 }
-                if self.cell_states.get(hash).unwrap().health < 0 {
+                if self.cell_states.get(hash).health < 0 {
                     self.set_entity(x, y, Entity::Corpse(10), None);
                 }
             },
@@ -120,9 +120,11 @@ impl Affector for World {
 }
 
 pub trait Perceptor {
-    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
     // TODO do I need this method?
-    fn get_state(&mut self, hash: HashType) -> Option<&mut CellState>;
+    fn get_state_mut(&mut self, hash: HashType) -> &mut CellState;
+
+    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
+    fn get_state(&self, hash: HashType) -> &CellState;
     fn get_genome(&self, hash: HashType) -> &Genome;
 }
 
@@ -132,7 +134,11 @@ impl Perceptor for World {
     }
 
     // TODO: should not be mut
-    fn get_state(&mut self, hash: HashType) -> Option<&mut CellState> {
+    fn get_state_mut(&mut self, hash: HashType) -> &mut CellState {
+        self.cell_states.get_mut(hash)
+    }
+
+    fn get_state(&self, hash: HashType) -> &CellState {
         self.cell_states.get(hash)
     }
 
