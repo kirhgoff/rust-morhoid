@@ -41,9 +41,10 @@ impl World {
         // TODO use linked list for performance
         let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
-        for row in 0..self.height {
-            for col in 0..self.width {
-                let idx = self.get_index(row, col);
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let idx = self.get_index(x, y);
+
                 let entity = self.entities[idx];
                 let mut action_batch = processor.process_entity(entity, self);
                 actions.append(&mut action_batch);
@@ -91,6 +92,7 @@ impl Affector for World {
         }
         match entity {
             Entity::Cell(hash) => {
+                self.genomes.put(genome.unwrap());
                 self.cell_states.put(hash, initial_state.unwrap());
             },
             _ => {}

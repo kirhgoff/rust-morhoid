@@ -10,7 +10,7 @@ impl GenomeStorage {
         GenomeStorage {genomes: HashMap::new()}
     }
 
-    fn put(&mut self, genome:Genome) -> HashType {
+    pub fn put(&mut self, genome:Genome) -> HashType {
         let hash = genome.hash();
         self.genomes.insert(hash, genome);
         hash
