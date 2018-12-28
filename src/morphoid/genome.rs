@@ -11,8 +11,8 @@ pub type GeneType = u32; // TODO: rename to Gene
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub const GENE_LENGTH: usize = 64;
 
-const REPRODUCE: GeneType = 30;
-const PHOTOSYNTHESYS: GeneType = 31;
+pub const REPRODUCE: GeneType = 30;
+pub const PHOTOSYNTHESYS: GeneType = 31;
 
 pub struct Genome {
     id: HashType,

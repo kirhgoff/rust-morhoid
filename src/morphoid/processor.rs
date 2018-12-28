@@ -3,8 +3,6 @@ use morphoid::action::*;
 use morphoid::world::*;
 use morphoid::genome::*;
 use morphoid::action::KillAction;
-use std::collections::LinkedList;
-use morphoid::cell_state::CellState;
 
 pub struct Processor {}
 
@@ -36,7 +34,6 @@ impl Processor {
         let mut actions:Vec<Box<dyn Action>> = Vec::new();
 
         let genome = perceptor.get_genome(genome_id);
-        let state = perceptor.get_state(genome_id);
 
         let start_index = 0;
         let steps_limit = 15; // TODO: add settings object - unhardcode
@@ -45,12 +42,16 @@ impl Processor {
         for i in start_index..end_index {
             let gene = genome.genes[i];
             match gene {
-//                REPRODUCE => {
-//                    match perceptor.find_vacant_place(x, y) {
-//                        Some((new_x, new_y)) => actions.add(ReproduceAction::new(new_x, new_y, genome_id)),
-//                    }
-//                }, // 30
+                REPRODUCE => {
+                    // TODO: unhardcode
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, -10)));
+                    match perceptor.find_vacant_place_around(x, y) {
+                        Some((new_x, new_y)) => actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id))),
+                        _ => {}
+                    }
+                }, // 30
                 PHOTOSYNTHESYS => actions.push(Box::new(UpdateHealthAction::new(x, y, 5))), // 31
+                _ => {}
             }
 
         }

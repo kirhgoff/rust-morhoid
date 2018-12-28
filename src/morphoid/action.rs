@@ -77,7 +77,6 @@ mod tests {
     use super::*;
     use morphoid::genome::Genome;
     use morphoid::cell_state::CellState;
-    use std::collections::LinkedList;
     use morphoid::processor::Processor;
 
     #[test]
@@ -87,20 +86,14 @@ mod tests {
         let hash = plant.hash();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
 
-        match world.get_state(hash) {
-            CellState {health} => assert_eq!(*health, 10),
-            _ => panic!()
-        }
+        assert_eq!(world.get_state(hash).health, 10);
 
         Processor::new().apply(
             &vec![Box::new(UpdateHealthAction::new(0, 0, 5))],
             &mut world
         );
 
-        match world.get_state(hash) {
-            CellState {health} => assert_eq!(*health, 15),
-            _ => panic!()
-        }
+        assert_eq!(world.get_state(hash).health, 15);
     }
 
     #[test]
@@ -118,11 +111,7 @@ mod tests {
         match world.get_entity(1, 0) {
             Entity::Cell(new_hash) => {
                 assert_ne!(*new_hash, hash);
-                match world.get_state(*new_hash) {
-                    CellState {health} => assert_eq!(*health, 10),
-                    _ => panic!("Cant find reproduced entity state")
-                }
-
+                assert_eq!(world.get_state(*new_hash).health, 10);
             },
             _ => panic!("Cant find reproduced entity")
         }

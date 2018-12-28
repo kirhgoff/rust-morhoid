@@ -8,9 +8,9 @@ use morphoid::cell_state_storage::CellStateStorage;
 use morphoid::genome::HashType;
 use morphoid::cell_state::HealthType;
 use morphoid::cell_state::CellState;
-use morphoid::genome::Genome;
+use morphoid::genome::{Genome, REPRODUCE};
 
-pub type Coords = u32;
+pub type Coords = i32;
 
 pub struct World {
     width: Coords,
@@ -54,7 +54,31 @@ impl World {
     }
 
     fn get_index(&self, x: Coords, y: Coords) -> usize {
-        (y * self.width + x) as usize
+        let x2 = if x < 0 {
+//            println!("Remainder_x x={:?} w={:?} => {:?}", x, self.width, (x % self.width));
+            if x % self.width == 0 {
+                0
+            } else {
+                self.width + (x % self.width)
+            }
+        } else {
+            x % self.width
+        };
+
+        let y2 = if y < 0 {
+//            println!("Remainder_y y={:?} h={:?} => {:?}", y, self.height, (y % self.height));
+            if y % self.height == 0 {
+                0
+            } else {
+                self.height - (y % self.height) * (-1)
+            }
+
+        } else {
+            y % self.height
+        };
+
+//        println!("get_index x={:?} y={:?} x2={:?} y2={:?}", x, y, x2, y2);
+        (y2 * self.width + x2) as usize
     }
 }
 
@@ -130,6 +154,7 @@ pub trait Perceptor {
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
     fn get_state(&self, hash: HashType) -> &CellState;
     fn get_genome(&self, hash: HashType) -> &Genome;
+    fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
 }
 
 impl Perceptor for World {
@@ -149,6 +174,24 @@ impl Perceptor for World {
     fn get_genome(&self, hash: HashType) -> &Genome {
         self.genomes.get(hash)
     }
+
+    fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
+        let results: Vec<(Coords, Coords)> = iproduct!(x-1..x+1, y-1..y+1)
+            .into_iter()
+            .filter(|(i,j)| {
+                match self.get_entity(*i, *j) {
+                    Entity::Nothing => true,
+                    _ => false
+                }
+            })
+            .collect();
+
+        // TODO: why, why?
+        match results.first() {
+            Some(x) => Some(*x),
+            _ => None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -160,27 +203,46 @@ mod tests {
     fn integration_test() {
         let processor = Processor::new();
         let mut world = World::new(2, 1);
-        let plant = Genome::new_plant();
+        let mut plant = Genome::new_plant();
+        plant.mutate(10, REPRODUCE);
         let hash = plant.hash();
 
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
         world.set_entity(1, 0, Entity::Nothing, None, None);
 
-        // Settings: sun power = 5
-        // new baby born: 20
-        world.tick(&processor);
-        world.tick(&processor);
         world.tick(&processor);
 
-        let new_entity = world.get_entity(0, 0);
+        // Checking old entity state
         let cell_state = world.get_state(hash);
-        assert_eq!(cell_state.health, 235); // TODO: use settings to amend the values
+        assert_eq!(cell_state.health, 70); // TODO: use settings to amend the values
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
+            _ => panic!("New cell was not reproduced!")
+        }
     }
 
     #[test]
     fn get_index_test() {
-        let mut world = World::new(2, 1);
+        let world = World::new(2, 1);
+
+        assert_eq!(world.get_index(-2,0), 0);
+        assert_eq!(world.get_index(-1,0), 1);
         assert_eq!(world.get_index(0,0), 0);
         assert_eq!(world.get_index(1,0), 1);
+        assert_eq!(world.get_index(2,0), 0);
+
+        assert_eq!(world.get_index(0,0), 0);
+        assert_eq!(world.get_index(0,1), 0);
+        assert_eq!(world.get_index(0,2), 0);
+        assert_eq!(world.get_index(0,-2), 0);
+        assert_eq!(world.get_index(0,-1), 0);
+
+        assert_eq!(world.get_index(1,0), 1);
+        assert_eq!(world.get_index(1,1), 1);
+        assert_eq!(world.get_index(1,2), 1);
+        assert_eq!(world.get_index(1,-2), 1);
+        assert_eq!(world.get_index(1,-1), 1);
+
     }
 }
