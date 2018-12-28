@@ -70,19 +70,18 @@ mod tests {
         let plant = Genome::new_plant();
         let hash = plant.hash();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState{health: 10}));
+
         match world.get_entity(0, 0) {
             Entity::Cell(old_hash) => assert_eq!(*old_hash, hash),
             _ => panic!()
         }
 
-        let kill_action = KillAction::new(0, 0);
-        let mut list: Vec<Box<Action>> = Vec::new();
-        list.push(Box::new(kill_action));
+        Processor::new().apply(
+            &vec![Box::new(KillAction::new(0, 0))],
+            &mut world
+        );
 
-        Processor::new().apply(&list, &mut world);
-
-        let new_entity = world.get_entity(0, 0);
-        match new_entity {
+        match world.get_entity(0, 0) {
             Entity::Corpse(_) =>  {},
             _ => panic!()
         }
@@ -95,16 +94,14 @@ mod tests {
         let hash = plant.hash();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
 
-        let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
-        let mut list: Vec<Box<Action>> = Vec::new();
-        list.push(Box::new(update_health_action));
+        Processor::new().apply(
+            &vec![Box::new(UpdateHealthAction::new(0, 0, -100))],
+            &mut world
+        );
 
-        Processor::new().apply(&list, &mut world);
-
-        let new_entity = world.get_entity(0, 0);
-        match new_entity {
+        match world.get_entity(0, 0) {
             Entity::Corpse(_) =>  {},
-            _ => panic!(format!("{:?}", new_entity))
+            _ => panic!("Cell should be dead here")
         }
     }
 }
