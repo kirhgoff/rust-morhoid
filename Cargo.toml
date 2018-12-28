@@ -1,8 +1,9 @@
 [package]
-name = "rust-buildpack-example-actix"
+name = "morphoid"
 version = "0.1.0"
-authors = ["Eric Kidd <git@randomhacks.net>"]
+authors = ["Kirill Lastovirya <kirill.lastovirya@gmail.com>"]
 
 [dependencies]
 actix-web = "0.7"
 itertools = "0.8.0"
+

@@ -1,3 +1,4 @@
+#[macro_use] extern crate itertools;
 extern crate actix_web;
 
 use actix_web::{server, App, HttpRequest, Responder};

@@ -1,5 +1,4 @@
 use std::fmt;
-use std::collections::LinkedList;
 
 use morphoid::entity::Entity;
 use morphoid::processor::Processor;
@@ -9,8 +8,9 @@ use morphoid::cell_state_storage::CellStateStorage;
 use morphoid::genome::HashType;
 use morphoid::cell_state::HealthType;
 use morphoid::cell_state::CellState;
+use morphoid::genome::{Genome, REPRODUCE};
 
-pub type Coords = u32;
+pub type Coords = i32;
 
 pub struct World {
     width: Coords,
@@ -36,29 +36,49 @@ impl World {
     }
 
     // TODO: synchronize
-    fn tick<T : Action>(&mut self) {
-        // TODO move to processor
-        let mut actions: LinkedList<T> = LinkedList::new();
+    fn tick(&mut self, processor: &Processor) {
+        // TODO move to processor?
+        // TODO use linked list for performance
+        let mut actions: Vec<Box<dyn Action>> = Vec::new();
 
-        for row in 0..self.height {
-            for col in 0..self.width {
-                let idx = self.get_index(row, col);
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let idx = self.get_index(x, y);
+
                 let entity = self.entities[idx];
-                //TODO: no need to return entities
-                let (_, action_batch) = Processor::new_entity(entity, self);
-
-                // TODO how to do it better (collect iterators?)
-                for action in action_batch {
-                    actions.push_back(action);
-                }
-
-                Processor::apply(&actions, self);
+                let mut action_batch = processor.process_entity(x, y, entity, self);
+                actions.append(&mut action_batch);
             }
         }
+        processor.apply(&actions, self);
     }
 
-    fn get_index(&self, row: Coords, column: Coords) -> usize {
-        (row * self.width + column) as usize
+    fn get_index(&self, x: Coords, y: Coords) -> usize {
+        let x2 = if x < 0 {
+//            println!("Remainder_x x={:?} w={:?} => {:?}", x, self.width, (x % self.width));
+            if x % self.width == 0 {
+                0
+            } else {
+                self.width + (x % self.width)
+            }
+        } else {
+            x % self.width
+        };
+
+        let y2 = if y < 0 {
+//            println!("Remainder_y y={:?} h={:?} => {:?}", y, self.height, (y % self.height));
+            if y % self.height == 0 {
+                0
+            } else {
+                self.height - (y % self.height) * (-1)
+            }
+
+        } else {
+            y % self.height
+        };
+
+//        println!("get_index x={:?} y={:?} x2={:?} y2={:?}", x, y, x2, y2);
+        (y2 * self.width + x2) as usize
     }
 }
 
@@ -78,14 +98,16 @@ impl fmt::Display for World {
 }
 
 pub trait Affector {
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>);
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
+    fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome;
 }
 
 
 impl Affector for World {
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, initial_state: Option<CellState>) {
+    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
+        println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
         match self.entities[index] {
             Entity::Cell(hash) => {
                 self.cell_states.remove(hash);
@@ -95,6 +117,7 @@ impl Affector for World {
         }
         match entity {
             Entity::Cell(hash) => {
+                self.genomes.put(genome.unwrap());
                 self.cell_states.put(hash, initial_state.unwrap());
             },
             _ => {}
@@ -107,23 +130,31 @@ impl Affector for World {
             Entity::Cell(hash) => {
                 {
                     // TODO: probably need to make it more tolerant
-                    let mut state = self.cell_states.get(hash).unwrap();
+                    let mut state = self.cell_states.get_mut(hash);
                     state.health += health_delta;
                 }
-                if self.cell_states.get(hash).unwrap().health < 0 {
-                    self.set_entity(x, y, Entity::Corpse(10), None);
+                if self.cell_states.get(hash).health < 0 {
+                    self.set_entity(x, y, Entity::Corpse(10), None, None);
                 }
             },
             _ => {}
         }
+    }
 
+    fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome {
+        let parent_genome = self.genomes.get(parent_genome_id);
+        parent_genome.clone() // TODO: add mutation
     }
 }
 
 pub trait Perceptor {
-    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
     // TODO do I need this method?
-    fn get_state(&mut self, hash: HashType) -> Option<&mut CellState>;
+    fn get_state_mut(&mut self, hash: HashType) -> &mut CellState;
+
+    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
+    fn get_state(&self, hash: HashType) -> &CellState;
+    fn get_genome(&self, hash: HashType) -> &Genome;
+    fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
 }
 
 impl Perceptor for World {
@@ -132,10 +163,35 @@ impl Perceptor for World {
     }
 
     // TODO: should not be mut
-    fn get_state(&mut self, hash: HashType) -> Option<&mut CellState> {
+    fn get_state_mut(&mut self, hash: HashType) -> &mut CellState {
+        self.cell_states.get_mut(hash)
+    }
+
+    fn get_state(&self, hash: HashType) -> &CellState {
         self.cell_states.get(hash)
     }
 
+    fn get_genome(&self, hash: HashType) -> &Genome {
+        self.genomes.get(hash)
+    }
+
+    fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
+        let results: Vec<(Coords, Coords)> = iproduct!(x-1..x+1, y-1..y+1)
+            .into_iter()
+            .filter(|(i,j)| {
+                match self.get_entity(*i, *j) {
+                    Entity::Nothing => true,
+                    _ => false
+                }
+            })
+            .collect();
+
+        // TODO: why, why?
+        match results.first() {
+            Some(x) => Some(*x),
+            _ => None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -144,21 +200,49 @@ mod tests {
     use morphoid::genome::Genome;
 
     #[test]
-    fn processor_can_do_update_health() {
-        let mut world = World::new(1, 1);
-        let plant = Genome::new_plant();
+    fn integration_test() {
+        let processor = Processor::new();
+        let mut world = World::new(2, 1);
+        let mut plant = Genome::new_plant();
+        plant.mutate(10, REPRODUCE);
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(CellState { health: 10 }));
 
-        let update_health_action = UpdateHealthAction  {x:0, y:0, health_delta: -100};
-        let mut list = LinkedList::new();
-        list.push_back(update_health_action);
-        Processor::apply(&list, &mut world);
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
+        world.set_entity(1, 0, Entity::Nothing, None, None);
 
-        let new_entity = world.get_entity(0, 0);
-        match new_entity {
-            Entity::Corpse(_) =>  {},
-            _ => panic!(format!("{:?}", new_entity))
+        world.tick(&processor);
+
+        // Checking old entity state
+        let cell_state = world.get_state(hash);
+        assert_eq!(cell_state.health, 70); // TODO: use settings to amend the values
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
+            _ => panic!("New cell was not reproduced!")
         }
+    }
+
+    #[test]
+    fn get_index_test() {
+        let world = World::new(2, 1);
+
+        assert_eq!(world.get_index(-2,0), 0);
+        assert_eq!(world.get_index(-1,0), 1);
+        assert_eq!(world.get_index(0,0), 0);
+        assert_eq!(world.get_index(1,0), 1);
+        assert_eq!(world.get_index(2,0), 0);
+
+        assert_eq!(world.get_index(0,0), 0);
+        assert_eq!(world.get_index(0,1), 0);
+        assert_eq!(world.get_index(0,2), 0);
+        assert_eq!(world.get_index(0,-2), 0);
+        assert_eq!(world.get_index(0,-1), 0);
+
+        assert_eq!(world.get_index(1,0), 1);
+        assert_eq!(world.get_index(1,1), 1);
+        assert_eq!(world.get_index(1,2), 1);
+        assert_eq!(world.get_index(1,-2), 1);
+        assert_eq!(world.get_index(1,-1), 1);
+
     }
 }

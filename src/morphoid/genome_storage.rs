@@ -10,14 +10,14 @@ impl GenomeStorage {
         GenomeStorage {genomes: HashMap::new()}
     }
 
-    fn put(&mut self, genome:Genome) -> HashType {
+    pub fn put(&mut self, genome:Genome) -> HashType {
         let hash = genome.hash();
         self.genomes.insert(hash, genome);
         hash
     }
 
-    fn get(&self, hash:HashType) -> Option<&Genome> {
-        self.genomes.get(&hash)
+    pub fn get(&self, hash:HashType) -> &Genome {
+        self.genomes.get(&hash).unwrap()
     }
 
     pub fn remove(&mut self, hash:HashType) {
@@ -39,7 +39,7 @@ mod tests {
         assert_ne!(hash, 0);
         assert_eq!(genome_hash, hash);
 
-        let found_genome = storage.get(hash).unwrap();
+        let found_genome = storage.get(hash);
         assert_eq!(hash, found_genome.hash());
         //assert_eq!(*found_genome, genome); // TODO: what about moving?
     }
