@@ -70,7 +70,7 @@ impl Action for ReproduceAction {
     }
 }
 
-
+// --------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -111,7 +111,7 @@ mod tests {
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
 
         Processor::new().apply(
-            &vec![Box::new(ReproduceAction::new(0, 0, hash))],
+            &vec![Box::new(ReproduceAction::new(1, 0, hash))],
             &mut world
         );
 

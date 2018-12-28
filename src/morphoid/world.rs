@@ -76,6 +76,7 @@ impl fmt::Display for World {
 pub trait Affector {
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
+    fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome;
 }
 
 
@@ -114,7 +115,11 @@ impl Affector for World {
             },
             _ => {}
         }
+    }
 
+    fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome {
+        let parent_genome = self.genomes.get(parent_genome_id);
+        parent_genome.clone() // TODO: add mutation
     }
 }
 
@@ -142,7 +147,7 @@ impl Perceptor for World {
     }
 
     fn get_genome(&self, hash: HashType) -> &Genome {
-        self.genomes.get(hash).unwrap() // TODO: return Option?
+        self.genomes.get(hash)
     }
 }
 

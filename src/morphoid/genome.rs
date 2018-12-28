@@ -5,8 +5,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use self::itertools::Itertools;
 
-pub type HashType = u64;
-pub type GeneType = u32;
+pub type HashType = u64; // TODO: rename to GenomeId
+pub type GeneType = u32; // TODO: rename to Gene
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub const GENE_LENGTH: usize = 64;
@@ -20,12 +20,26 @@ pub struct Genome {
 }
 
 impl Genome {
+    fn new_id() -> HashType {
+        HASH_COUNTER.fetch_add(1, Ordering::SeqCst) as HashType
+    }
+
     pub fn new_plant() -> Genome {
-        Genome {id: HASH_COUNTER.fetch_add(1, Ordering::SeqCst) as u64, genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
+        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 
     pub fn hash(&self) -> HashType {
         self.id
+    }
+
+    pub fn mutate(&mut self, index: usize, new_value: GeneType) {
+        self.genes[index] = new_value;
+    }
+
+    pub fn clone(&self) -> Genome {
+        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]};
+        new_genome.genes.copy_from_slice(&self.genes[..]);
+        new_genome
     }
 }
 
@@ -49,7 +63,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn genome_impl_partial_eq() {
+    fn partial_eq_impl() {
         let genome1 = Genome::new_plant();
         let genome2 = Genome::new_plant();
         let mut genome3 = Genome::new_plant();
@@ -60,10 +74,29 @@ mod tests {
     }
 
     #[test]
-    fn genome_impl_debug() {
+    fn debug_impl() {
         let genome1 = Genome::new_plant();
         let genome2 = Genome::new_plant();
         assert_ne!(genome1.hash(), genome2.hash());
         assert_eq!("Genome genes: 31 31 31", format!("{:?}", genome1).split_at(22).0);
     }
+
+    #[test]
+    fn clone() {
+        let genome1 = Genome::new_plant();
+        let genome2 = genome1.clone();
+        assert_ne!(genome1.hash(), genome2.hash());
+        assert_eq!(genome1, genome2);
+    }
+
+    #[test]
+    fn mutate() {
+        let genome1 = Genome::new_plant();
+        let mut genome2 = genome1.clone();
+        assert_eq!(genome1, genome2);
+        genome2.mutate(0, REPRODUCE);
+        assert_ne!(genome1, genome2);
+    }
+
+
 }
