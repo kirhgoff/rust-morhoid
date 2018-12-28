@@ -40,13 +40,11 @@ mod tests {
         let hash: HashType = 1;
         storage.put(hash, cell_state);
         {
-            let mut state = storage.get_mut(hash);
+            let state = storage.get_mut(hash);
             assert_eq!(state.health, 10);
             state.health -= 5;
         }
 
-
-        let mut new_state = storage.get(hash);
-        assert_eq!(new_state.health, 5);
+        assert_eq!(storage.get(hash).health, 5);
     }
 }

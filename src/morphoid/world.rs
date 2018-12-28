@@ -46,7 +46,7 @@ impl World {
                 let idx = self.get_index(x, y);
 
                 let entity = self.entities[idx];
-                let mut action_batch = processor.process_entity(entity, self);
+                let mut action_batch = processor.process_entity(x, y, entity, self);
                 actions.append(&mut action_batch);
             }
         }
@@ -169,7 +169,7 @@ mod tests {
 
         let new_entity = world.get_entity(0, 0);
         let cell_state = world.get_state(hash);
-        assert_eq!(cell_state.health, 25);
+        assert_eq!(cell_state.health, 235); // TODO: use settings to amend the values
     }
 
     #[test]

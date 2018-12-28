@@ -34,6 +34,12 @@ pub struct UpdateHealthAction {
     pub health_delta: HealthType
 }
 
+impl UpdateHealthAction {
+    pub fn new(x: Coords, y: Coords, health_delta: HealthType) -> UpdateHealthAction {
+        UpdateHealthAction { x, y, health_delta }
+    }
+}
+
 impl Action for UpdateHealthAction {
     fn execute(&self, affector: &mut Affector) {
         affector.update_health(self.x, self.y, self.health_delta);

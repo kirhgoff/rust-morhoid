@@ -13,13 +13,11 @@ impl Processor {
         Processor {}
     }
 
-    pub fn process_entity(&self, entity: Entity, perceptor: &mut Perceptor) -> Vec<Box<dyn Action>> {
+    pub fn process_entity(&self, x:Coords, y:Coords, entity: Entity, perceptor: &Perceptor) -> Vec<Box<dyn Action>> {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
-                let genome = perceptor.get_genome(genome_id);
-                let state = perceptor.get_state(genome_id);
-                let mut actions = self.execute(genome, state);
+                let mut actions = self.execute(x, y, genome_id, perceptor);
                 all_actions.append(&mut actions);
             }
             _ => {},
@@ -27,15 +25,36 @@ impl Processor {
         all_actions
     }
 
+    // TODO: move to world
     pub fn apply(&self, actions: &Vec<Box<dyn Action>>, affector: &mut Affector) {
         for action in actions.iter() {
             action.execute(affector);
         }
     }
 
-    pub fn execute(&self, genome: &Genome, cell_state: &CellState) -> Vec<Box<dyn Action>> {
-        //TODO
-        vec![]
+    pub fn execute(&self, x:Coords, y:Coords, genome_id: HashType, perceptor: &Perceptor) -> Vec<Box<dyn Action>> {
+        let mut actions:Vec<Box<dyn Action>> = Vec::new();
+
+        let genome = perceptor.get_genome(genome_id);
+        let state = perceptor.get_state(genome_id);
+
+        let start_index = 0;
+        let steps_limit = 15; // TODO: add settings object - unhardcode
+        let end_index = (start_index + steps_limit) % GENE_LENGTH;
+
+        for i in start_index..end_index {
+            let gene = genome.genes[i];
+            match gene {
+//                REPRODUCE => {
+//                    match perceptor.find_vacant_place(x, y) {
+//                        Some((new_x, new_y)) => actions.add(ReproduceAction::new(new_x, new_y, genome_id)),
+//                    }
+//                }, // 30
+                PHOTOSYNTHESYS => actions.push(Box::new(UpdateHealthAction::new(x, y, 5))), // 31
+            }
+
+        }
+        actions
     }
 }
 

@@ -9,13 +9,14 @@ pub type HashType = u64;
 pub type GeneType = u32;
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
-const GENE_LENGTH: usize = 64;
+pub const GENE_LENGTH: usize = 64;
 
+const REPRODUCE: GeneType = 30;
 const PHOTOSYNTHESYS: GeneType = 31;
 
 pub struct Genome {
     id: HashType,
-    genes: [GeneType; GENE_LENGTH]
+    pub genes: [GeneType; GENE_LENGTH]
 }
 
 impl Genome {
