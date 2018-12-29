@@ -2,12 +2,19 @@ use morphoid::entity::Entity;
 use morphoid::action::*;
 use morphoid::world::*;
 use morphoid::genome::*;
+use morphoid::settings::*;
 
-pub struct Processor {}
+pub struct Processor {
+    settings: Settings
+}
 
 impl Processor {
+    pub fn with_settings(settings: Settings) -> Processor {
+        Processor { settings: settings }
+    }
+
     pub fn new() -> Processor {
-        Processor {}
+        Processor { settings: Settings::new() }
     }
 
     pub fn process_entity(&self, x:Coords, y:Coords, entity: Entity, perceptor: &Perceptor) -> Vec<Box<dyn Action>> {
@@ -35,23 +42,22 @@ impl Processor {
         let genome = perceptor.get_genome(genome_id);
 
         let start_index = 0;
-        let steps_limit = 15; // TODO: add settings object - unhardcode
+        let steps_limit = self.settings.steps_per_turn();
         let end_index = (start_index + steps_limit) % GENE_LENGTH;
 
         for i in start_index..end_index {
             let gene = genome.genes[i];
             match gene {
                 REPRODUCE => {
-                    if perceptor.get_state(genome_id).health > 100 {
-                        // TODO: unhardcode
-                        actions.push(Box::new(UpdateHealthAction::new(x, y, -10)));
+                    if perceptor.get_state(genome_id).health > self.settings.reproduce_threshold() {
+                        actions.push(Box::new(UpdateHealthAction::new(x, y, self.settings.reproduce_cost())));
                         match perceptor.find_vacant_place_around(x, y) {
                             Some((new_x, new_y)) => actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id))),
                             _ => {}
                         }
                     }
                 }, // 30
-                PHOTOSYNTHESYS => actions.push(Box::new(UpdateHealthAction::new(x, y, 5))), // 31
+                PHOTOSYNTHESYS => actions.push(Box::new(UpdateHealthAction::new(x, y, self.settings.photosynthesys_adds()))), // 31
                 _ => {}
             }
 
