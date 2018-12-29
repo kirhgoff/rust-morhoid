@@ -1,20 +1,30 @@
 <html>
 <head>
     <script language="JavaScript">
-      const url = ''
+      const url = '/world';
 
       function render() {
-            fetch(url)
-              .then(function(data) {
-                document.getElementById("display").innerText = data;
-              })
-              .catch(function(error) {
-                console.log(error)
-              });
-        }
+        fetch(url)
+          .then(function(response) {
+            return response.text();
+          })
+          .then(function(data){
+            console.log(data);
+            document.getElementById("display").innerText = data;
+          })
+          .catch(function(error) {
+            console.log(error)
+          });
+
+        setTimeout(render, 1000);
+      }
+      document.addEventListener("DOMContentLoaded", function(event) {
+        setTimeout(render, 1000);
+      });
     </script>
+
 </head>
 <body>
-    <div id="display"></div>
+    <div id="display">Tata</div>
 </body>
 </html>

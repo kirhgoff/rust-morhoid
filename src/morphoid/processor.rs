@@ -42,11 +42,13 @@ impl Processor {
             let gene = genome.genes[i];
             match gene {
                 REPRODUCE => {
-                    // TODO: unhardcode
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, -10)));
-                    match perceptor.find_vacant_place_around(x, y) {
-                        Some((new_x, new_y)) => actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id))),
-                        _ => {}
+                    if perceptor.get_state(genome_id).health > 100 {
+                        // TODO: unhardcode
+                        actions.push(Box::new(UpdateHealthAction::new(x, y, -10)));
+                        match perceptor.find_vacant_place_around(x, y) {
+                            Some((new_x, new_y)) => actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id))),
+                            _ => {}
+                        }
                     }
                 }, // 30
                 PHOTOSYNTHESYS => actions.push(Box::new(UpdateHealthAction::new(x, y, 5))), // 31

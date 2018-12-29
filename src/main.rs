@@ -8,26 +8,41 @@ use std::env;
 
 pub mod morphoid;
 use morphoid::world::World;
+use morphoid::world::Affector;
+use morphoid::genome::Genome;
 use morphoid::processor::Processor;
+use morphoid::entity::Entity;
+use morphoid::cell_state::CellState;
 
 use actix_web::fs;
 use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
+use morphoid::genome::REPRODUCE;
 
 lazy_static! {
-    static ref WORLD: Mutex<World> = Mutex::new(World::new(10, 10));
+    static ref WORLD: Mutex<World> = Mutex::new(new_world());
     static ref PROCESSOR: Processor = Processor::new();
 }
 
+fn new_world() -> World {
+    let mut world = World::new(10, 10);
+    let mut genome = Genome::new_plant();
+    genome.mutate(2, REPRODUCE);
+    world.set_entity(5, 5, Entity::Cell(genome.hash()), Some(genome), Some(CellState {health:10}));
+    world
+}
+
 fn world_state(_req: &HttpRequest) -> impl Responder {
-    format!("{}", WORLD.lock().unwrap())
+    let result = format!("{}", WORLD.lock().unwrap());
+    println!("Got result");
+    result
 }
 
 fn initialize() {
     thread::spawn(|| {
         loop {
-            thread::sleep(Duration::from_millis(30));
+            thread::sleep(Duration::from_millis(500));
             WORLD.lock().unwrap().tick(&PROCESSOR);
         }
     });
@@ -46,7 +61,12 @@ fn main() {
     server::new(|| {
         App::new()
             .resource("/world", |r| r.f(world_state))
-            .handler("/", fs::StaticFiles::new("static/").unwrap())
+            .handler(
+                "/",
+                fs::StaticFiles::new("static/")
+                    .unwrap()
+                    .index_file("index.html")
+            )
     })
     .bind(("0.0.0.0", port))
     .expect(&format!("Can not bind to port {:?}", port))
