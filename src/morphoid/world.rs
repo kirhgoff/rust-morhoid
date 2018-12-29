@@ -8,7 +8,7 @@ use morphoid::cell_state_storage::CellStateStorage;
 use morphoid::genome::HashType;
 use morphoid::cell_state::HealthType;
 use morphoid::cell_state::CellState;
-use morphoid::genome::{Genome, REPRODUCE};
+use morphoid::genome::Genome;
 
 pub type Coords = i32;
 
@@ -35,8 +35,8 @@ impl World {
         }
     }
 
-    // TODO: synchronize
-    fn tick(&mut self, processor: &Processor) {
+    // TODO: synchronize?
+    pub fn tick(&mut self, processor: &Processor) {
         // TODO move to processor?
         // TODO use linked list for performance
         let mut actions: Vec<Box<dyn Action>> = Vec::new();
@@ -53,9 +53,9 @@ impl World {
         processor.apply(&actions, self);
     }
 
+    // TODO: simplify
     fn get_index(&self, x: Coords, y: Coords) -> usize {
         let x2 = if x < 0 {
-//            println!("Remainder_x x={:?} w={:?} => {:?}", x, self.width, (x % self.width));
             if x % self.width == 0 {
                 0
             } else {
@@ -66,7 +66,6 @@ impl World {
         };
 
         let y2 = if y < 0 {
-//            println!("Remainder_y y={:?} h={:?} => {:?}", y, self.height, (y % self.height));
             if y % self.height == 0 {
                 0
             } else {
@@ -77,7 +76,6 @@ impl World {
             y % self.height
         };
 
-//        println!("get_index x={:?} y={:?} x2={:?} y2={:?}", x, y, x2, y2);
         (y2 * self.width + x2) as usize
     }
 }
@@ -198,6 +196,7 @@ impl Perceptor for World {
 mod tests {
     use super::*;
     use morphoid::genome::Genome;
+    use morphoid::genome::REPRODUCE;
 
     #[test]
     fn integration_test() {

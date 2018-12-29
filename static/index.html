@@ -1,0 +1,20 @@
+<html>
+<head>
+    <script language="JavaScript">
+      const url = ''
+
+      function render() {
+            fetch(url)
+              .then(function(data) {
+                document.getElementById("display").innerText = data;
+              })
+              .catch(function(error) {
+                console.log(error)
+              });
+        }
+    </script>
+</head>
+<body>
+    <div id="display"></div>
+</body>
+</html>

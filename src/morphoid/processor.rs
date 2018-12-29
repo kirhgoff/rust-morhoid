@@ -2,7 +2,6 @@ use morphoid::entity::Entity;
 use morphoid::action::*;
 use morphoid::world::*;
 use morphoid::genome::*;
-use morphoid::action::KillAction;
 
 pub struct Processor {}
 
