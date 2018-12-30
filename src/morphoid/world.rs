@@ -96,6 +96,7 @@ impl fmt::Display for World {
 }
 
 pub trait Affector {
+    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome);
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
     fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome;
@@ -103,9 +104,13 @@ pub trait Affector {
 
 
 impl Affector for World {
+    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome) {
+        self.set_entity(x, y, Entity::Cell(genome.hash()), Some(genome), Some(CellState {health:10}));
+    }
+
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
-        println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
+        //println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
         match self.entities[index] {
             Entity::Cell(hash) => {
                 self.cell_states.remove(hash);
@@ -197,15 +202,22 @@ mod tests {
     use super::*;
     use morphoid::genome::Genome;
     use morphoid::genome::REPRODUCE;
+    use morphoid::settings::Settings;
 
     #[test]
     fn integration_test() {
-        let processor = Processor::new();
+        let processor = Processor::with_settings(Settings {
+            steps_per_turn: 2,
+            reproduce_cost: -8, // it will die after new born
+            reproduce_threshold: 9, // it will reproduce on second step
+            photosynthesys_adds: 5 // it will have 10 + 5 health after first step
+        });
         let mut world = World::new(2, 1);
         let mut plant = Genome::new_plant();
-        plant.mutate(10, REPRODUCE);
+        plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
 
+        // TODO: add new_xxx methods
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
         world.set_entity(1, 0, Entity::Nothing, None, None);
 
@@ -213,7 +225,7 @@ mod tests {
 
         // Checking old entity state
         let cell_state = world.get_state(hash);
-        assert_eq!(cell_state.health, 70); // TODO: use settings to amend the values
+        assert_eq!(cell_state.health, 10 + 5 - 8); // TODO: use settings to amend the values
 
         match world.get_entity(1, 0) {
             Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
