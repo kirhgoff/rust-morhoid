@@ -5,7 +5,7 @@ use morphoid::processor::Processor;
 use morphoid::action::*;
 use morphoid::genome_storage::GenomeStorage;
 use morphoid::cell_state_storage::CellStateStorage;
-use morphoid::genome::HashType;
+use morphoid::genome::GenomeId;
 use morphoid::cell_state::HealthType;
 use morphoid::cell_state::CellState;
 use morphoid::genome::Genome;
@@ -107,7 +107,7 @@ pub trait Affector {
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
-    fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome;
+    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome;
 }
 
 
@@ -159,7 +159,7 @@ impl Affector for World {
         }
     }
 
-    fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome {
+    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome {
         let parent_genome = self.genomes.get(parent_genome_id);
         parent_genome.clone() // TODO: add mutation
     }
@@ -167,11 +167,11 @@ impl Affector for World {
 
 pub trait Perceptor {
     // TODO do I need this method?
-    fn get_state_mut(&mut self, hash: HashType) -> &mut CellState;
+    fn get_state_mut(&mut self, hash: GenomeId) -> &mut CellState;
 
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
-    fn get_state(&self, hash: HashType) -> &CellState;
-    fn get_genome(&self, hash: HashType) -> &Genome;
+    fn get_state(&self, hash: GenomeId) -> &CellState;
+    fn get_genome(&self, hash: GenomeId) -> &Genome;
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
 }
 
@@ -181,15 +181,15 @@ impl Perceptor for World {
     }
 
     // TODO: should not be mut
-    fn get_state_mut(&mut self, hash: HashType) -> &mut CellState {
+    fn get_state_mut(&mut self, hash: GenomeId) -> &mut CellState {
         self.cell_states.get_mut(hash)
     }
 
-    fn get_state(&self, hash: HashType) -> &CellState {
+    fn get_state(&self, hash: GenomeId) -> &CellState {
         self.cell_states.get(hash)
     }
 
-    fn get_genome(&self, hash: HashType) -> &Genome {
+    fn get_genome(&self, hash: GenomeId) -> &Genome {
         self.genomes.get(hash)
     }
 

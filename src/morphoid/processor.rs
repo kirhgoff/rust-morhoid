@@ -30,7 +30,7 @@ impl Processor {
         }
     }
 
-    pub fn execute(&self, x:Coords, y:Coords, genome_id: HashType, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
+    pub fn execute(&self, x:Coords, y:Coords, genome_id: GenomeId, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
         let mut actions:Vec<Box<dyn Action>> = Vec::new();
 
         let genome = perceptor.get_genome(genome_id);

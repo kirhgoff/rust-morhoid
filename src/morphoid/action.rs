@@ -1,7 +1,7 @@
 use morphoid::world::*;
 use morphoid::entity::Entity;
 use morphoid::cell_state::HealthType;
-use morphoid::genome::HashType;
+use morphoid::genome::GenomeId;
 use morphoid::cell_state::CellState;
 
 pub trait Action {
@@ -54,11 +54,11 @@ impl Action for UpdateHealthAction {
 pub struct ReproduceAction {
     pub x: Coords,
     pub y: Coords,
-    pub parent_genome_id: HashType
+    pub parent_genome_id: GenomeId
 }
 
 impl ReproduceAction {
-    pub fn new(x: Coords, y: Coords, parent_genome_id: HashType) -> ReproduceAction {
+    pub fn new(x: Coords, y: Coords, parent_genome_id: GenomeId) -> ReproduceAction {
         ReproduceAction { x, y, parent_genome_id }
     }
 }

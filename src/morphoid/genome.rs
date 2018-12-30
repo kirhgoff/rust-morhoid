@@ -5,34 +5,34 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use self::itertools::Itertools;
 
-pub type HashType = u64; // TODO: rename to GenomeId
-pub type GeneType = u32; // TODO: rename to Gene
+pub type GenomeId = u64;
+pub type Gene = u32;
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
 pub const GENE_LENGTH: usize = 64;
 
-pub const REPRODUCE: GeneType = 30;
-pub const PHOTOSYNTHESYS: GeneType = 31;
+pub const REPRODUCE: Gene = 30;
+pub const PHOTOSYNTHESYS: Gene = 31;
 
 pub struct Genome {
-    id: HashType,
-    pub genes: [GeneType; GENE_LENGTH]
+    id: GenomeId,
+    pub genes: [Gene; GENE_LENGTH]
 }
 
 impl Genome {
-    fn new_id() -> HashType {
-        HASH_COUNTER.fetch_add(1, Ordering::SeqCst) as HashType
+    fn new_id() -> GenomeId {
+        HASH_COUNTER.fetch_add(1, Ordering::SeqCst) as GenomeId
     }
 
     pub fn new_plant() -> Genome {
         Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 
-    pub fn hash(&self) -> HashType {
+    pub fn hash(&self) -> GenomeId {
         self.id
     }
 
-    pub fn mutate(&mut self, index: usize, new_value: GeneType) {
+    pub fn mutate(&mut self, index: usize, new_value: Gene) {
         self.genes[index] = new_value;
     }
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use morphoid::genome::*;
 
 pub struct GenomeStorage {
-    genomes: HashMap<HashType,Genome>
+    genomes: HashMap<GenomeId,Genome>
 }
 
 impl GenomeStorage {
@@ -10,17 +10,17 @@ impl GenomeStorage {
         GenomeStorage {genomes: HashMap::new()}
     }
 
-    pub fn put(&mut self, genome:Genome) -> HashType {
+    pub fn put(&mut self, genome:Genome) -> GenomeId {
         let hash = genome.hash();
         self.genomes.insert(hash, genome);
         hash
     }
 
-    pub fn get(&self, hash:HashType) -> &Genome {
+    pub fn get(&self, hash: GenomeId) -> &Genome {
         self.genomes.get(&hash).unwrap()
     }
 
-    pub fn remove(&mut self, hash:HashType) {
+    pub fn remove(&mut self, hash: GenomeId) {
         self.genomes.remove(&hash);
     }
 }

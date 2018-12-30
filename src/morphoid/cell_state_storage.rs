@@ -1,9 +1,9 @@
-use morphoid::genome::HashType;
+use morphoid::genome::GenomeId;
 use morphoid::cell_state::CellState;
 use std::collections::HashMap;
 
 pub struct CellStateStorage {
-    states: HashMap<HashType,CellState>
+    states: HashMap<GenomeId,CellState>
 }
 
 impl CellStateStorage {
@@ -11,19 +11,19 @@ impl CellStateStorage {
         CellStateStorage {states: HashMap::new()}
     }
 
-    pub fn put(&mut self, hash: HashType, cell_state: CellState) {
+    pub fn put(&mut self, hash: GenomeId, cell_state: CellState) {
         self.states.insert(hash, cell_state);
     }
 
-    pub fn get_mut(&mut self, hash:HashType) -> &mut CellState {
+    pub fn get_mut(&mut self, hash: GenomeId) -> &mut CellState {
         self.states.get_mut(&hash).unwrap()
     }
 
-    pub fn get(&self, hash:HashType) -> &CellState {
+    pub fn get(&self, hash: GenomeId) -> &CellState {
         self.states.get(&hash).unwrap()
     }
 
-    pub fn remove(&mut self, hash:HashType) {
+    pub fn remove(&mut self, hash: GenomeId) {
         self.states.remove(&hash);
     }
 }
@@ -37,7 +37,7 @@ mod tests {
     fn it_can_read_and_write_cell_states() {
         let mut storage = CellStateStorage::new();
         let cell_state = CellState { health: 10 };
-        let hash: HashType = 1;
+        let hash: GenomeId = 1;
         storage.put(hash, cell_state);
         {
             let state = storage.get_mut(hash);
