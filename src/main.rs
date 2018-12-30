@@ -8,12 +8,7 @@ use actix_web::{server, App, HttpRequest, Responder};
 use std::env;
 
 pub mod morphoid;
-use morphoid::world::World;
-use morphoid::world::Affector;
-use morphoid::genome::Genome;
-use morphoid::genome::REPRODUCE;
-use morphoid::processor::Processor;
-use morphoid::settings::Settings;
+use morphoid::types::*;
 
 use actix_web::fs;
 use std::thread;

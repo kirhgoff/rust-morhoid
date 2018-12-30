@@ -1,16 +1,9 @@
-use morphoid::cell_state::HealthType;
-
-pub struct Settings {
-
-    // TODO: add builder
-    pub steps_per_turn: usize,
-    pub reproduce_cost: HealthType,
-    pub reproduce_threshold: HealthType,
-    pub photosynthesys_adds: HealthType,
-    pub initial_cell_health: HealthType,
-}
+use morphoid::types::Settings;
+use morphoid::types::HealthType;
 
 impl Settings {
+    // TODO: add builder
+
     pub fn prod() -> Settings {
         Settings {
             steps_per_turn: 15,

@@ -4,20 +4,10 @@ use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use self::itertools::Itertools;
+use morphoid::types::*;
 
-pub type GenomeId = u64;
-pub type Gene = u32;
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
-pub const GENE_LENGTH: usize = 64;
-
-pub const REPRODUCE: Gene = 30;
-pub const PHOTOSYNTHESYS: Gene = 31;
-
-pub struct Genome {
-    id: GenomeId,
-    pub genes: [Gene; GENE_LENGTH]
-}
 
 impl Genome {
     fn new_id() -> GenomeId {

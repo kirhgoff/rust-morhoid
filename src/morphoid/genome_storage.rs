@@ -1,9 +1,5 @@
 use std::collections::HashMap;
-use morphoid::genome::*;
-
-pub struct GenomeStorage {
-    genomes: HashMap<GenomeId,Genome>
-}
+use morphoid::types::*;
 
 impl GenomeStorage {
     pub fn new() -> GenomeStorage {
