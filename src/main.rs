@@ -11,20 +11,20 @@ pub mod morphoid;
 use morphoid::world::World;
 use morphoid::world::Affector;
 use morphoid::genome::Genome;
+use morphoid::genome::REPRODUCE;
 use morphoid::processor::Processor;
-use morphoid::entity::Entity;
-use morphoid::cell_state::CellState;
+use morphoid::settings::Settings;
 
 use actix_web::fs;
 use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
-use morphoid::genome::REPRODUCE;
+
 use core::mem;
 
 lazy_static! {
-    static ref WORLD: Mutex<World> = Mutex::new(new_world());
     static ref PROCESSOR: Processor = Processor::new();
+    static ref WORLD: Mutex<World> = Mutex::new(build_new_world());
 }
 
 //  12345678
@@ -34,8 +34,8 @@ lazy_static! {
 //4   000
 //5    0
 
-fn new_world() -> World {
-    let mut world = World::new(20, 20);
+fn build_new_world() -> World {
+    let mut world = World::new(20, 20, Settings::prod());
     let coords_vec = vec![
         (2,1), (3,1), (5,1),(6,1),
         (1,2), (2,2), (3,2), (4,2), (5,2), (6,2), (7,2),
@@ -59,8 +59,8 @@ fn world_state(_req: &HttpRequest) -> impl Responder {
 
 fn reset_world(_req: &HttpRequest) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
-    mem::replace(&mut *world, new_world());
-    ""
+    mem::replace(&mut *world, build_new_world());
+    "OK"
 }
 
 fn initialize() {

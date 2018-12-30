@@ -9,19 +9,25 @@ use morphoid::genome::HashType;
 use morphoid::cell_state::HealthType;
 use morphoid::cell_state::CellState;
 use morphoid::genome::Genome;
+use morphoid::settings::Settings;
 
 pub type Coords = i32;
 
 pub struct World {
     width: Coords,
     height: Coords,
+    settings: Settings,
     entities: Vec<Entity>,
     genomes: GenomeStorage,
-    cell_states: CellStateStorage
+    cell_states: CellStateStorage,
 }
 
 impl World {
-    pub fn new(width:Coords, height:Coords) -> World {
+    pub fn prod(width:Coords, height:Coords) -> World {
+        World::new(width, height, Settings::prod())
+    }
+
+    pub fn new(width:Coords, height:Coords, settings: Settings) -> World {
         let entities = (0..width * height)
             .map(|_| Entity::Nothing)
             .collect();
@@ -29,6 +35,7 @@ impl World {
         World {
             width: width,
             height: height,
+            settings: settings,
             entities: entities,
             genomes: GenomeStorage::new(),
             cell_states: CellStateStorage::new()
@@ -46,7 +53,7 @@ impl World {
                 let idx = self.get_index(x, y);
 
                 let entity = self.entities[idx];
-                let mut action_batch = processor.process_entity(x, y, entity, self);
+                let mut action_batch = processor.process_entity(x, y, entity, self, &self.settings);
                 actions.append(&mut action_batch);
             }
         }
@@ -98,6 +105,7 @@ impl fmt::Display for World {
 pub trait Affector {
     fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome);
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
+
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
     fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome;
 }
@@ -105,7 +113,14 @@ pub trait Affector {
 
 impl Affector for World {
     fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome) {
-        self.set_entity(x, y, Entity::Cell(genome.hash()), Some(genome), Some(CellState {health:10}));
+        let initial_health = self.settings.initial_cell_health;
+        self.set_entity(
+            x,
+            y,
+            Entity::Cell(genome.hash()),
+            Some(genome),
+            Some(CellState {health: initial_health })
+        );
     }
 
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
@@ -206,13 +221,16 @@ mod tests {
 
     #[test]
     fn integration_test() {
-        let processor = Processor::with_settings(Settings {
+        let settings = Settings {
             steps_per_turn: 2,
             reproduce_cost: -8, // it will die after new born
             reproduce_threshold: 9, // it will reproduce on second step
-            photosynthesys_adds: 5 // it will have 10 + 5 health after first step
-        });
-        let mut world = World::new(2, 1);
+            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
+            initial_cell_health: 10, // it will have 10 originally
+        };
+
+        let processor = Processor::new();
+        let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
@@ -235,7 +253,7 @@ mod tests {
 
     #[test]
     fn get_index_test() {
-        let world = World::new(2, 1);
+        let world = World::prod(2, 1);
 
         assert_eq!(world.get_index(-2,0), 0);
         assert_eq!(world.get_index(-1,0), 1);

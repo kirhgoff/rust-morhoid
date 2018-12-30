@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn update_health_action_works() {
-        let mut world = World::new(1, 1);
+        let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn reproduce_action_works() {
-        let mut world = World::new(2, 1);
+        let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
