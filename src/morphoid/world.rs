@@ -1,26 +1,6 @@
 use std::fmt;
 
-use morphoid::entity::Entity;
-use morphoid::processor::Processor;
-use morphoid::action::*;
-use morphoid::genome_storage::GenomeStorage;
-use morphoid::cell_state_storage::CellStateStorage;
-use morphoid::genome::GenomeId;
-use morphoid::cell_state::HealthType;
-use morphoid::cell_state::CellState;
-use morphoid::genome::Genome;
-use morphoid::settings::Settings;
-
-pub type Coords = i32;
-
-pub struct World {
-    width: Coords,
-    height: Coords,
-    settings: Settings,
-    entities: Vec<Entity>,
-    genomes: GenomeStorage,
-    cell_states: CellStateStorage,
-}
+use morphoid::types::*;
 
 impl World {
     pub fn prod(width:Coords, height:Coords) -> World {
@@ -87,7 +67,6 @@ impl World {
     }
 }
 
-
 impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.entities.as_slice().chunks(self.width as usize) {
@@ -101,15 +80,6 @@ impl fmt::Display for World {
         Ok(())
     }
 }
-
-pub trait Affector {
-    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome);
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
-
-    fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome;
-}
-
 
 impl Affector for World {
     fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome) {
@@ -165,16 +135,6 @@ impl Affector for World {
     }
 }
 
-pub trait Perceptor {
-    // TODO do I need this method?
-    fn get_state_mut(&mut self, hash: GenomeId) -> &mut CellState;
-
-    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
-    fn get_state(&self, hash: GenomeId) -> &CellState;
-    fn get_genome(&self, hash: GenomeId) -> &Genome;
-    fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
-}
-
 impl Perceptor for World {
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity {
         &self.entities[self.get_index(x, y)]
@@ -215,9 +175,6 @@ impl Perceptor for World {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use morphoid::genome::Genome;
-    use morphoid::genome::REPRODUCE;
-    use morphoid::settings::Settings;
 
     #[test]
     fn integration_test() {

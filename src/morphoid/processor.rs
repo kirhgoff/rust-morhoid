@@ -1,10 +1,5 @@
-use morphoid::entity::Entity;
 use morphoid::action::*;
-use morphoid::world::*;
-use morphoid::genome::*;
-use morphoid::settings::Settings;
-
-pub struct Processor {}
+use morphoid::types::*;
 
 impl Processor {
     pub fn new() -> Processor {
@@ -64,7 +59,6 @@ impl Processor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use morphoid::cell_state::CellState;
 
     #[test]
     fn processor_can_do_kill_entity_action() {

@@ -1,20 +1,6 @@
-use morphoid::world::*;
-use morphoid::entity::Entity;
-use morphoid::cell_state::HealthType;
-use morphoid::genome::GenomeId;
-use morphoid::cell_state::CellState;
-
-pub trait Action {
-    // do something with stats or replace with dirt
-    fn execute(&self, affector: &mut Affector);
-}
+use morphoid::types::*;
 
 // ---------------------------------
-
-pub struct KillAction {
-    x: Coords,
-    y: Coords
-}
 
 impl KillAction {
     pub fn new(x: Coords, y: Coords) -> KillAction {
@@ -29,12 +15,6 @@ impl Action for KillAction {
 }
 
 // ---------------------------------
-
-pub struct UpdateHealthAction {
-    pub x: Coords,
-    pub y: Coords,
-    pub health_delta: HealthType
-}
 
 impl UpdateHealthAction {
     pub fn new(x: Coords, y: Coords, health_delta: HealthType) -> UpdateHealthAction {
@@ -77,9 +57,6 @@ impl Action for ReproduceAction {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use morphoid::genome::Genome;
-    use morphoid::cell_state::CellState;
-    use morphoid::processor::Processor;
 
     #[test]
     fn update_health_action_works() {

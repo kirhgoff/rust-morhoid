@@ -1,10 +1,7 @@
-use morphoid::genome::GenomeId;
-use morphoid::cell_state::CellState;
 use std::collections::HashMap;
-
-pub struct CellStateStorage {
-    states: HashMap<GenomeId,CellState>
-}
+use morphoid::types::CellStateStorage;
+use morphoid::types::GenomeId;
+use morphoid::types::CellState;
 
 impl CellStateStorage {
     pub fn new() -> CellStateStorage {
