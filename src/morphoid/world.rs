@@ -96,6 +96,7 @@ impl fmt::Display for World {
 }
 
 pub trait Affector {
+    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome);
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
     fn build_child_genome_for(&mut self, parent_genome_id: HashType) -> Genome;
@@ -103,6 +104,10 @@ pub trait Affector {
 
 
 impl Affector for World {
+    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome) {
+        self.set_entity(x, y, Entity::Cell(genome.hash()), Some(genome), Some(CellState {health:10}));
+    }
+
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
         //println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);

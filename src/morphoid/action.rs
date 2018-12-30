@@ -44,7 +44,7 @@ impl UpdateHealthAction {
 
 impl Action for UpdateHealthAction {
     fn execute(&self, affector: &mut Affector) {
-        println!("UpdateHealthAction.execute x={:?} y={:?} health_delta={:?}", self.x, self.y, self.health_delta);
+        //println!("UpdateHealthAction.execute x={:?} y={:?} health_delta={:?}", self.x, self.y, self.health_delta);
         affector.update_health(self.x, self.y, self.health_delta);
     }
 }
@@ -65,7 +65,7 @@ impl ReproduceAction {
 
 impl Action for ReproduceAction {
     fn execute(&self, affector: &mut Affector) {
-        println!("ReproduceAction.execute x={:?} y={:?}", self.x, self.y);
+        //println!("ReproduceAction.execute x={:?} y={:?}", self.x, self.y);
         let new_genome = affector.build_child_genome_for(self.parent_genome_id);
         affector.set_entity(self.x, self.y, Entity::Cell(new_genome.hash()), Some(new_genome), Some(CellState {health: 10}));
         // TODO: use settings (initial state health)

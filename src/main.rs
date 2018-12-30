@@ -2,6 +2,7 @@
 #[macro_use] extern crate lazy_static;
 
 extern crate actix_web;
+extern crate core;
 
 use actix_web::{server, App, HttpRequest, Responder};
 use std::env;
@@ -19,17 +20,34 @@ use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
 use morphoid::genome::REPRODUCE;
+use core::mem;
 
 lazy_static! {
     static ref WORLD: Mutex<World> = Mutex::new(new_world());
     static ref PROCESSOR: Processor = Processor::new();
 }
 
+//  12345678
+//1  00 00
+//2 0000000
+//3  00000
+//4   000
+//5    0
+
 fn new_world() -> World {
-    let mut world = World::new(10, 10);
-    let mut genome = Genome::new_plant();
-    genome.mutate(2, REPRODUCE);
-    world.set_entity(5, 5, Entity::Cell(genome.hash()), Some(genome), Some(CellState {health:10}));
+    let mut world = World::new(20, 20);
+    let coords_vec = vec![
+        (2,1), (3,1), (5,1),(6,1),
+        (1,2), (2,2), (3,2), (4,2), (5,2), (6,2), (7,2),
+        (2,3), (3,3), (4,3), (5,3), (6,3),
+        (3,4), (4,4), (5,4),
+        (4,5)
+    ];
+    for (x, y) in coords_vec.iter() {
+        let mut genome = Genome::new_plant();
+        genome.mutate(2, REPRODUCE);
+        world.new_plant(*x + 7, *y + 7, genome);
+    }
     world
 }
 
@@ -37,6 +55,12 @@ fn world_state(_req: &HttpRequest) -> impl Responder {
     let result = format!("{}", WORLD.lock().unwrap());
     println!("Got result");
     result
+}
+
+fn reset_world(_req: &HttpRequest) -> impl Responder {
+    let mut world = WORLD.lock().expect("Could not lock mutex");
+    mem::replace(&mut *world, new_world());
+    ""
 }
 
 fn initialize() {
@@ -61,6 +85,7 @@ fn main() {
     server::new(|| {
         App::new()
             .resource("/world", |r| r.f(world_state))
+            .resource("/reset", |r| r.f(reset_world))
             .handler(
                 "/",
                 fs::StaticFiles::new("static/")

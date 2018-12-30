@@ -1,10 +1,14 @@
 <html>
 <head>
     <script language="JavaScript">
-      const url = '/world';
+      function reset() {
+        fetch("/reset");
+
+        setTimeout(render, 50);
+      }
 
       function render() {
-        fetch(url)
+        fetch("/world")
           .then(function(response) {
             return response.text();
           })
@@ -16,13 +20,12 @@
             console.log(error)
           });
 
-        setTimeout(render, 1000);
+        setTimeout(render, 800);
       }
       document.addEventListener("DOMContentLoaded", function(event) {
-        setTimeout(render, 1000);
+        setTimeout(reset, 800);
       });
     </script>
-
 </head>
 <body>
     <div id="display">Tata</div>
