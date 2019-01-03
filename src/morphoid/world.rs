@@ -40,30 +40,20 @@ impl World {
         processor.apply(&actions, self);
     }
 
-    // TODO: simplify
     fn get_index(&self, x: Coords, y: Coords) -> usize {
-        let x2 = if x < 0 {
-            if x % self.width == 0 {
-                0
-            } else {
-                self.width + (x % self.width)
-            }
-        } else {
-            x % self.width
-        };
-
-        let y2 = if y < 0 {
-            if y % self.height == 0 {
-                0
-            } else {
-                self.height - (y % self.height) * (-1)
-            }
-
-        } else {
-            y % self.height
-        };
+        let x2 = World::normalize(x, self.width);
+        let y2 = World::normalize(y, self.height);
 
         (y2 * self.width + x2) as usize
+    }
+
+    fn normalize(coord:Coords, dimension: Coords) -> Coords {
+        let remainder = coord % dimension;
+        if coord < 0 {
+            if remainder == 0 { 0 } else { dimension + remainder }
+        } else {
+            remainder
+        }
     }
 }
 
@@ -177,7 +167,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn integration_test() {
+    fn get_index_test() {
+        let world = World::prod(2, 1);
+
+        assert_eq!(world.get_index(-2,0), 0);
+        assert_eq!(world.get_index(-1,0), 1);
+        assert_eq!(world.get_index(0,0), 0);
+        assert_eq!(world.get_index(1,0), 1);
+        assert_eq!(world.get_index(2,0), 0);
+
+        assert_eq!(world.get_index(0,0), 0);
+        assert_eq!(world.get_index(0,1), 0);
+        assert_eq!(world.get_index(0,2), 0);
+        assert_eq!(world.get_index(0,-2), 0);
+        assert_eq!(world.get_index(0,-1), 0);
+
+        assert_eq!(world.get_index(1,0), 1);
+        assert_eq!(world.get_index(1,1), 1);
+        assert_eq!(world.get_index(1,2), 1);
+        assert_eq!(world.get_index(1,-2), 1);
+        assert_eq!(world.get_index(1,-1), 1);
+
+    }
+
+    #[test]
+    fn integration_test_it_works() {
         let settings = Settings {
             steps_per_turn: 2,
             reproduce_cost: -8, // it will die after new born
@@ -208,27 +222,42 @@ mod tests {
         }
     }
 
-    #[test]
-    fn get_index_test() {
-        let world = World::prod(2, 1);
+    //#[test]
+    fn integration_test_genome_state() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: -0,
+            reproduce_threshold: 4, // it will reproduce on first step
+            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
+            initial_cell_health: 10, // it will have 10 originally
+        };
 
-        assert_eq!(world.get_index(-2,0), 0);
-        assert_eq!(world.get_index(-1,0), 1);
-        assert_eq!(world.get_index(0,0), 0);
-        assert_eq!(world.get_index(1,0), 1);
-        assert_eq!(world.get_index(2,0), 0);
+        let processor = Processor::new();
+        let mut world = World::new(2, 1, settings);
+        let mut plant = Genome::new_plant();
+        plant.mutate(1, REPRODUCE);
+        let hash = plant.hash();
 
-        assert_eq!(world.get_index(0,0), 0);
-        assert_eq!(world.get_index(0,1), 0);
-        assert_eq!(world.get_index(0,2), 0);
-        assert_eq!(world.get_index(0,-2), 0);
-        assert_eq!(world.get_index(0,-1), 0);
+        // TODO: add new_xxx methods
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
+        world.set_entity(1, 0, Entity::Nothing, None, None);
 
-        assert_eq!(world.get_index(1,0), 1);
-        assert_eq!(world.get_index(1,1), 1);
-        assert_eq!(world.get_index(1,2), 1);
-        assert_eq!(world.get_index(1,-2), 1);
-        assert_eq!(world.get_index(1,-1), 1);
+        world.tick(&processor);
+
+        // Checking nothing is still nothing
+        match world.get_entity(1, 0) {
+            Entity::Nothing => {},
+            _ => panic!("New cell was created! WTF?")
+        }
+
+        // Now it will reproduce
+        world.tick(&processor);
+
+        // Checking new cell has been born
+        match world.get_entity(1, 0) {
+            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
+            _ => panic!("New cell was not reproduced!")
+        }
 
     }
 }
