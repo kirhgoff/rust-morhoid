@@ -30,12 +30,12 @@ impl Processor {
         let mut actions:Vec<Box<dyn Action>> = Vec::new();
 
         let genome = perceptor.get_genome(genome_id);
-        let genome_state = self.get_genome_state(genome_id);
 
-        let start_index = 0;
+        let start_index = self.get_genome_index(genome_id);
         let steps_limit = settings.steps_per_turn();
         let end_index = (start_index + steps_limit) % GENE_LENGTH;
 
+        let mut index_delta = 0;
         for i in start_index..end_index {
             let gene = genome.genes[i];
             match gene {
@@ -43,21 +43,44 @@ impl Processor {
                     if perceptor.get_state(genome_id).health > settings.reproduce_threshold() {
                         actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
                         match perceptor.find_vacant_place_around(x, y) {
-                            Some((new_x, new_y)) => actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id))),
+                            Some((new_x, new_y)) => {
+                                //TODO extract to a method
+                                actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id)));
+                                index_delta += 1;
+                            },
                             _ => {}
                         }
                     }
                 }, // 30
-                PHOTOSYNTHESYS => actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds()))), // 31
+                PHOTOSYNTHESYS => {
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
+                    index_delta += 1;
+                }, // 31
                 _ => {}
             }
-
         }
+        self.update_genome_index(genome_id, index_delta);
         actions
     }
 
-    fn get_genome_state(&self, genome_id: GenomeId) -> Option<&GenomeState> {
-        self.genome_states.get(&genome_id)
+    fn get_genome_index(&self, genome_id: GenomeId) -> GeneIndex {
+        self.genome_states.get(&genome_id).unwrap().current_gene
+    }
+
+    fn update_genome_index(&mut self, genome_id: GenomeId, index_delta: GeneIndex)  {
+        let genome_state = self.genome_states
+            .entry(genome_id)
+            .or_insert(GenomeState { current_gene: 0 });
+
+        genome_state.current_gene = Processor::normalize(genome_state.current_gene, index_delta)
+    }
+
+    fn normalize(curent_index:GeneIndex, delta: GeneIndex) -> GeneIndex {
+        let mut new_current_index = curent_index + delta;
+        if new_current_index > GENE_LENGTH {
+            new_current_index = (new_current_index % GENE_LENGTH) as GeneIndex;
+        }
+        new_current_index
     }
 }
 
@@ -74,12 +97,9 @@ mod tests {
         let hash = plant.hash();
         world.new_plant(0, 0, plant);
 
-        world.tick(&processor);
+        world.tick(&mut processor);
 
-        match processor.get_genome_state(hash) {
-            Some(GenomeState {current_gene}) =>  {assert_eq!(*current_gene, 1)},
-            _ => panic!("GenomeState index should have updated!")
-        }
+        assert_eq!(processor.get_genome_index(hash), 1);
     }
 
 

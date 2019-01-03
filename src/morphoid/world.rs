@@ -200,7 +200,7 @@ mod tests {
             initial_cell_health: 10, // it will have 10 originally
         };
 
-        let processor = Processor::new();
+        let mut processor = Processor::new();
         let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
@@ -210,7 +210,7 @@ mod tests {
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
         world.set_entity(1, 0, Entity::Nothing, None, None);
 
-        world.tick(&processor);
+        world.tick(&mut processor);
 
         // Checking old entity state
         let cell_state = world.get_state(hash);
@@ -232,7 +232,7 @@ mod tests {
             initial_cell_health: 10, // it will have 10 originally
         };
 
-        let processor = Processor::new();
+        let mut processor = Processor::new();
         let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
@@ -242,7 +242,7 @@ mod tests {
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
         world.set_entity(1, 0, Entity::Nothing, None, None);
 
-        world.tick(&processor);
+        world.tick(&mut processor);
 
         // Checking nothing is still nothing
         match world.get_entity(1, 0) {
@@ -251,7 +251,7 @@ mod tests {
         }
 
         // Now it will reproduce
-        world.tick(&processor);
+        world.tick(&mut processor);
 
         // Checking new cell has been born
         match world.get_entity(1, 0) {
