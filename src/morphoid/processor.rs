@@ -1,12 +1,13 @@
 use morphoid::action::*;
 use morphoid::types::*;
+use std::collections::HashMap;
 
 impl Processor {
     pub fn new() -> Processor {
-        Processor { }
+        Processor { genome_states: HashMap::new() }
     }
 
-    pub fn process_entity(&self, x:Coords, y:Coords, entity: Entity, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
+    pub fn process_entity(&mut self, x:Coords, y:Coords, entity: Entity, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
@@ -25,10 +26,11 @@ impl Processor {
         }
     }
 
-    pub fn execute(&self, x:Coords, y:Coords, genome_id: GenomeId, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
+    pub fn execute(&mut self, x:Coords, y:Coords, genome_id: GenomeId, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
         let mut actions:Vec<Box<dyn Action>> = Vec::new();
 
         let genome = perceptor.get_genome(genome_id);
+        let genome_state = self.get_genome_state(genome_id);
 
         let start_index = 0;
         let steps_limit = settings.steps_per_turn();
@@ -53,12 +55,33 @@ impl Processor {
         }
         actions
     }
+
+    fn get_genome_state(&self, genome_id: GenomeId) -> Option<&GenomeState> {
+        self.genome_states.get(&genome_id)
+    }
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn processor_updates_genome_states() {
+        let mut processor = Processor::new();
+        let mut world = World::prod(1, 1);
+        let plant = Genome::new_plant();
+        let hash = plant.hash();
+        world.new_plant(0, 0, plant);
+
+        world.tick(&processor);
+
+        match processor.get_genome_state(hash) {
+            Some(GenomeState {current_gene}) =>  {assert_eq!(*current_gene, 1)},
+            _ => panic!("GenomeState index should have updated!")
+        }
+    }
+
 
     #[test]
     fn processor_can_do_kill_entity_action() {

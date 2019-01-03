@@ -4,8 +4,9 @@ pub type Coords = i32;
 pub type GenomeId = u64;
 pub type Gene = u32;
 pub type HealthType = i32;
+pub type GeneIndex = usize; // TODO: rename in other places
 
-pub const GENE_LENGTH: usize = 64;
+pub const GENE_LENGTH: GeneIndex = 64;
 
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
@@ -25,23 +26,38 @@ pub enum Entity {
     Corpse(i64)
 }
 
+pub struct CellState {
+    pub health: HealthType
+}
+
+pub struct CellStateStorage {
+    pub states: HashMap<GenomeId,CellState>
+}
+
 pub struct Genome {
     pub id: GenomeId,
     pub genes: [Gene; GENE_LENGTH]
 }
 
-pub struct CellState {
-    pub health: HealthType
+pub struct GenomeState {
+    pub current_gene: GeneIndex,
 }
 
-pub struct Processor {}
+// TODO: move to processor
+pub struct GenomeStorage {
+    pub genomes: HashMap<GenomeId, Genome>
+}
+
+pub struct Processor {
+    pub genome_states: HashMap<GenomeId, GenomeState>
+}
 
 pub struct World {
     pub width: Coords,
     pub height: Coords,
     pub settings: Settings,
     pub entities: Vec<Entity>,
-    pub genomes: GenomeStorage,
+    pub genomes: GenomeStorage, // TODO: move to processor
     pub cell_states: CellStateStorage,
 }
 
@@ -63,14 +79,6 @@ pub trait Perceptor {
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
 }
 
-pub struct GenomeStorage {
-    pub genomes: HashMap<GenomeId,Genome>
-}
-
-pub struct CellStateStorage {
-    pub states: HashMap<GenomeId,CellState>
-}
-
 pub trait Action {
     // do something with stats or replace with dirt
     fn execute(&self, affector: &mut Affector);
@@ -86,5 +94,3 @@ pub struct UpdateHealthAction {
     pub y: Coords,
     pub health_delta: HealthType
 }
-
-

@@ -23,7 +23,7 @@ impl World {
     }
 
     // TODO: synchronize?
-    pub fn tick(&mut self, processor: &Processor) {
+    pub fn tick(&mut self, processor: &mut Processor) {
         // TODO move to processor?
         // TODO use linked list for performance
         let mut actions: Vec<Box<dyn Action>> = Vec::new();
@@ -222,7 +222,7 @@ mod tests {
         }
     }
 
-    //#[test]
+    //TODO #[test]
     fn integration_test_genome_state() {
         let settings = Settings {
             steps_per_turn: 1,
