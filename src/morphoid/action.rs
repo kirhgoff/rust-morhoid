@@ -31,12 +31,6 @@ impl Action for UpdateHealthAction {
 
 // --------------------------------
 
-pub struct ReproduceAction {
-    pub x: Coords,
-    pub y: Coords,
-    pub parent_genome_id: GenomeId
-}
-
 impl ReproduceAction {
     pub fn new(x: Coords, y: Coords, parent_genome_id: GenomeId) -> ReproduceAction {
         ReproduceAction { x, y, parent_genome_id }
@@ -52,6 +46,22 @@ impl Action for ReproduceAction {
     }
 }
 
+// --------------------------------
+
+//impl AttackAction {
+//    pub fn new(victim_x: Coords, victim_y: Coords, attacker_x: Coords, attacker_y: Coords, damage: HealthType) -> AttackAction {
+//        AttackAction { victim_x, victim_y, attacker_x, attacker_y, damage }
+//    }
+//}
+//
+//impl Action for AttackAction {
+//    fn execute(&self, affector: &mut Affector) {
+//
+//        //println!("AttackAction.execute x={:?} y={:?}", self.x, self.y);
+//        affector.set_entity(self.x, self.y, Entity::Cell(new_genome.hash()), Some(new_genome), Some(CellState {health: 10}));
+//        // TODO: use settings (initial state health)
+//    }
+//}
 // --------------------------------
 
 #[cfg(test)]

@@ -94,3 +94,18 @@ pub struct UpdateHealthAction {
     pub y: Coords,
     pub health_delta: HealthType
 }
+
+pub struct ReproduceAction {
+    pub x: Coords,
+    pub y: Coords,
+    pub parent_genome_id: GenomeId
+}
+
+pub struct AttackAction {
+    pub victim_x: Coords,
+    pub victim_y: Coords,
+    pub attacker_x: Coords,
+    pub attacker_y: Coords,
+    pub damage: HealthType
+}
+
