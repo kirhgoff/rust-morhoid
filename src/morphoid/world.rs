@@ -72,7 +72,17 @@ impl fmt::Display for World {
 }
 
 impl Affector for World {
-    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome) {
+    fn set_nothing(&mut self, x:Coords, y:Coords) {
+        self.set_entity(
+            x,
+            y,
+            Entity::Nothing,
+            None,
+            None
+        );
+    }
+
+    fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome) {
         let initial_health = self.settings.initial_cell_health;
         self.set_entity(
             x,
@@ -160,6 +170,25 @@ impl Perceptor for World {
             _ => None
         }
     }
+
+    // TODO: extract method
+    fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
+        let results: Vec<(Coords, Coords)> = iproduct!(x-1..x+1, y-1..y+1)
+            .into_iter()
+            .filter(|(i,j)| {
+                match self.get_entity(*i, *j) {
+                    Entity::Cell(_) => true,
+                    _ => false
+                }
+            })
+            .collect();
+
+        // TODO: why, why?
+        match results.first() {
+            Some(x) => Some(*x),
+            _ => None
+        }
+    }
 }
 
 #[cfg(test)]
@@ -190,14 +219,16 @@ mod tests {
 
     }
 
+    // TODO: duplicate tests in actions
     #[test]
-    fn integration_test_it_works() {
+    fn integration_test_it_reproduces() {
         let settings = Settings {
             steps_per_turn: 2,
             reproduce_cost: -8, // it will die after new born
             reproduce_threshold: 9, // it will reproduce on second step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
             initial_cell_health: 10, // it will have 10 originally
+            attack_damage: 4,
         };
 
         let mut processor = Processor::new();
@@ -206,9 +237,8 @@ mod tests {
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
 
-        // TODO: add new_xxx methods
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
-        world.set_entity(1, 0, Entity::Nothing, None, None);
+        world.set_cell(0, 0, plant);
+        world.set_nothing(1, 0);
 
         world.tick(&mut processor);
 
@@ -223,6 +253,40 @@ mod tests {
     }
 
     #[test]
+    fn integration_test_it_kills() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: -8,
+            reproduce_threshold: 9,
+            photosynthesys_adds: 0,
+            initial_cell_health: 10,
+            attack_damage: 9,
+        };
+
+        let mut processor = Processor::new();
+        let mut world = World::new(2, 1, settings);
+        world.set_cell(0, 0, Genome::new_plant());
+        world.set_cell(0, 0, Genome::new_predator());
+
+        world.tick(&mut processor);
+
+        // It is still here
+        match world.get_entity(0, 0) {
+            Entity::Cell(_) => {},
+            _ => panic!("Cell should stiill be alive!")
+        }
+
+        world.tick(&mut processor);
+
+        // It is dead
+        match world.get_entity(0, 0) {
+            Entity::Corpse(_) => {},
+            _ => panic!("Now it should be dead!"),
+        }
+    }
+
+
+    #[test]
     fn integration_test_genome_state() {
         let settings = Settings {
             steps_per_turn: 1,
@@ -230,6 +294,7 @@ mod tests {
             reproduce_threshold: 4, // it will reproduce on first step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
             initial_cell_health: 10, // it will have 10 originally
+            attack_damage: 4,
         };
 
         let mut processor = Processor::new();

@@ -18,6 +18,7 @@ pub struct Settings {
     pub reproduce_threshold: HealthType,
     pub photosynthesys_adds: HealthType,
     pub initial_cell_health: HealthType,
+    pub attack_damage: HealthType,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -63,7 +64,8 @@ pub struct World {
 }
 
 pub trait Affector {
-    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome);
+    fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome);
+    fn set_nothing(&mut self, x:Coords, y:Coords);
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
@@ -78,6 +80,7 @@ pub trait Perceptor {
     fn get_state(&self, hash: GenomeId) -> &CellState;
     fn get_genome(&self, hash: GenomeId) -> &Genome;
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
+    fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
 }
 
 pub trait Action {

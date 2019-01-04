@@ -38,7 +38,19 @@ impl Processor {
         for i in start_index..end_index {
             let gene = genome.genes[i];
             match gene {
+                ATTACK => {
+                    match perceptor.find_target_around(x, y) {
+                        Some((victim_x, victim_y)) => {
+                            actions.push(Box::new(
+                                AttackAction::new(victim_x, victim_y, x, y, settings.attack_damage()))
+                            );
+                            index_delta += 1;
+                        },
+                        _ => {}
+                    }
+                },
                 REPRODUCE => {
+                    // TODO: move all to action?
                     if perceptor.get_state(genome_id).health > settings.reproduce_threshold() {
                         actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
                         match perceptor.find_vacant_place_around(x, y) {
@@ -100,13 +112,14 @@ mod tests {
             reproduce_threshold: 4, // it will reproduce on first step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
             initial_cell_health: 10, // it will have 10 originally
+            attack_damage: 4,
         };
 
         let mut processor = Processor::new();
         let mut world = World::new(1, 1, settings);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.new_plant(0, 0, plant);
+        world.set_cell(0, 0, plant);
 
         world.tick(&mut processor);
 

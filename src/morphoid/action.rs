@@ -107,17 +107,19 @@ mod tests {
 
     #[test]
     fn attack_action_works() {
+        // TODO: this is not needed
         let settings = Settings {
             steps_per_turn: 2,
             reproduce_cost: -8, // it will die after new born
             reproduce_threshold: 9, // it will reproduce on second step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
             initial_cell_health: 10, // it will have 10 originally
+            attack_damage: 4,
         };
 
         let mut world = World::new(2, 1, settings);
-        world.new_plant(0, 0, Genome::new_plant());
-        world.new_plant(1, 0, Genome::new_predator());
+        world.set_cell(0, 0, Genome::new_plant());
+        world.set_cell(1, 0, Genome::new_predator());
 
         Processor::new().apply(
             &vec![Box::new(AttackAction::new(0, 0, 1, 1, 100))],

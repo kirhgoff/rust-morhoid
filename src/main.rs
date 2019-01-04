@@ -41,7 +41,7 @@ fn build_new_world() -> World {
     for (x, y) in coords_vec.iter() {
         let mut genome = Genome::new_plant();
         genome.mutate(2, REPRODUCE);
-        world.new_plant(*x + 7, *y + 7, genome);
+        world.set_cell(*x + 7, *y + 7, genome);
     }
     world
 }
