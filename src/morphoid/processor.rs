@@ -60,23 +60,22 @@ impl Processor {
             }
         }
         self.update_genome_index(genome_id, index_delta);
-        println!(">>>>>>>>> New index: {:?}", self.get_genome_index(genome_id));
+        //println!(">>>>>>>>> New index: {:?}", self.get_genome_index(genome_id));
         actions
     }
 
-    fn get_genome_index(&mut self, genome_id: GenomeId) -> GeneIndex {
-        let genome_state = self.genome_states
+    fn get_genome_state(&mut self, genome_id: GenomeId) -> &mut GenomeState {
+        self.genome_states
             .entry(genome_id)
-            .or_insert(GenomeState { current_gene: 0 });
+            .or_insert(GenomeState { current_gene: 0 })
+    }
 
-        genome_state.current_gene
+    fn get_genome_index(&mut self, genome_id: GenomeId) -> GeneIndex {
+        self.get_genome_state(genome_id).current_gene
     }
 
     fn update_genome_index(&mut self, genome_id: GenomeId, index_delta: GeneIndex)  {
-        let genome_state = self.genome_states
-            .entry(genome_id)
-            .or_insert(GenomeState { current_gene: 0 });
-
+        let genome_state = self.get_genome_state(genome_id);
         genome_state.current_gene = Processor::normalize(genome_state.current_gene, index_delta)
     }
 
