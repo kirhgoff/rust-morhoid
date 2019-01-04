@@ -18,7 +18,7 @@ use std::sync::Mutex;
 use core::mem;
 
 lazy_static! {
-    static ref PROCESSOR: Processor = Processor::new();
+    static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
     static ref WORLD: Mutex<World> = Mutex::new(build_new_world());
 }
 
@@ -62,7 +62,7 @@ fn initialize() {
     thread::spawn(|| {
         loop {
             thread::sleep(Duration::from_millis(500));
-            WORLD.lock().unwrap().tick(&PROCESSOR);
+            WORLD.lock().unwrap().tick(&mut PROCESSOR.lock().unwrap());
         }
     });
 }

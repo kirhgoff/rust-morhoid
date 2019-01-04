@@ -18,6 +18,7 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 
+    // TODO: rename to genome_id
     pub fn hash(&self) -> GenomeId {
         self.id
     }

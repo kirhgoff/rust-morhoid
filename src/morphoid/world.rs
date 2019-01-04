@@ -23,7 +23,7 @@ impl World {
     }
 
     // TODO: synchronize?
-    pub fn tick(&mut self, processor: &Processor) {
+    pub fn tick(&mut self, processor: &mut Processor) {
         // TODO move to processor?
         // TODO use linked list for performance
         let mut actions: Vec<Box<dyn Action>> = Vec::new();
@@ -40,30 +40,20 @@ impl World {
         processor.apply(&actions, self);
     }
 
-    // TODO: simplify
     fn get_index(&self, x: Coords, y: Coords) -> usize {
-        let x2 = if x < 0 {
-            if x % self.width == 0 {
-                0
-            } else {
-                self.width + (x % self.width)
-            }
-        } else {
-            x % self.width
-        };
-
-        let y2 = if y < 0 {
-            if y % self.height == 0 {
-                0
-            } else {
-                self.height - (y % self.height) * (-1)
-            }
-
-        } else {
-            y % self.height
-        };
+        let x2 = World::normalize(x, self.width);
+        let y2 = World::normalize(y, self.height);
 
         (y2 * self.width + x2) as usize
+    }
+
+    fn normalize(coord:Coords, dimension: Coords) -> Coords {
+        let remainder = coord % dimension;
+        if coord < 0 {
+            if remainder == 0 { 0 } else { dimension + remainder }
+        } else {
+            remainder
+        }
     }
 }
 
@@ -177,38 +167,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn integration_test() {
-        let settings = Settings {
-            steps_per_turn: 2,
-            reproduce_cost: -8, // it will die after new born
-            reproduce_threshold: 9, // it will reproduce on second step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-        };
-
-        let processor = Processor::new();
-        let mut world = World::new(2, 1, settings);
-        let mut plant = Genome::new_plant();
-        plant.mutate(1, REPRODUCE);
-        let hash = plant.hash();
-
-        // TODO: add new_xxx methods
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
-        world.set_entity(1, 0, Entity::Nothing, None, None);
-
-        world.tick(&processor);
-
-        // Checking old entity state
-        let cell_state = world.get_state(hash);
-        assert_eq!(cell_state.health, 10 + 5 - 8); // TODO: use settings to amend the values
-
-        match world.get_entity(1, 0) {
-            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
-            _ => panic!("New cell was not reproduced!")
-        }
-    }
-
-    #[test]
     fn get_index_test() {
         let world = World::prod(2, 1);
 
@@ -229,6 +187,77 @@ mod tests {
         assert_eq!(world.get_index(1,2), 1);
         assert_eq!(world.get_index(1,-2), 1);
         assert_eq!(world.get_index(1,-1), 1);
+
+    }
+
+    #[test]
+    fn integration_test_it_works() {
+        let settings = Settings {
+            steps_per_turn: 2,
+            reproduce_cost: -8, // it will die after new born
+            reproduce_threshold: 9, // it will reproduce on second step
+            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
+            initial_cell_health: 10, // it will have 10 originally
+        };
+
+        let mut processor = Processor::new();
+        let mut world = World::new(2, 1, settings);
+        let mut plant = Genome::new_plant();
+        plant.mutate(1, REPRODUCE);
+        let hash = plant.hash();
+
+        // TODO: add new_xxx methods
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
+        world.set_entity(1, 0, Entity::Nothing, None, None);
+
+        world.tick(&mut processor);
+
+        // Checking old entity state
+        let cell_state = world.get_state(hash);
+        assert_eq!(cell_state.health, 10 + 5 - 8); // TODO: use settings to amend the values
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
+            _ => panic!("New cell was not reproduced!")
+        }
+    }
+
+    #[test]
+    fn integration_test_genome_state() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: -0,
+            reproduce_threshold: 4, // it will reproduce on first step
+            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
+            initial_cell_health: 10, // it will have 10 originally
+        };
+
+        let mut processor = Processor::new();
+        let mut world = World::new(2, 1, settings);
+        let mut plant = Genome::new_plant();
+        plant.mutate(1, REPRODUCE);
+        let hash = plant.hash();
+
+        // TODO: add new_xxx methods
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
+        world.set_entity(1, 0, Entity::Nothing, None, None);
+
+        world.tick(&mut processor);
+
+        // Checking nothing is still nothing
+        match world.get_entity(1, 0) {
+            Entity::Nothing => {},
+            _ => panic!("New cell was created! WTF?")
+        }
+
+        // Now it will reproduce
+        world.tick(&mut processor);
+
+        // Checking new cell has been born
+        match world.get_entity(1, 0) {
+            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
+            _ => panic!("New cell was not reproduced!")
+        }
 
     }
 }
