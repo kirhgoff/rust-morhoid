@@ -60,11 +60,16 @@ impl Processor {
             }
         }
         self.update_genome_index(genome_id, index_delta);
+        println!(">>>>>>>>> New index: {:?}", self.get_genome_index(genome_id));
         actions
     }
 
-    fn get_genome_index(&self, genome_id: GenomeId) -> GeneIndex {
-        self.genome_states.get(&genome_id).unwrap().current_gene
+    fn get_genome_index(&mut self, genome_id: GenomeId) -> GeneIndex {
+        let genome_state = self.genome_states
+            .entry(genome_id)
+            .or_insert(GenomeState { current_gene: 0 });
+
+        genome_state.current_gene
     }
 
     fn update_genome_index(&mut self, genome_id: GenomeId, index_delta: GeneIndex)  {
@@ -91,8 +96,16 @@ mod tests {
 
     #[test]
     fn processor_updates_genome_states() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: -0,
+            reproduce_threshold: 4, // it will reproduce on first step
+            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
+            initial_cell_health: 10, // it will have 10 originally
+        };
+
         let mut processor = Processor::new();
-        let mut world = World::prod(1, 1);
+        let mut world = World::new(1, 1, settings);
         let plant = Genome::new_plant();
         let hash = plant.hash();
         world.new_plant(0, 0, plant);
