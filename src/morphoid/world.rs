@@ -222,7 +222,7 @@ mod tests {
         }
     }
 
-    //TODO #[test]
+    #[test]
     fn integration_test_genome_state() {
         let settings = Settings {
             steps_per_turn: 1,
