@@ -8,6 +8,7 @@ pub type GeneIndex = usize; // TODO: rename in other places
 
 pub const GENE_LENGTH: GeneIndex = 64;
 
+pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
 

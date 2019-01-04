@@ -18,6 +18,10 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 
+    pub fn new_predator() -> Genome {
+        Genome {id: Genome::new_id(), genes: [ATTACK; GENE_LENGTH]}
+    }
+
     // TODO: rename to genome_id
     pub fn hash(&self) -> GenomeId {
         self.id

@@ -48,20 +48,19 @@ impl Action for ReproduceAction {
 
 // --------------------------------
 
-//impl AttackAction {
-//    pub fn new(victim_x: Coords, victim_y: Coords, attacker_x: Coords, attacker_y: Coords, damage: HealthType) -> AttackAction {
-//        AttackAction { victim_x, victim_y, attacker_x, attacker_y, damage }
-//    }
-//}
-//
-//impl Action for AttackAction {
-//    fn execute(&self, affector: &mut Affector) {
-//
-//        //println!("AttackAction.execute x={:?} y={:?}", self.x, self.y);
-//        affector.set_entity(self.x, self.y, Entity::Cell(new_genome.hash()), Some(new_genome), Some(CellState {health: 10}));
-//        // TODO: use settings (initial state health)
-//    }
-//}
+impl AttackAction {
+    pub fn new(victim_x: Coords, victim_y: Coords, attacker_x: Coords, attacker_y: Coords, damage: HealthType) -> AttackAction {
+        AttackAction { victim_x, victim_y, attacker_x, attacker_y, damage }
+    }
+}
+
+impl Action for AttackAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.update_health(self.victim_x, self.victim_y, -1 * self.damage);
+        affector.update_health(self.attacker_x, self.attacker_y, self.damage);
+        // TODO: some punishment for not having enough energy?
+    }
+}
 // --------------------------------
 
 #[cfg(test)]
@@ -103,6 +102,38 @@ mod tests {
                 assert_eq!(world.get_state(*new_hash).health, 10);
             },
             _ => panic!("Cant find reproduced entity")
+        }
+    }
+
+    #[test]
+    fn attack_action_works() {
+        let settings = Settings {
+            steps_per_turn: 2,
+            reproduce_cost: -8, // it will die after new born
+            reproduce_threshold: 9, // it will reproduce on second step
+            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
+            initial_cell_health: 10, // it will have 10 originally
+        };
+
+        let mut world = World::new(2, 1, settings);
+        world.new_plant(0, 0, Genome::new_plant());
+        world.new_plant(1, 0, Genome::new_predator());
+
+        Processor::new().apply(
+            &vec![Box::new(AttackAction::new(0, 0, 1, 1, 100))],
+            &mut world
+        );
+
+        match world.get_entity(0, 0) {
+            Entity::Corpse(_) => {},
+            _ => panic!("Cell survived after 100 of damage!"),
+        }
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(genome_id) => {
+                assert_eq!(world.get_state(*genome_id).health, 110);
+            },
+            _ => panic!("Predator cell should have high health!"),
         }
     }
 
