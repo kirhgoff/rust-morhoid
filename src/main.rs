@@ -43,6 +43,7 @@ fn build_new_world() -> World {
         genome.mutate(2, REPRODUCE);
         world.set_cell(*x + 7, *y + 7, genome);
     }
+    world.set_cell(4 + 7, 3 + 7, Genome::new_predator());
     world
 }
 

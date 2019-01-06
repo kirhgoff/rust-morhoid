@@ -61,7 +61,11 @@ impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.entities.as_slice().chunks(self.width as usize) {
             for &entity in line {
-                let symbol = if entity == Entity::Nothing { '◻' } else { '◼' };
+                let symbol = match entity {
+                    Entity::Nothing => '◻',
+                    Entity::Cell(_) => '◼',
+                    Entity::Corpse(_) => 'x',
+                };
                 write!(f, "{}", symbol)?;
             }
             write!(f, "\n")?;
