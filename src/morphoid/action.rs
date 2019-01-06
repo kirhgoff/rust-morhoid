@@ -56,6 +56,7 @@ impl AttackAction {
 
 impl Action for AttackAction {
     fn execute(&self, affector: &mut Affector) {
+        //println!("AttackAction.execute x={:?} y={:?} health_delta={:?}", self.victim_x, self.victim_y, self.damage);
         affector.update_health(self.victim_x, self.victim_y, -1 * self.damage);
         affector.update_health(self.attacker_x, self.attacker_y, self.damage);
         // TODO: some punishment for not having enough energy?
@@ -118,8 +119,9 @@ mod tests {
         };
 
         let mut world = World::new(2, 1, settings);
-        world.set_cell(0, 0, Genome::new_plant());
+
         world.set_cell(1, 0, Genome::new_predator());
+        world.set_cell(0, 0, Genome::new_plant());
 
         Processor::new().apply(
             &vec![Box::new(AttackAction::new(0, 0, 1, 1, 100))],

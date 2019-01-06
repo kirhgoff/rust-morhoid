@@ -120,6 +120,8 @@ impl Affector for World {
                     // TODO: probably need to make it more tolerant
                     let mut state = self.cell_states.get_mut(hash);
                     state.health += health_delta;
+                    //println!("World.update_health x={:?} y={:?} hash={:?} delta={:?} new_health={:?}",
+                    //    x, y, hash, health_delta, state.health);
                 }
                 if self.cell_states.get(hash).health < 0 {
                     self.set_entity(x, y, Entity::Corpse(10), None, None);
@@ -177,7 +179,7 @@ impl Perceptor for World {
             .into_iter()
             .filter(|(i,j)| {
                 match self.get_entity(*i, *j) {
-                    Entity::Cell(_) => true,
+                    Entity::Cell(_) => (*i != x && *j != y),
                     _ => false
                 }
             })
@@ -266,7 +268,7 @@ mod tests {
         let mut processor = Processor::new();
         let mut world = World::new(2, 1, settings);
         world.set_cell(0, 0, Genome::new_plant());
-        world.set_cell(0, 0, Genome::new_predator());
+        world.set_cell(1, 0, Genome::new_predator());
 
         world.tick(&mut processor);
 
