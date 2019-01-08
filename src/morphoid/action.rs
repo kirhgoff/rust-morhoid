@@ -56,7 +56,7 @@ impl AttackAction {
 
 impl Action for AttackAction {
     fn execute(&self, affector: &mut Affector) {
-        //println!("AttackAction.execute x={:?} y={:?} health_delta={:?}", self.victim_x, self.victim_y, self.damage);
+        println!("AttackAction.execute x={:?} y={:?} health_delta={:?}", self.victim_x, self.victim_y, self.damage);
         affector.update_health(self.victim_x, self.victim_y, -1 * self.damage);
         affector.update_health(self.attacker_x, self.attacker_y, self.damage);
         // TODO: some punishment for not having enough energy?

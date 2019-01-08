@@ -35,8 +35,10 @@ impl World {
         for y in 0..self.height {
             for x in 0..self.width {
                 let idx = self.get_index(x, y);
-
                 let entity = self.entities[idx];
+
+                println!("DEBUG: World.tick x: {:?} y: {:?} idx: {:?}", x, y, idx);
+
                 let mut action_batch = processor.process_entity(x, y, entity, self, &self.settings);
                 actions.append(&mut action_batch);
             }
@@ -46,7 +48,7 @@ impl World {
         // whatever you want to do
         let end_time = PreciseTime::now();
 
-        println!("LOG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
+        println!("DEBUG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
     }
 
     fn get_index(&self, x: Coords, y: Coords) -> usize {
@@ -211,7 +213,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_index_test() {
+    fn test_get_index_test() {
         let world = World::prod(2, 1);
 
         assert_eq!(world.get_index(-2,0), 0);
@@ -231,6 +233,29 @@ mod tests {
         assert_eq!(world.get_index(1,2), 1);
         assert_eq!(world.get_index(1,-2), 1);
         assert_eq!(world.get_index(1,-1), 1);
+
+    }
+
+    #[test]
+    fn test_find_target_around() {
+        let mut processor = Processor::new();
+        let mut world = World::new(3, 3, Settings::prod());
+        for x in 0..3 {
+            for y in 0..3 {
+                world.set_cell(x, y, Genome::new_predator());
+            }
+        }
+
+        assert_eq!(world.find_target_around(1, 1), Some((0,0)));
+
+        world.set_nothing(0, 0);
+        assert_eq!(world.find_target_around(1, 1), Some((1,0)));
+
+        world.set_nothing(1, 0);
+        assert_eq!(world.find_target_around(1, 1), Some((2,0)));
+
+        world.set_nothing(2, 0);
+        assert_eq!(world.find_target_around(1, 1), Some((0,1)));
 
     }
 
@@ -282,17 +307,21 @@ mod tests {
         let mut world = World::new(3, 3, settings);
 
         // set the scene, killer in the middle
-        world.set_cell(1, 1, Genome::new_predator());
-        for x in 0..2 {
-            for y in 0..2 {
-                if x != y {
+        for x in 0..3 {
+            for y in 0..3 {
+                if x != 1 || y != 1 {
+                    println!("Setting plant to x: {:?}, y: {:?}", x, y);
                     world.set_cell(x, y, Genome::new_plant());
                 }
             }
         }
+        world.set_cell(1, 1, Genome::new_predator());
 
         // One shot kills
-        (1..9).map(|_| world.tick(&mut processor));
+        for _ in 0..9 {
+            println!("Kill!");
+            world.tick(&mut processor)
+        }
 
         // Should all be dead
         for x in 0..2 {

@@ -10,10 +10,13 @@ impl Processor {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
+                println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
-            _ => {},
+            otherwise => {
+                println!("DEBUG: Processor.process_entity [other] {:?}", otherwise);
+            },
         };
         all_actions
     }
@@ -33,7 +36,7 @@ impl Processor {
 
         let mut index = start_index;
         for _ in 0..settings.steps_per_turn() {
-            println!("DEBUG: Processor.execute gene: {:?} index={:?}", genome_id, index);
+//            println!("DEBUG: Processor.execute gene: {:?} index={:?}", genome_id, index);
             let gene = genome.genes[index];
             match gene {
                 ATTACK => {
@@ -74,8 +77,8 @@ impl Processor {
         }
         self.update_genome_index(genome_id, index);
 
-        println!("DEBUG: Processor.execute gene: {:?} start: {:?} steps: {:?} end: {:?}",
-                 genome_id, start_index, settings.steps_per_turn(), index);
+//        println!("DEBUG: Processor.execute gene: {:?} start: {:?} steps: {:?} end: {:?}",
+//                 genome_id, start_index, settings.steps_per_turn(), index);
 
         actions
     }
@@ -95,8 +98,8 @@ impl Processor {
         let old_index = genome_state.current_gene;
         genome_state.current_gene = new_index;
 
-        println!("DEBUG: Processor.update_genome_index gene: {:?} old: {:?} new: {:?}",
-            genome_id, old_index, new_index);
+//        println!("DEBUG: Processor.update_genome_index gene: {:?} old: {:?} new: {:?}",
+//            genome_id, old_index, new_index);
     }
 }
 
