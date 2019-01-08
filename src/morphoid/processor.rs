@@ -34,8 +34,12 @@ impl Processor {
         let steps_limit = settings.steps_per_turn();
         let end_index = (start_index + steps_limit) % GENE_LENGTH;
 
+        println!("LOG: Processor.execute start: {:?} steps: {:?} end: {:?}",
+            start_index, steps_limit, end_index);
+
         let mut index_delta = 0;
         for i in start_index..end_index {
+            println!("DEBUG Processor.execute gene index={:?}", i);
             let gene = genome.genes[i];
             match gene {
                 ATTACK => {
@@ -67,7 +71,9 @@ impl Processor {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
                     index_delta += 1;
                 }, // 31
-                _ => {}
+                _ => {
+                    println!("Unknown gene");
+                }
             }
         }
         self.update_genome_index(genome_id, index_delta);
@@ -87,7 +93,12 @@ impl Processor {
 
     fn update_genome_index(&mut self, genome_id: GenomeId, index_delta: GeneIndex)  {
         let genome_state = self.get_genome_state(genome_id);
-        genome_state.current_gene = Processor::normalize(genome_state.current_gene, index_delta)
+        let current_index = genome_state.current_gene;
+        let new_current_index = Processor::normalize(current_index, index_delta);
+        genome_state.current_gene = new_current_index;
+
+        println!("DEBUG Processor.update_genome_index current: {:?} delta: {:?} new_current: {:?}",
+            current_index, index_delta, new_current_index);
     }
 
     fn normalize(curent_index:GeneIndex, delta: GeneIndex) -> GeneIndex {
@@ -105,9 +116,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn processor_updates_genome_states() {
+    fn integration_updates_genome_states() {
         let settings = Settings {
-            steps_per_turn: 1,
+            steps_per_turn: 5,
             reproduce_cost: -0,
             reproduce_threshold: 4, // it will reproduce on first step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
@@ -116,19 +127,25 @@ mod tests {
         };
 
         let mut processor = Processor::new();
-        let mut world = World::new(1, 1, settings);
+        let mut world = World::new(2, 1, settings);
+
         let plant = Genome::new_plant();
         let hash = plant.hash();
         world.set_cell(0, 0, plant);
 
-        world.tick(&mut processor);
+        let plant2 = Genome::new_plant();
+        let hash2 = plant2.hash();
+        world.set_cell(1, 0, plant2);
 
-        assert_eq!(processor.get_genome_index(hash), 1);
+        for i in 0..10 {
+            world.tick(&mut processor);
+            assert_eq!(processor.get_genome_index(hash), 5 * (i + 1));
+            assert_eq!(processor.get_genome_index(hash2), 5 * (i + 1));
+        }
     }
 
-
     #[test]
-    fn processor_can_do_kill_entity_action() {
+    fn integration_can_do_kill_entity_action() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
@@ -151,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn processor_can_do_update_health() {
+    fn integration_can_do_update_health() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();

@@ -1,6 +1,8 @@
-use std::fmt;
+extern crate time;
 
+use std::fmt;
 use morphoid::types::*;
+use self::time::PreciseTime;
 
 impl World {
     pub fn prod(width:Coords, height:Coords) -> World {
@@ -24,6 +26,8 @@ impl World {
 
     // TODO: synchronize?
     pub fn tick(&mut self, processor: &mut Processor) {
+        let start_time = PreciseTime::now();
+
         // TODO move to processor?
         // TODO use linked list for performance
         let mut actions: Vec<Box<dyn Action>> = Vec::new();
@@ -38,6 +42,11 @@ impl World {
             }
         }
         processor.apply(&actions, self);
+
+        // whatever you want to do
+        let end_time = PreciseTime::now();
+
+        println!("LOG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
     }
 
     fn get_index(&self, x: Coords, y: Coords) -> usize {
