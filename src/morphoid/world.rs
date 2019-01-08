@@ -249,7 +249,7 @@ mod tests {
 
         world.set_nothing(0, 0);
         assert_eq!(world.find_target_around(1, 1), Some((1,0)));
-        
+
         world.set_nothing(1, 0);
         assert_eq!(world.find_target_around(1, 1), Some((2,0)));
 

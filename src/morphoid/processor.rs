@@ -10,12 +10,12 @@ impl Processor {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
-                println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
+                //println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
             otherwise => {
-                println!("DEBUG: Processor.process_entity [other] {:?}", otherwise);
+                //println!("DEBUG: Processor.process_entity [other] {:?}", otherwise);
             },
         };
         all_actions
