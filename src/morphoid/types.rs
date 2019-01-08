@@ -6,6 +6,7 @@ pub type Gene = u32;
 pub type HealthType = i32;
 pub type GeneIndex = usize; // TODO: rename in other places
 
+// TODO: rename to GENOME_LENGTH
 pub const GENE_LENGTH: GeneIndex = 64;
 
 pub const ATTACK: Gene = 29;

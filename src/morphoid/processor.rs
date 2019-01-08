@@ -29,18 +29,12 @@ impl Processor {
         let mut actions:Vec<Box<dyn Action>> = Vec::new();
 
         let genome = perceptor.get_genome(genome_id);
-
         let start_index = self.get_genome_index(genome_id);
-        let steps_limit = settings.steps_per_turn();
-        let end_index = (start_index + steps_limit) % GENE_LENGTH;
 
-        println!("LOG: Processor.execute start: {:?} steps: {:?} end: {:?}",
-            start_index, steps_limit, end_index);
-
-        let mut index_delta = 0;
-        for i in start_index..end_index {
-            println!("DEBUG Processor.execute gene index={:?}", i);
-            let gene = genome.genes[i];
+        let mut index = start_index;
+        for _ in 0..settings.steps_per_turn() {
+            println!("DEBUG: Processor.execute gene: {:?} index={:?}", genome_id, index);
+            let gene = genome.genes[index];
             match gene {
                 ATTACK => {
                     match perceptor.find_target_around(x, y) {
@@ -48,7 +42,6 @@ impl Processor {
                             actions.push(Box::new(
                                 AttackAction::new(victim_x, victim_y, x, y, settings.attack_damage()))
                             );
-                            index_delta += 1;
                         },
                         _ => {}
                     }
@@ -61,7 +54,6 @@ impl Processor {
                             Some((new_x, new_y)) => {
                                 //TODO extract to a method
                                 actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id)));
-                                index_delta += 1;
                             },
                             _ => {}
                         }
@@ -69,15 +61,22 @@ impl Processor {
                 }, // 30
                 PHOTOSYNTHESYS => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
-                    index_delta += 1;
                 }, // 31
                 _ => {
                     println!("Unknown gene");
                 }
             }
+
+            index += 1;
+            if index > GENE_LENGTH {
+                index = index % GENE_LENGTH
+            }
         }
-        self.update_genome_index(genome_id, index_delta);
-        //println!(">>>>>>>>> New index: {:?}", self.get_genome_index(genome_id));
+        self.update_genome_index(genome_id, index);
+
+        println!("DEBUG: Processor.execute gene: {:?} start: {:?} steps: {:?} end: {:?}",
+                 genome_id, start_index, settings.steps_per_turn(), index);
+
         actions
     }
 
@@ -91,22 +90,13 @@ impl Processor {
         self.get_genome_state(genome_id).current_gene
     }
 
-    fn update_genome_index(&mut self, genome_id: GenomeId, index_delta: GeneIndex)  {
+    fn update_genome_index(&mut self, genome_id: GenomeId, new_index: GeneIndex)  {
         let genome_state = self.get_genome_state(genome_id);
-        let current_index = genome_state.current_gene;
-        let new_current_index = Processor::normalize(current_index, index_delta);
-        genome_state.current_gene = new_current_index;
+        let old_index = genome_state.current_gene;
+        genome_state.current_gene = new_index;
 
-        println!("DEBUG Processor.update_genome_index current: {:?} delta: {:?} new_current: {:?}",
-            current_index, index_delta, new_current_index);
-    }
-
-    fn normalize(curent_index:GeneIndex, delta: GeneIndex) -> GeneIndex {
-        let mut new_current_index = curent_index + delta;
-        if new_current_index > GENE_LENGTH {
-            new_current_index = (new_current_index % GENE_LENGTH) as GeneIndex;
-        }
-        new_current_index
+        println!("DEBUG: Processor.update_genome_index gene: {:?} old: {:?} new: {:?}",
+            genome_id, old_index, new_index);
     }
 }
 

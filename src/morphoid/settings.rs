@@ -6,7 +6,7 @@ impl Settings {
 
     pub fn prod() -> Settings {
         Settings {
-            steps_per_turn: 15,
+            steps_per_turn: 1,
             reproduce_cost: -10,
             reproduce_threshold: 100,
             photosynthesys_adds: 1,
