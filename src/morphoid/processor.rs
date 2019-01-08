@@ -95,7 +95,7 @@ impl Processor {
 
     fn update_genome_index(&mut self, genome_id: GenomeId, new_index: GeneIndex)  {
         let genome_state = self.get_genome_state(genome_id);
-        let old_index = genome_state.current_gene;
+        //let old_index = genome_state.current_gene;
         genome_state.current_gene = new_index;
 
 //        println!("DEBUG: Processor.update_genome_index gene: {:?} old: {:?} new: {:?}",

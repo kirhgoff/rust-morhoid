@@ -3,6 +3,7 @@ extern crate time;
 use std::fmt;
 use morphoid::types::*;
 use self::time::PreciseTime;
+use std::vec::Vec;
 
 impl World {
     pub fn prod(width:Coords, height:Coords) -> World {
@@ -190,21 +191,20 @@ impl Perceptor for World {
 
     // TODO: extract method
     fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
-        let results: Vec<(Coords, Coords)> = iproduct!(x-1..x+1, y-1..y+1)
+        iproduct!(-1..2, -1..2)
             .into_iter()
-            .filter(|(i,j)| {
-                match self.get_entity(*i, *j) {
-                    Entity::Cell(_) => (*i != x && *j != y),
+            .filter(|(dx, dy)| *dx != 0 || *dy != 0) // remove self
+            .map(|(dx, dy)| (dy, dx)) // turn around so it is clockwise
+            .map(|(dx, dy)| (x + dx, y + dy))
+            .filter(|(other_x, other_y)| {
+                match self.get_entity(*other_x, *other_y) {
+                    Entity::Cell(_) =>  true,
                     _ => false
                 }
             })
-            .collect();
-
-        // TODO: why, why?
-        match results.first() {
-            Some(x) => Some(*x),
-            _ => None
-        }
+            .collect::<Vec<(Coords,Coords)>>()
+            .first() // TODO: randomize
+            .map(|coords| *coords)
     }
 }
 
@@ -238,7 +238,6 @@ mod tests {
 
     #[test]
     fn test_find_target_around() {
-        let mut processor = Processor::new();
         let mut world = World::new(3, 3, Settings::prod());
         for x in 0..3 {
             for y in 0..3 {
@@ -250,13 +249,12 @@ mod tests {
 
         world.set_nothing(0, 0);
         assert_eq!(world.find_target_around(1, 1), Some((1,0)));
-
+        
         world.set_nothing(1, 0);
         assert_eq!(world.find_target_around(1, 1), Some((2,0)));
 
         world.set_nothing(2, 0);
         assert_eq!(world.find_target_around(1, 1), Some((0,1)));
-
     }
 
     // TODO: duplicate tests in actions
