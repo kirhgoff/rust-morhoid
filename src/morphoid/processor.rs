@@ -68,7 +68,7 @@ impl Processor {
             }
 
             index += 1;
-            if index > GENE_LENGTH {
+            if index >= GENE_LENGTH {
                 index = index % GENE_LENGTH
             }
         }
@@ -131,6 +131,11 @@ mod tests {
             world.tick(&mut processor);
             assert_eq!(processor.get_genome_index(hash), 5 * (i + 1));
             assert_eq!(processor.get_genome_index(hash2), 5 * (i + 1));
+        }
+
+        // make sure it is going around the genes array and not crash
+        for i in 0..GENE_LENGTH {
+            world.tick(&mut processor);
         }
     }
 
