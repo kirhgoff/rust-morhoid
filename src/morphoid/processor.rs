@@ -134,7 +134,7 @@ mod tests {
         }
 
         // make sure it is going around the genes array and not crash
-        for i in 0..GENE_LENGTH {
+        for _ in 0..GENE_LENGTH {
             world.tick(&mut processor);
         }
     }

@@ -268,35 +268,47 @@ mod tests {
     }
 
     #[test]
-    fn integration_test_it_kills() {
+    fn integration_test_and_then_there_were_none() {
         let settings = Settings {
             steps_per_turn: 1,
-            reproduce_cost: -8,
-            reproduce_threshold: 9,
-            photosynthesys_adds: 0,
+            reproduce_cost: -10,
+            reproduce_threshold: 20,
+            photosynthesys_adds: 5,
             initial_cell_health: 10,
-            attack_damage: 9,
+            attack_damage: 100,
         };
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, settings);
-        world.set_cell(0, 0, Genome::new_plant());
-        world.set_cell(1, 0, Genome::new_predator());
+        let mut world = World::new(3, 3, settings);
 
-        world.tick(&mut processor);
-
-        // It is still here
-        match world.get_entity(0, 0) {
-            Entity::Cell(_) => {},
-            _ => panic!("Cell should stiill be alive!")
+        // set the scene, killer in the middle
+        world.set_cell(1, 1, Genome::new_predator());
+        for x in 0..2 {
+            for y in 0..2 {
+                if x != y {
+                    world.set_cell(x, y, Genome::new_plant());
+                }
+            }
         }
 
-        world.tick(&mut processor);
+        // One shot kills
+        (1..9).map(|_| world.tick(&mut processor));
 
-        // It is dead
-        match world.get_entity(0, 0) {
-            Entity::Corpse(_) => {},
-            _ => panic!("Now it should be dead!"),
+        // Should all be dead
+        for x in 0..2 {
+            for y in 0..2 {
+                if x != y {
+                    match world.get_entity(x, y) {
+                        Entity::Corpse(_) => {},
+                        _ => panic!("This guys is not dead!")
+                    }
+                }
+            }
+        }
+
+        match world.get_entity(1, 1) {
+            Entity::Cell(_) => {},
+            _ => panic!("The killer must survive!")
         }
     }
 
