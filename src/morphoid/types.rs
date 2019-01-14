@@ -70,7 +70,7 @@ pub trait Affector {
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome;
+    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Some(Genome); //TODO... continue
 }
 
 pub trait Perceptor {
