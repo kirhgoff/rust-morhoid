@@ -30,6 +30,10 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [ATTACK; GENE_LENGTH]}
     }
 
+    pub fn new_yeast() -> Genome {
+        Genome {id: Genome::new_id(), genes: [REPRODUCE; GENE_LENGTH]}
+    }
+
     // TODO: rename to genome_id
     pub fn hash(&self) -> GenomeId {
         self.id

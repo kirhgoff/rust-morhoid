@@ -14,7 +14,7 @@ impl Processor {
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
-            otherwise => {
+            _ => {
                 //println!("DEBUG: Processor.process_entity [other] {:?}", otherwise);
             },
         };
