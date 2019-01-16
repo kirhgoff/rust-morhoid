@@ -70,7 +70,7 @@ pub trait Affector {
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome; // Some(Genome); //TODO... continue
+    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome>;
 }
 
 pub trait Perceptor {
@@ -79,7 +79,7 @@ pub trait Perceptor {
 
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
     fn get_state(&self, hash: GenomeId) -> &CellState;
-    fn get_genome(&self, hash: GenomeId) -> &Genome;
+    fn get_genome(&self, hash: GenomeId) -> Option<&Genome>;
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
     fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
 }

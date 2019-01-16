@@ -31,7 +31,7 @@ impl Processor {
     pub fn execute(&mut self, x:Coords, y:Coords, genome_id: GenomeId, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
         let mut actions:Vec<Box<dyn Action>> = Vec::new();
 
-        let genome = perceptor.get_genome(genome_id);
+        let genome = perceptor.get_genome(genome_id).unwrap(); // should never happen
         let start_index = self.get_genome_index(genome_id);
 
         let mut index = start_index;

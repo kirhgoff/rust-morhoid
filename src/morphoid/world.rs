@@ -147,9 +147,10 @@ impl Affector for World {
         }
     }
 
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome {
-        let parent_genome = self.genomes.get(parent_genome_id);
-        parent_genome.clone() // TODO: add mutation
+    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome> {
+        self.genomes
+            .get(parent_genome_id)
+            .map(|genome| genome.clone()) // TODO: mutate
     }
 }
 
@@ -167,7 +168,7 @@ impl Perceptor for World {
         self.cell_states.get(hash)
     }
 
-    fn get_genome(&self, hash: GenomeId) -> &Genome {
+    fn get_genome(&self, hash: GenomeId) -> Option<&Genome> {
         self.genomes.get(hash)
     }
 
