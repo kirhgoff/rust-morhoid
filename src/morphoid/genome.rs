@@ -18,6 +18,22 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
     }
 
+    pub fn new_reproducing_plant() -> Genome {
+        let mut genes = [PHOTOSYNTHESYS; GENE_LENGTH];
+        for i in 0..GENE_LENGTH {
+            if i % 2 != 0 { genes[i] = REPRODUCE; }
+        }
+        Genome {id: Genome::new_id(), genes: genes}
+    }
+
+    pub fn new_predator() -> Genome {
+        Genome {id: Genome::new_id(), genes: [ATTACK; GENE_LENGTH]}
+    }
+
+    pub fn new_yeast() -> Genome {
+        Genome {id: Genome::new_id(), genes: [REPRODUCE; GENE_LENGTH]}
+    }
+
     // TODO: rename to genome_id
     pub fn hash(&self) -> GenomeId {
         self.id

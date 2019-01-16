@@ -12,8 +12,8 @@ impl GenomeStorage {
         hash
     }
 
-    pub fn get(&self, hash: GenomeId) -> &Genome {
-        self.genomes.get(&hash).unwrap()
+    pub fn get(&self, hash: GenomeId) -> Option<&Genome> {
+        self.genomes.get(&hash)
     }
 
     pub fn remove(&mut self, hash: GenomeId) {
@@ -35,7 +35,7 @@ mod tests {
         assert_ne!(hash, 0);
         assert_eq!(genome_hash, hash);
 
-        let found_genome = storage.get(hash);
+        let found_genome = storage.get(hash).unwrap();
         assert_eq!(hash, found_genome.hash());
         //assert_eq!(*found_genome, genome); // TODO: what about moving?
     }

@@ -30,7 +30,15 @@ lazy_static! {
 //5    0
 
 fn build_new_world() -> World {
-    let mut world = World::new(20, 20, Settings::prod());
+    let settings = Settings {
+        steps_per_turn: 1,
+        reproduce_cost: -10,
+        reproduce_threshold: 20,
+        photosynthesys_adds: 5,
+        initial_cell_health: 10,
+        attack_damage: 100,
+    };
+    let mut world = World::new(20, 20, settings);
     let coords_vec = vec![
         (2,1), (3,1), (5,1),(6,1),
         (1,2), (2,2), (3,2), (4,2), (5,2), (6,2), (7,2),
@@ -39,10 +47,10 @@ fn build_new_world() -> World {
         (4,5)
     ];
     for (x, y) in coords_vec.iter() {
-        let mut genome = Genome::new_plant();
-        genome.mutate(2, REPRODUCE);
-        world.new_plant(*x + 7, *y + 7, genome);
+        let mut genome = Genome::new_reproducing_plant();
+        world.set_cell(*x + 7, *y + 7, genome);
     }
+    world.set_cell(4 + 7, 3 + 7, Genome::new_predator());
     world
 }
 

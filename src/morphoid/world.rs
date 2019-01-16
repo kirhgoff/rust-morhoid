@@ -1,6 +1,9 @@
-use std::fmt;
+extern crate time;
 
+use std::fmt;
 use morphoid::types::*;
+use self::time::PreciseTime;
+use std::vec::Vec;
 
 impl World {
     pub fn prod(width:Coords, height:Coords) -> World {
@@ -24,6 +27,8 @@ impl World {
 
     // TODO: synchronize?
     pub fn tick(&mut self, processor: &mut Processor) {
+        let start_time = PreciseTime::now();
+
         // TODO move to processor?
         // TODO use linked list for performance
         let mut actions: Vec<Box<dyn Action>> = Vec::new();
@@ -31,13 +36,20 @@ impl World {
         for y in 0..self.height {
             for x in 0..self.width {
                 let idx = self.get_index(x, y);
-
                 let entity = self.entities[idx];
+
+                println!("DEBUG: World.tick x: {:?} y: {:?} idx: {:?}", x, y, idx);
+
                 let mut action_batch = processor.process_entity(x, y, entity, self, &self.settings);
                 actions.append(&mut action_batch);
             }
         }
         processor.apply(&actions, self);
+
+        // whatever you want to do
+        let end_time = PreciseTime::now();
+
+        println!("DEBUG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
     }
 
     fn get_index(&self, x: Coords, y: Coords) -> usize {
@@ -61,7 +73,11 @@ impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.entities.as_slice().chunks(self.width as usize) {
             for &entity in line {
-                let symbol = if entity == Entity::Nothing { '◻' } else { '◼' };
+                let symbol = match entity {
+                    Entity::Nothing => '◻',
+                    Entity::Cell(_) => '◼',
+                    Entity::Corpse(_) => 'x',
+                };
                 write!(f, "{}", symbol)?;
             }
             write!(f, "\n")?;
@@ -72,7 +88,17 @@ impl fmt::Display for World {
 }
 
 impl Affector for World {
-    fn new_plant(&mut self, x:Coords, y:Coords, genome:Genome) {
+    fn set_nothing(&mut self, x:Coords, y:Coords) {
+        self.set_entity(
+            x,
+            y,
+            Entity::Nothing,
+            None,
+            None
+        );
+    }
+
+    fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome) {
         let initial_health = self.settings.initial_cell_health;
         self.set_entity(
             x,
@@ -110,6 +136,8 @@ impl Affector for World {
                     // TODO: probably need to make it more tolerant
                     let mut state = self.cell_states.get_mut(hash);
                     state.health += health_delta;
+                    //println!("World.update_health x={:?} y={:?} hash={:?} delta={:?} new_health={:?}",
+                    //    x, y, hash, health_delta, state.health);
                 }
                 if self.cell_states.get(hash).health < 0 {
                     self.set_entity(x, y, Entity::Corpse(10), None, None);
@@ -119,9 +147,10 @@ impl Affector for World {
         }
     }
 
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Genome {
-        let parent_genome = self.genomes.get(parent_genome_id);
-        parent_genome.clone() // TODO: add mutation
+    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome> {
+        self.genomes
+            .get(parent_genome_id)
+            .map(|genome| genome.clone()) // TODO: mutate
     }
 }
 
@@ -139,7 +168,7 @@ impl Perceptor for World {
         self.cell_states.get(hash)
     }
 
-    fn get_genome(&self, hash: GenomeId) -> &Genome {
+    fn get_genome(&self, hash: GenomeId) -> Option<&Genome> {
         self.genomes.get(hash)
     }
 
@@ -160,6 +189,24 @@ impl Perceptor for World {
             _ => None
         }
     }
+
+    // TODO: extract method
+    fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
+        iproduct!(-1..2, -1..2)
+            .into_iter()
+            .filter(|(dx, dy)| *dx != 0 || *dy != 0) // remove self
+            .map(|(dx, dy)| (dy, dx)) // turn around so it is clockwise
+            .map(|(dx, dy)| (x + dx, y + dy))
+            .filter(|(other_x, other_y)| {
+                match self.get_entity(*other_x, *other_y) {
+                    Entity::Cell(_) =>  true,
+                    _ => false
+                }
+            })
+            .collect::<Vec<(Coords,Coords)>>()
+            .first() // TODO: randomize
+            .map(|coords| *coords)
+    }
 }
 
 #[cfg(test)]
@@ -167,7 +214,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_index_test() {
+    fn test_get_index_test() {
         let world = World::prod(2, 1);
 
         assert_eq!(world.get_index(-2,0), 0);
@@ -191,13 +238,36 @@ mod tests {
     }
 
     #[test]
-    fn integration_test_it_works() {
+    fn test_find_target_around() {
+        let mut world = World::new(3, 3, Settings::prod());
+        for x in 0..3 {
+            for y in 0..3 {
+                world.set_cell(x, y, Genome::new_predator());
+            }
+        }
+
+        assert_eq!(world.find_target_around(1, 1), Some((0,0)));
+
+        world.set_nothing(0, 0);
+        assert_eq!(world.find_target_around(1, 1), Some((1,0)));
+
+        world.set_nothing(1, 0);
+        assert_eq!(world.find_target_around(1, 1), Some((2,0)));
+
+        world.set_nothing(2, 0);
+        assert_eq!(world.find_target_around(1, 1), Some((0,1)));
+    }
+
+    // TODO: duplicate tests in actions
+    #[test]
+    fn integration_test_it_reproduces() {
         let settings = Settings {
             steps_per_turn: 2,
             reproduce_cost: -8, // it will die after new born
             reproduce_threshold: 9, // it will reproduce on second step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
             initial_cell_health: 10, // it will have 10 originally
+            attack_damage: 4,
         };
 
         let mut processor = Processor::new();
@@ -206,9 +276,8 @@ mod tests {
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
 
-        // TODO: add new_xxx methods
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
-        world.set_entity(1, 0, Entity::Nothing, None, None);
+        world.set_cell(0, 0, plant);
+        world.set_nothing(1, 0);
 
         world.tick(&mut processor);
 
@@ -223,6 +292,54 @@ mod tests {
     }
 
     #[test]
+    fn integration_test_and_then_there_were_none() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: -10,
+            reproduce_threshold: 20,
+            photosynthesys_adds: 5,
+            initial_cell_health: 10,
+            attack_damage: 100,
+        };
+
+        let mut processor = Processor::new();
+        let mut world = World::new(3, 3, settings);
+
+        // set the scene, killer in the middle
+        for x in 0..3 {
+            for y in 0..3 {
+                if x != 1 || y != 1 {
+                    world.set_cell(x, y, Genome::new_plant());
+                }
+            }
+        }
+        world.set_cell(1, 1, Genome::new_predator());
+
+        // One shot kills
+        for _ in 0..9 {
+            world.tick(&mut processor)
+        }
+
+        // Should all be dead
+        for x in 0..2 {
+            for y in 0..2 {
+                if x != y {
+                    match world.get_entity(x, y) {
+                        Entity::Corpse(_) => {},
+                        _ => panic!("This guys is not dead!")
+                    }
+                }
+            }
+        }
+
+        match world.get_entity(1, 1) {
+            Entity::Cell(_) => {},
+            _ => panic!("The killer must survive!")
+        }
+    }
+
+
+    #[test]
     fn integration_test_genome_state() {
         let settings = Settings {
             steps_per_turn: 1,
@@ -230,6 +347,7 @@ mod tests {
             reproduce_threshold: 4, // it will reproduce on first step
             photosynthesys_adds: 5, // it will have 10 + 5 health after first step
             initial_cell_health: 10, // it will have 10 originally
+            attack_damage: 4,
         };
 
         let mut processor = Processor::new();
@@ -238,9 +356,8 @@ mod tests {
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
 
-        // TODO: add new_xxx methods
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
-        world.set_entity(1, 0, Entity::Nothing, None, None);
+        world.set_cell(0, 0, plant);
+        world.set_nothing(1, 0);
 
         world.tick(&mut processor);
 
@@ -259,5 +376,43 @@ mod tests {
             _ => panic!("New cell was not reproduced!")
         }
 
+    }
+
+    #[test]
+    fn integration_test_conflicting_actions() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: 0,
+            reproduce_threshold: 0, // it will reproduce on first step
+            photosynthesys_adds: 0, // it will have 10 + 5 health after first step
+            initial_cell_health: 50, // it will have 10 originally
+            attack_damage: 100,
+        };
+
+        let mut world = World::new(3, 1, settings);
+        let parent = Genome::new_yeast();
+        let parent_hash = parent.hash();
+
+        world.set_cell(1, 0, parent);
+        world.set_cell(2, 0, Genome::new_predator());
+
+        Processor::new().apply(
+            &vec![
+                Box::new(AttackAction::new(1, 0, 2, 0, 100)),
+                Box::new(ReproduceAction::new(0, 0, parent_hash))
+            ],
+            &mut world
+        );
+
+        // attack came first, sad
+        match world.get_entity(1, 0) {
+            Entity::Corpse(_) => {},
+            _ => panic!("Parent should have been destroyed")
+        }
+
+        match world.get_entity(0, 0) {
+            Entity::Nothing => {},
+            _ => panic!("Nothing should be born")
+        }
     }
 }
