@@ -378,8 +378,9 @@ mod tests {
 
     }
 
+    // TODO: deduplicate
     #[test]
-    fn integration_test_conflicting_actions() {
+    fn integration_test_attack_first() {
         let settings = Settings {
             steps_per_turn: 1,
             reproduce_cost: 0,
@@ -413,6 +414,44 @@ mod tests {
         match world.get_entity(0, 0) {
             Entity::Nothing => {},
             _ => panic!("Nothing should be born")
+        }
+    }
+
+    #[test]
+    fn integration_test_reproduce_first() {
+        let settings = Settings {
+            steps_per_turn: 1,
+            reproduce_cost: 0,
+            reproduce_threshold: 0, // it will reproduce on first step
+            photosynthesys_adds: 0, // it will have 10 + 5 health after first step
+            initial_cell_health: 50, // it will have 10 originally
+            attack_damage: 100,
+        };
+
+        let mut world = World::new(3, 1, settings);
+        let parent = Genome::new_yeast();
+        let parent_hash = parent.hash();
+
+        world.set_cell(1, 0, parent);
+        world.set_cell(2, 0, Genome::new_predator());
+
+        Processor::new().apply(
+            &vec![
+                Box::new(ReproduceAction::new(0, 0, parent_hash)),
+                Box::new(AttackAction::new(1, 0, 2, 0, 100))
+            ],
+            &mut world
+        );
+
+        // attack came first, sad
+        match world.get_entity(1, 0) {
+            Entity::Corpse(_) => {},
+            _ => panic!("Parent should have been destroyed")
+        }
+
+        match world.get_entity(0, 0) {
+            Entity::Cell(_) => {},
+            _ => panic!("But new life survived!")
         }
     }
 }
