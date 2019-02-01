@@ -29,8 +29,21 @@ pub enum Entity {
     Corpse(i64)
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest
+}
+
 pub struct CellState {
-    pub health: HealthType
+    pub health: HealthType,
+    pub direction: Direction
 }
 
 pub struct CellStateStorage {

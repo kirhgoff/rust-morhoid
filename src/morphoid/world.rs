@@ -105,7 +105,7 @@ impl Affector for World {
             y,
             Entity::Cell(genome.hash()),
             Some(genome),
-            Some(CellState {health: initial_health })
+            Some(CellState::new(initial_health, Direction::North))
         );
     }
 

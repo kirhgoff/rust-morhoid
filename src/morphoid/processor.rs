@@ -147,7 +147,7 @@ mod tests {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState{health: 10}));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         match world.get_entity(0, 0) {
             Entity::Cell(old_hash) => assert_eq!(*old_hash, hash),
@@ -170,7 +170,7 @@ mod tests {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState { health: 10 }));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         Processor::new().apply(
             &vec![Box::new(UpdateHealthAction::new(0, 0, -100))],

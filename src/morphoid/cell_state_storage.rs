@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use morphoid::types::CellStateStorage;
-use morphoid::types::GenomeId;
-use morphoid::types::CellState;
+
+use morphoid::types::*;
 
 impl CellStateStorage {
     pub fn new() -> CellStateStorage {
@@ -33,7 +32,7 @@ mod tests {
     #[test]
     fn it_can_read_and_write_cell_states() {
         let mut storage = CellStateStorage::new();
-        let cell_state = CellState { health: 10 };
+        let cell_state = CellState::default();
         let hash: GenomeId = 1;
         storage.put(hash, cell_state);
         {

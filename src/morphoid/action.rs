@@ -74,7 +74,7 @@ mod tests {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         assert_eq!(world.get_state(hash).health, 10);
 
@@ -91,7 +91,7 @@ mod tests {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         Processor::new().apply(
             &vec![Box::new(ReproduceAction::new(1, 0, hash))],
