@@ -169,7 +169,7 @@ mod tests {
         world.set_cell(0, 0, plant);
 
         Processor::new().apply(
-            &vec![Box::new(MoveAction::new(1, 0))],
+            &vec![Box::new(MoveAction::new(0, 0))],
             &mut world
         );
 
