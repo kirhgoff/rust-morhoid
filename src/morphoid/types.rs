@@ -9,6 +9,9 @@ pub type GeneIndex = usize; // TODO: rename in other places
 // TODO: rename to GENOME_LENGTH
 pub const GENE_LENGTH: GeneIndex = 64;
 
+pub const CHECK: Gene = 27; // Complex gene
+pub const TURN: Gene = 27; // Complex gene
+pub const MOVE: Gene = 28;
 pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
@@ -82,6 +85,8 @@ pub trait Affector {
     fn set_nothing(&mut self, x:Coords, y:Coords);
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
+    fn move_cell(&mut self, x:Coords, y:Coords);
+
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
     fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome>;
 }
@@ -127,3 +132,7 @@ pub struct AttackAction {
     pub damage: HealthType
 }
 
+pub struct MoveAction {
+    pub x: Coords,
+    pub y: Coords,
+}

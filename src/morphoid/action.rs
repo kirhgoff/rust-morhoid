@@ -63,7 +63,23 @@ impl Action for AttackAction {
         // TODO: some punishment for not having enough energy?
     }
 }
+
 // --------------------------------
+
+impl MoveAction {
+    pub fn new(x: Coords, y: Coords) -> MoveAction {
+        MoveAction { x, y }
+    }
+}
+
+impl Action for MoveAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.move_cell(self.x, self.y);
+    }
+}
+
+// --------------------------------
+
 
 #[cfg(test)]
 mod tests {
@@ -91,7 +107,7 @@ mod tests {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
+        world.set_cell(0, 0, plant);
 
         Processor::new().apply(
             &vec![Box::new(ReproduceAction::new(1, 0, hash))],
@@ -142,4 +158,31 @@ mod tests {
         }
     }
 
+    #[test]
+    fn move_action_works() {
+        let mut world = World::prod(2, 1);
+        let mut plant = Genome::new_plant();
+        plant.mutate(0, MOVE);
+
+        let hash = plant.hash();
+
+        world.set_cell(0, 0, plant);
+
+        Processor::new().apply(
+            &vec![Box::new(MoveAction::new(1, 0))],
+            &mut world
+        );
+
+        match world.get_entity(0, 0) {
+            Entity::Nothing => { },
+            _ => panic!("Cell should have moved away")
+        }
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(new_hash) => {
+                assert_eq!(*new_hash, hash);
+            },
+            _ => panic!("Cell should have moved in")
+        }
+    }
 }

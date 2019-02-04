@@ -109,6 +109,28 @@ impl Affector for World {
         );
     }
 
+    fn move_cell(&mut self, x:Coords, y:Coords) {
+        let old_index = self.get_index(x, y);
+
+        match self.entities[old_index] {
+            Entity::Cell(hash) => {
+                let cell_state = self.cell_states.get(hash);
+                let (dx, dy) = cell_state.direction.shift();
+
+                let new_index = self.get_index(x + dx, y + dy);
+
+                match self.entities[new_index] {
+                    Entity::Nothing => {
+                        self.entities[new_index] = Entity::Cell(hash);
+                        self.entities[old_index] = Entity::Nothing;
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
         //println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);

@@ -8,4 +8,5 @@ mod action;
 mod genome_storage;
 mod cell_state_storage;
 mod cell_state;
+mod direction;
 
