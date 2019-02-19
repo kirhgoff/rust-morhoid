@@ -80,6 +80,20 @@ impl Action for MoveAction {
 
 // --------------------------------
 
+impl RotateAction {
+    // TODO: find macros that allows to create objects with ()
+    pub fn new(x: Coords, y: Coords, value: Gene) -> RotateAction {
+        RotateAction { x, y, value }
+    }
+}
+
+impl Action for RotateAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.rotate_cell(self.x, self.y, self.value);
+    }
+}
+
+// --------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -183,6 +197,34 @@ mod tests {
                 assert_eq!(*new_hash, hash);
             },
             _ => panic!("Cell should have moved in")
+        }
+    }
+
+    #[test]
+    fn rotate_action_works() {
+        // TODO: try creating function in function
+
+        let mut world = World::prod(1, 1);
+        let mut plant = Genome::new_plant();
+        plant.mutate(0, TURN);
+        plant.mutate(1, 1); // Rotate clockwise by 1
+
+        let hash = plant.hash();
+
+        world.set_cell(0, 0, plant);
+
+        Processor::new().apply(
+            &vec![Box::new(RotateAction::new(0, 0, 1))],
+            &mut world
+        );
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(new_hash) => {
+                let cell_state = world.get_state(*new_hash);
+                assert_eq!(cell_state.direction, Direction::NorthEast);
+                assert_eq!(hash, *new_hash);
+            },
+            _ => {}
         }
     }
 }
