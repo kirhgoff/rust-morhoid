@@ -44,6 +44,7 @@ mod tests {
     #[test]
     fn test_rotate() {
         let north = Direction::North;
-        assert_eq!(Direction::NorthEast, north.rotate(1))
+        assert_eq!(Direction::NorthEast, north.rotate(1));
+        assert_eq!(Direction::South, north.rotate(12));
     }
 }
