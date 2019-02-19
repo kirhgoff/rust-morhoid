@@ -105,8 +105,42 @@ impl Affector for World {
             y,
             Entity::Cell(genome.hash()),
             Some(genome),
-            Some(CellState {health: initial_health })
+            Some(CellState::new(initial_health, Direction::North))
         );
+    }
+
+    fn move_cell(&mut self, x:Coords, y:Coords) {
+        let old_index = self.get_index(x, y);
+
+        match self.entities[old_index] {
+            Entity::Cell(hash) => {
+                let cell_state = self.cell_states.get(hash);
+                let (dx, dy) = cell_state.direction.shift();
+
+                let new_index = self.get_index(x + dx, y + dy);
+
+                match self.entities[new_index] {
+                    Entity::Nothing => {
+                        self.entities[new_index] = Entity::Cell(hash);
+                        self.entities[old_index] = Entity::Nothing;
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn rotate_cell(&mut self, x:Coords, y:Coords, value: Gene) {
+        let index = self.get_index(x, y);
+
+        match self.entities[index] {
+            Entity::Cell(hash) => {
+                let mut cell_state = self.cell_states.get_mut(hash);
+                cell_state.direction = cell_state.direction.rotate(value);
+            }
+            _ => {}
+        }
     }
 
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
@@ -234,7 +268,6 @@ mod tests {
         assert_eq!(world.get_index(1,2), 1);
         assert_eq!(world.get_index(1,-2), 1);
         assert_eq!(world.get_index(1,-1), 1);
-
     }
 
     #[test]

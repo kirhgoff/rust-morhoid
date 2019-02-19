@@ -9,6 +9,9 @@ pub type GeneIndex = usize; // TODO: rename in other places
 // TODO: rename to GENOME_LENGTH
 pub const GENE_LENGTH: GeneIndex = 64;
 
+pub const CHECK: Gene = 27; // Complex gene
+pub const TURN: Gene = 27; // Complex gene
+pub const MOVE: Gene = 28;
 pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
@@ -29,8 +32,21 @@ pub enum Entity {
     Corpse(i64)
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest
+}
+
 pub struct CellState {
-    pub health: HealthType
+    pub health: HealthType,
+    pub direction: Direction
 }
 
 pub struct CellStateStorage {
@@ -66,10 +82,13 @@ pub struct World {
 
 pub trait Affector {
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome);
-    fn set_nothing(&mut self, x:Coords, y:Coords);
-    fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
+    fn set_nothing(&mut self, x: Coords, y: Coords);
+    fn set_entity(&mut self, x: Coords, y: Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
-    fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType);
+    fn move_cell(&mut self, x: Coords, y: Coords);
+    fn rotate_cell(&mut self, x: Coords, y: Coords, value: Gene);
+
+    fn update_health(&mut self, x: Coords, y: Coords, health_delta: HealthType);
     fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome>;
 }
 
@@ -114,3 +133,22 @@ pub struct AttackAction {
     pub damage: HealthType
 }
 
+pub struct MoveAction {
+    pub x: Coords,
+    pub y: Coords,
+}
+
+pub struct RotateAction {
+    pub x: Coords,
+    pub y: Coords,
+    pub value: Gene // new_direction += value % 8 ?
+}
+
+pub struct SenseAction {
+    pub x: Coords,
+    pub y: Coords,
+    pub jump_relative: Gene,
+    pub jump_enemy: Gene, // TODO: predator?
+    pub jump_corpse: Gene,
+    pub jump_nothing: Gene,
+}

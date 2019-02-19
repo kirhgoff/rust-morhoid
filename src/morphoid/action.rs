@@ -63,6 +63,36 @@ impl Action for AttackAction {
         // TODO: some punishment for not having enough energy?
     }
 }
+
+// --------------------------------
+
+impl MoveAction {
+    pub fn new(x: Coords, y: Coords) -> MoveAction {
+        MoveAction { x, y }
+    }
+}
+
+impl Action for MoveAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.move_cell(self.x, self.y);
+    }
+}
+
+// --------------------------------
+
+impl RotateAction {
+    // TODO: find macros that allows to create objects with ()
+    pub fn new(x: Coords, y: Coords, value: Gene) -> RotateAction {
+        RotateAction { x, y, value }
+    }
+}
+
+impl Action for RotateAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.rotate_cell(self.x, self.y, self.value);
+    }
+}
+
 // --------------------------------
 
 #[cfg(test)]
@@ -74,7 +104,7 @@ mod tests {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
+        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         assert_eq!(world.get_state(hash).health, 10);
 
@@ -91,7 +121,7 @@ mod tests {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
         let hash = plant.hash();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState {health: 10}));
+        world.set_cell(0, 0, plant);
 
         Processor::new().apply(
             &vec![Box::new(ReproduceAction::new(1, 0, hash))],
@@ -142,4 +172,59 @@ mod tests {
         }
     }
 
+    #[test]
+    fn move_action_works() {
+        let mut world = World::prod(2, 1);
+        let mut plant = Genome::new_plant();
+        plant.mutate(0, MOVE);
+
+        let hash = plant.hash();
+
+        world.set_cell(0, 0, plant);
+
+        Processor::new().apply(
+            &vec![Box::new(MoveAction::new(0, 0))],
+            &mut world
+        );
+
+        match world.get_entity(0, 0) {
+            Entity::Nothing => { },
+            _ => panic!("Cell should have moved away")
+        }
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(new_hash) => {
+                assert_eq!(*new_hash, hash);
+            },
+            _ => panic!("Cell should have moved in")
+        }
+    }
+
+    #[test]
+    fn rotate_action_works() {
+        // TODO: try creating function in function
+
+        let mut world = World::prod(1, 1);
+        let mut plant = Genome::new_plant();
+        plant.mutate(0, TURN);
+        plant.mutate(1, 1); // Rotate clockwise by 1
+
+        let hash = plant.hash();
+
+        world.set_cell(0, 0, plant);
+
+        Processor::new().apply(
+            &vec![Box::new(RotateAction::new(0, 0, 1))],
+            &mut world
+        );
+
+        match world.get_entity(1, 0) {
+            Entity::Cell(new_hash) => {
+                let cell_state = world.get_state(*new_hash);
+                assert_eq!(cell_state.direction, Direction::NorthEast);
+                assert_eq!(hash, *new_hash);
+            },
+            _ => {}
+        }
+    }
 }
