@@ -2,7 +2,7 @@ use morphoid::types::*;
 use std::slice::Iter;
 
 impl Direction {
-    const SIZE: usize = 8;
+    pub const SIZE: usize = 8;
 
     pub fn shift(&self) -> (Coords, Coords) {
         match *self {

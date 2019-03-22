@@ -96,9 +96,10 @@ pub trait Perceptor {
     // TODO do I need this method?
     fn get_state_mut(&mut self, hash: GenomeId) -> &mut CellState;
 
-    fn get_entity(&self, x:Coords, y:Coords) -> &Entity;
+    fn get_entity(&self, x: Coords, y: Coords) -> &Entity;
     fn get_state(&self, hash: GenomeId) -> &CellState;
     fn get_genome(&self, hash: GenomeId) -> Option<&Genome>;
+    fn looking_at(&self, x: Coords, y: Coords, hash: GenomeId) -> (Coords, Coords); // TODO: return type?
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
     fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
 }
@@ -108,6 +109,7 @@ pub trait Action {
     fn execute(&self, affector: &mut Affector);
 }
 
+// TODO: make coords keep two coords
 pub struct KillAction {
     pub x: Coords,
     pub y: Coords
@@ -126,10 +128,8 @@ pub struct ReproduceAction {
 }
 
 pub struct AttackAction {
-    pub victim_x: Coords,
-    pub victim_y: Coords,
-    pub attacker_x: Coords,
-    pub attacker_y: Coords,
+    pub x: Coords,
+    pub y: Coords,
     pub damage: HealthType
 }
 
@@ -147,8 +147,7 @@ pub struct RotateAction {
 pub struct SenseAction {
     pub x: Coords,
     pub y: Coords,
-    pub jump_relative: Gene,
-    pub jump_enemy: Gene, // TODO: predator?
-    pub jump_corpse: Gene,
     pub jump_nothing: Gene,
+    pub jump_relative: Gene,
+    pub jump_cell: Gene, // TODO: add enemy vs relative
 }

@@ -40,33 +40,38 @@ impl Processor {
             let gene = genome.genes[index];
             match gene {
                 ATTACK => {
-                    match perceptor.find_target_around(x, y) {
-                        Some((victim_x, victim_y)) => {
-                            actions.push(Box::new(
-                                AttackAction::new(victim_x, victim_y, x, y, settings.attack_damage()))
-                            );
-                        },
-                        _ => {}
-                    }
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.attack_cost())));
+                    actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())))
                 },
                 REPRODUCE => {
-                    // TODO: move all to action?
-                    if perceptor.get_state(genome_id).health > settings.reproduce_threshold() {
-                        actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
-                        match perceptor.find_vacant_place_around(x, y) {
-                            Some((new_x, new_y)) => {
-                                //TODO extract to a method
-                                actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id)));
-                            },
-                            _ => {}
-                        }
-                    }
-                }, // 30
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
+                    actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id)));
+                },
                 PHOTOSYNTHESYS => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
-                }, // 31
+                },
+                MOVE => {
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.move_cost())));
+                    actions.push(Box::new(MoveAction::new(x, y)));
+                },
+                TURN => {
+                    new_direction = genome.genes[index += 1] % Direction::SIZE;
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.turn_cost())));
+                    actions.push(Box::new(RotateAction::new(x, y, new_direction)));
+                },
+                SENSE => {
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
+
+                    let (target_x, target_y) = perceptor.looking_at(x, y, genome_id);
+                    match perceptor.get_entity(target_x, target_y) {
+                        Entity::Nothing => {},
+                        Entity::Cell(other_genome_id) => {},
+                        Entity::Corpse(_) => {}
+                        // TODO: current!!
+                    }
+                }
                 _ => {
-                    println!("Unknown gene");
+                    println!("Unknown gene: {}", gene);
                 }
             }
 

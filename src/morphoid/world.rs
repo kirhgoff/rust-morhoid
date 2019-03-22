@@ -114,10 +114,8 @@ impl Affector for World {
 
         match self.entities[old_index] {
             Entity::Cell(hash) => {
-                let cell_state = self.cell_states.get(hash);
-                let (dx, dy) = cell_state.direction.shift();
-
-                let new_index = self.get_index(x + dx, y + dy);
+                let (new_x, new_y) = self.looking_at(x, y, hash);
+                let new_index = self.get_index(new_x, new_y);
 
                 match self.entities[new_index] {
                     Entity::Nothing => {
@@ -188,6 +186,7 @@ impl Affector for World {
     }
 }
 
+
 impl Perceptor for World {
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity {
         &self.entities[self.get_index(x, y)]
@@ -204,6 +203,14 @@ impl Perceptor for World {
 
     fn get_genome(&self, hash: GenomeId) -> Option<&Genome> {
         self.genomes.get(hash)
+    }
+
+    fn looking_at(&mut self, x: i32, y: i32, hash: u64) -> (Coords, Coords) {
+        let cell_state = self.cell_states.get(hash);
+        let (dx, dy) = cell_state.direction.shift();
+        (x + dx, y + dy)
+//        let new_index = self.get_index(x + dx, y + dy);
+//        new_index
     }
 
     fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {

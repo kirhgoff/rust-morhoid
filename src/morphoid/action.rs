@@ -50,8 +50,8 @@ impl Action for ReproduceAction {
 // --------------------------------
 
 impl AttackAction {
-    pub fn new(victim_x: Coords, victim_y: Coords, attacker_x: Coords, attacker_y: Coords, damage: HealthType) -> AttackAction {
-        AttackAction { victim_x, victim_y, attacker_x, attacker_y, damage }
+    pub fn new(x: Coords, y: Coords, damage: HealthType) -> AttackAction {
+        AttackAction { x, y, damage }
     }
 }
 
