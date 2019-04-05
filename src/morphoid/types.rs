@@ -4,10 +4,10 @@ pub type Coords = i32;
 pub type GenomeId = u64;
 pub type Gene = u32;
 pub type HealthType = i32;
-pub type GeneIndex = usize; // TODO: rename in other places
+pub type GeneIndex = u32; // TODO: rename in other places
 
 // TODO: rename to GENOME_LENGTH
-pub const GENE_LENGTH: GeneIndex = 64;
+pub const GENE_LENGTH: usize = 64;
 
 pub const CHECK: Gene = 27; // Complex gene
 pub const TURN: Gene = 27; // Complex gene

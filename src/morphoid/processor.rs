@@ -41,41 +41,44 @@ impl Processor {
             match gene {
                 ATTACK => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.attack_cost())));
-                    actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())))
+                    actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())));
+                    index += 1
                 },
                 REPRODUCE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
-                    actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id)));
+                    actions.push(Box::new(ReproduceAction::new(x, y, genome_id)));
+                    index += 1
                 },
                 PHOTOSYNTHESYS => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
+                    index += 1
                 },
                 MOVE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.move_cost())));
                     actions.push(Box::new(MoveAction::new(x, y)));
+                    index += 1
                 },
                 TURN => {
-                    new_direction = genome.genes[index += 1] % Direction::SIZE;
+                    let new_direction = genome.genes[index += 1] % Direction::SIZE;
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.turn_cost())));
                     actions.push(Box::new(RotateAction::new(x, y, new_direction)));
+                    index += 1
                 },
                 SENSE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
-
                     let (target_x, target_y) = perceptor.looking_at(x, y, genome_id);
-                    match perceptor.get_entity(target_x, target_y) {
-                        Entity::Nothing => {},
-                        Entity::Cell(other_genome_id) => {},
-                        Entity::Corpse(_) => {}
-                        // TODO: current!!
+                    index += match perceptor.get_entity(target_x, target_y) {
+                        Entity::Nothing => 1,
+                        Entity::Cell(_) => 2,
+                        Entity::Corpse(_) => 3
                     }
                 }
                 _ => {
-                    println!("Unknown gene: {}", gene);
+                    // Jumping
+                    index = gene;
                 }
             }
 
-            index += 1;
             if index >= GENE_LENGTH {
                 index = index % GENE_LENGTH
             }

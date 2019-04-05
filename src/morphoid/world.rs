@@ -205,12 +205,10 @@ impl Perceptor for World {
         self.genomes.get(hash)
     }
 
-    fn looking_at(&mut self, x: i32, y: i32, hash: u64) -> (Coords, Coords) {
+    fn looking_at(&self, x: i32, y: i32, hash: u64) -> (Coords, Coords) {
         let cell_state = self.cell_states.get(hash);
         let (dx, dy) = cell_state.direction.shift();
         (x + dx, y + dy)
-//        let new_index = self.get_index(x + dx, y + dy);
-//        new_index
     }
 
     fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
