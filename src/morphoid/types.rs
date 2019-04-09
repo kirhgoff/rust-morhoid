@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 pub type Coords = i32;
 pub type GenomeId = u64;
-pub type Gene = u32;
+pub type Gene = usize;
 pub type HealthType = i32;
-pub type GeneIndex = u32; // TODO: rename in other places
+pub type GeneIndex = usize; // TODO: rename in other places
 
 // TODO: rename to GENOME_LENGTH
 pub const GENE_LENGTH: usize = 64;
@@ -23,6 +23,10 @@ pub struct Settings {
     pub photosynthesys_adds: HealthType,
     pub initial_cell_health: HealthType,
     pub attack_damage: HealthType,
+    pub attack_cost: HealthType,
+    pub move_cost: HealthType,
+    pub turn_cost: HealthType,
+    pub sense_cost: HealthType,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

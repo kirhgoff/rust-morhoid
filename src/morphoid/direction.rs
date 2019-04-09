@@ -31,7 +31,7 @@ impl Direction {
         DIRECTIONS.into_iter()
     }
 
-    pub fn rotate(&self, value: u32) -> Direction {
+    pub fn rotate(&self, value: Gene) -> Direction {
         let shift = (value % Direction::SIZE as u32) as usize;
         *Direction::iterator().skip(shift).next().unwrap()
     }

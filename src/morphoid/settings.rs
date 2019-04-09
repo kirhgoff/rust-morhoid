@@ -12,6 +12,10 @@ impl Settings {
             photosynthesys_adds: 1,
             initial_cell_health: 10,
             attack_damage: 4,
+            attack_cost: -5,
+            move_cost: -5,
+            turn_cost: -5,
+            sense_cost: -5
         }
     }
 
@@ -21,4 +25,8 @@ impl Settings {
     pub fn photosynthesys_adds(&self) -> HealthType { self.photosynthesys_adds }
     pub fn initial_cell_health(&self) -> HealthType { self.initial_cell_health }
     pub fn attack_damage(&self) -> HealthType { self.attack_damage }
+    pub fn attack_cost(&self) -> HealthType { self.attack_cost }
+    pub fn move_cost(&self) -> HealthType { self.move_cost }
+    pub fn turn_cost(&self) -> HealthType { self.turn_cost }
+    pub fn sense_cost(&self) -> HealthType { self.sense_cost }
 }

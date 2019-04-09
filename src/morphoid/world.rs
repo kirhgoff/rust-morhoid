@@ -437,7 +437,7 @@ mod tests {
 
         Processor::new().apply(
             &vec![
-                Box::new(AttackAction::new(1, 0, 2, 0, 100)),
+                Box::new(AttackAction::new(2, 0, 100)),
                 Box::new(ReproduceAction::new(0, 0, parent_hash))
             ],
             &mut world
@@ -476,7 +476,7 @@ mod tests {
         Processor::new().apply(
             &vec![
                 Box::new(ReproduceAction::new(0, 0, parent_hash)),
-                Box::new(AttackAction::new(1, 0, 2, 0, 100))
+                Box::new(AttackAction::new(2, 0, 100))
             ],
             &mut world
         );

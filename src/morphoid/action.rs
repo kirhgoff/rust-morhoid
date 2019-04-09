@@ -155,7 +155,7 @@ mod tests {
         world.set_cell(0, 0, Genome::new_plant());
 
         Processor::new().apply(
-            &vec![Box::new(AttackAction::new(0, 0, 1, 1, 100))],
+            &vec![Box::new(AttackAction::new(1, 1, 100))],
             &mut world
         );
 
