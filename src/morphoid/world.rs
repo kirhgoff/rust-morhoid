@@ -300,8 +300,7 @@ mod tests {
     #[test]
     fn integration_test_it_reproduces() {
         let settings = Settings::prod()
-            .with_steps_per_turn(2)
-            .with_reproduce_cost(-8) // it will die after new born
+//            .with_reproduce_cost(-8) // it will die after new born
             .with_reproduce_threshold(9) // it will reproduce on second step
             .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
             .with_initial_cell_health(10)
@@ -374,18 +373,14 @@ mod tests {
 
 
     #[test]
-    fn integration_test_genome_state() {
-        let settings = Settings {
-            steps_per_turn: 1,
-            reproduce_cost: -0,
-            reproduce_threshold: 4, // it will reproduce on first step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-            attack_damage: 4,
-        };
+    fn integration_test_plant_reproduce_if_have_enough() {
+        let settings = Settings::prod()
+            .with_reproduce_cost(0)
+            .with_reproduce_threshold(4) // it will reproduce on first step
+            .build(); // it will have 10 originally
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, settings);
+        let mut world = World::new(2, 1, *settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();

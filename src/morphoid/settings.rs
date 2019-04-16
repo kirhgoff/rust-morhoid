@@ -51,8 +51,43 @@ impl Settings {
         self.initial_cell_health = value; self
     }
 
+
+    pub fn with_attack_damage(&mut self, value: HealthType) -> &mut Settings {
+        self.attack_damage = value; self
+    }
+
+
+    pub fn with_attack_cost(&mut self, value: HealthType) -> &mut Settings {
+        self.attack_cost = value; self
+    }
+
+    pub fn with_move_cost(&mut self, value: HealthType) -> &mut Settings {
+        self.move_cost = value; self
+    }
+
+    pub fn with_turn_cost(&mut self, value: HealthType) -> &mut Settings {
+        self.turn_cost = value; self
+    }
+
+    pub fn with_sense_cost(&mut self, value: HealthType) -> &mut Settings {
+        self.sense_cost = value; self
+    }
+
     pub fn build(&mut self) -> &Settings {
         self
+    }
+
+    pub fn zero() -> Settings {
+        *Settings::prod()
+        .with_reproduce_cost(0)
+        .with_reproduce_threshold(0)
+        .with_photosynthesys_adds(0)
+        .with_attack_damage(0)
+        .with_attack_cost(0)
+        .with_move_cost(0)
+        .with_turn_cost(0)
+        .with_sense_cost(0)
+        .build()
     }
 }
 
