@@ -299,17 +299,21 @@ mod tests {
     // TODO: duplicate tests in actions
     #[test]
     fn integration_test_it_reproduces() {
-        let settings = Settings {
-            steps_per_turn: 2,
-            reproduce_cost: -8, // it will die after new born
-            reproduce_threshold: 9, // it will reproduce on second step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-            attack_damage: 4,
-        };
+        let settings = Settings::prod()
+            .with_steps_per_turn(2)
+            .with_reproduce_cost(-8) // it will die after new born
+            .with_reproduce_threshold(9) // it will reproduce on second step
+            .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
+            .with_initial_cell_health(10)
+            .build(); // it will have 10 originally
+
+        let new_value =
+            settings.initial_cell_health() +
+            settings.photosynthesys_adds() +
+            settings.reproduce_cost();
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, settings);
+        let mut world = World::new(2, 1, *settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
@@ -321,7 +325,7 @@ mod tests {
 
         // Checking old entity state
         let cell_state = world.get_state(hash);
-        assert_eq!(cell_state.health, 10 + 5 - 8); // TODO: use settings to amend the values
+        assert_eq!(cell_state.health, new_value);
 
         match world.get_entity(1, 0) {
             Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
@@ -331,15 +335,7 @@ mod tests {
 
     #[test]
     fn integration_test_and_then_there_were_none() {
-        let settings = Settings {
-            steps_per_turn: 1,
-            reproduce_cost: -10,
-            reproduce_threshold: 20,
-            photosynthesys_adds: 5,
-            initial_cell_health: 10,
-            attack_damage: 100,
-        };
-
+        let settings = Settings::prod();
         let mut processor = Processor::new();
         let mut world = World::new(3, 3, settings);
 

@@ -8,10 +8,10 @@ impl Settings {
         Settings {
             steps_per_turn: 1,
             reproduce_cost: -10,
-            reproduce_threshold: 100,
-            photosynthesys_adds: 1,
+            reproduce_threshold: 20,
+            photosynthesys_adds: 5,
             initial_cell_health: 10,
-            attack_damage: 4,
+            attack_damage: 100,
             attack_cost: -5,
             move_cost: -5,
             turn_cost: -5,
@@ -29,4 +29,41 @@ impl Settings {
     pub fn move_cost(&self) -> HealthType { self.move_cost }
     pub fn turn_cost(&self) -> HealthType { self.turn_cost }
     pub fn sense_cost(&self) -> HealthType { self.sense_cost }
+
+    pub fn with_steps_per_turn(&mut self, value: usize) -> &mut Settings {
+        self.steps_per_turn = value; self
+    }
+
+    // TODO: make macros for that
+    pub fn with_reproduce_cost(&mut self, value: HealthType) -> &mut Settings {
+        self.reproduce_cost = value; self
+    }
+
+    pub fn with_reproduce_threshold(&mut self, value: HealthType) -> &mut Settings {
+        self.reproduce_threshold = value; self
+    }
+
+    pub fn with_photosynthesys_adds(&mut self, value: HealthType) -> &mut Settings {
+        self.photosynthesys_adds = value; self
+    }
+
+    pub fn with_initial_cell_health(&mut self, value: HealthType) -> &mut Settings {
+        self.initial_cell_health = value; self
+    }
+
+    pub fn build(&mut self) -> &Settings {
+        self
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_build() {
+        let settings = Settings::prod().with_steps_per_turn(666);
+        assert_eq!(settings.steps_per_turn(), 666);
+    }
 }

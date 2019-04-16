@@ -30,14 +30,7 @@ lazy_static! {
 //5    0
 
 fn build_new_world() -> World {
-    let settings = Settings {
-        steps_per_turn: 1,
-        reproduce_cost: -10,
-        reproduce_threshold: 20,
-        photosynthesys_adds: 5,
-        initial_cell_health: 10,
-        attack_damage: 100,
-    };
+    let settings = Settings ::prod();
     let mut world = World::new(20, 20, settings);
     let coords_vec = vec![
         (2,1), (3,1), (5,1),(6,1),
