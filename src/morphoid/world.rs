@@ -409,9 +409,7 @@ mod tests {
 
     #[test]
     fn integration_test_order_of_execution_parent_killed() {
-        let settings = Settings::zero();
-
-        let mut world = World::new(3, 1, *settings);
+        let mut world = World::new(3, 1, Settings::zero());
         let parent = Genome::new_yeast();
 
         world.set_cell(1, 0, parent);

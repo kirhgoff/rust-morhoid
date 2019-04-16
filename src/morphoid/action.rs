@@ -140,17 +140,12 @@ mod tests {
     #[test]
     fn attack_action_works() {
         // TODO: this is not needed
-        let settings = Settings {
-            steps_per_turn: 2,
-            reproduce_cost: -8, // it will die after new born
-            reproduce_threshold: 9, // it will reproduce on second step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-            attack_damage: 4,
-        };
+        let settings = Settings::zero(); // initial health is 10
+        let new_value =
+            settings.initial_cell_health() +
+            settings.attack_cost();
 
-        let mut world = World::new(2, 1, settings);
-
+        let mut world = World::new(2, 1, *settings);
         world.set_cell(1, 0, Genome::new_predator());
         world.set_cell(0, 0, Genome::new_plant());
 
@@ -166,7 +161,7 @@ mod tests {
 
         match world.get_entity(1, 0) {
             Entity::Cell(genome_id) => {
-                assert_eq!(world.get_state(*genome_id).health, 110);
+                assert!(world.get_state(*genome_id).health > new_value);
             },
             _ => panic!("Predator cell should have high health!"),
         }
