@@ -407,21 +407,12 @@ mod tests {
 
     }
 
-    // TODO: deduplicate
     #[test]
-    fn integration_test_attack_first() {
-        let settings = Settings {
-            steps_per_turn: 1,
-            reproduce_cost: 0,
-            reproduce_threshold: 0, // it will reproduce on first step
-            photosynthesys_adds: 0, // it will have 10 + 5 health after first step
-            initial_cell_health: 50, // it will have 10 originally
-            attack_damage: 100,
-        };
+    fn integration_test_order_of_execution_parent_killed() {
+        let settings = Settings::zero();
 
-        let mut world = World::new(3, 1, settings);
+        let mut world = World::new(3, 1, *settings);
         let parent = Genome::new_yeast();
-        let parent_hash = parent.hash();
 
         world.set_cell(1, 0, parent);
         world.set_cell(2, 0, Genome::new_predator());
@@ -429,7 +420,7 @@ mod tests {
         Processor::new().apply(
             &vec![
                 Box::new(AttackAction::new(2, 0, 100)),
-                Box::new(ReproduceAction::new(0, 0, parent_hash))
+                Box::new(ReproduceAction::new(0, 0, parent.hash()))
             ],
             &mut world
         );
@@ -447,26 +438,18 @@ mod tests {
     }
 
     #[test]
-    fn integration_test_reproduce_first() {
-        let settings = Settings {
-            steps_per_turn: 1,
-            reproduce_cost: 0,
-            reproduce_threshold: 0, // it will reproduce on first step
-            photosynthesys_adds: 0, // it will have 10 + 5 health after first step
-            initial_cell_health: 50, // it will have 10 originally
-            attack_damage: 100,
-        };
+    fn integration_test_order_of_execution_parent_gives_birth() {
+        let settings = Settings::zero();
 
         let mut world = World::new(3, 1, settings);
         let parent = Genome::new_yeast();
-        let parent_hash = parent.hash();
 
         world.set_cell(1, 0, parent);
         world.set_cell(2, 0, Genome::new_predator());
 
         Processor::new().apply(
             &vec![
-                Box::new(ReproduceAction::new(0, 0, parent_hash)),
+                Box::new(ReproduceAction::new(0, 0, parent.hash())),
                 Box::new(AttackAction::new(2, 0, 100))
             ],
             &mut world
