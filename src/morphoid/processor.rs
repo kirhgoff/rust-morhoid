@@ -118,17 +118,15 @@ mod tests {
 
     #[test]
     fn integration_updates_genome_states() {
-        let settings = Settings {
-            steps_per_turn: 5,
-            reproduce_cost: -0,
-            reproduce_threshold: 4, // it will reproduce on first step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-            attack_damage: 4,
-        };
+        let settings = Settings::prod()
+            .with_steps_per_turn(5)
+            .with_reproduce_cost(0)
+            .with_reproduce_threshold(4) // it will reproduce on first step
+            .with_attack_damage(4)
+            .build();
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, settings);
+        let mut world = World::new(2, 1, *settings);
 
         let plant = Genome::new_plant();
         let hash = plant.hash();

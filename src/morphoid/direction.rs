@@ -32,7 +32,7 @@ impl Direction {
     }
 
     pub fn rotate(&self, value: Gene) -> Direction {
-        let shift = (value % Direction::SIZE as u32) as usize;
+        let shift = value % Direction::SIZE;
         *Direction::iterator().skip(shift).next().unwrap()
     }
 }

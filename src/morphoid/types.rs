@@ -94,6 +94,7 @@ pub trait Affector {
 
     fn update_health(&mut self, x: Coords, y: Coords, health_delta: HealthType);
     fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome>;
+    fn attack(&mut self, x: Coords, y: Coords, damage: HealthType);
 }
 
 pub trait Perceptor {

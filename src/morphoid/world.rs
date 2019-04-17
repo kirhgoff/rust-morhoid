@@ -179,6 +179,33 @@ impl Affector for World {
         }
     }
 
+    fn attack(&mut self, x:Coords, y:Coords, damage: HealthType) {
+        let index = self.get_index(x, y);
+
+        match self.entities[index] {
+            Entity::Cell(hash) => {
+                let (new_x, new_y) = self.looking_at(x, y, hash);
+                let target_index = self.get_index(new_x, new_y);
+
+                match self.entities[target_index] {
+                    Entity::Cell(target_hash) => {
+                        let mut state = self.cell_states.get_mut(target_hash);
+                        let old_health = state.health;
+                        state.health -= damage;
+
+                        if self.cell_states.get(target_hash).health < 0 {
+                            self.set_entity(x, y, Entity::Corpse(10), None, None);
+                        }
+                        let diff = if state.health < 0 { old_health } else { damage };
+                        self.update_health(x, y, diff);
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome> {
         self.genomes
             .get(parent_genome_id)

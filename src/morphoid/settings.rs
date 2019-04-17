@@ -51,11 +51,9 @@ impl Settings {
         self.initial_cell_health = value; self
     }
 
-
     pub fn with_attack_damage(&mut self, value: HealthType) -> &mut Settings {
         self.attack_damage = value; self
     }
-
 
     pub fn with_attack_cost(&mut self, value: HealthType) -> &mut Settings {
         self.attack_cost = value; self
