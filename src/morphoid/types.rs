@@ -9,7 +9,7 @@ pub type GeneIndex = usize; // TODO: rename in other places
 // TODO: rename to GENOME_LENGTH
 pub const GENE_LENGTH: usize = 64;
 
-pub const CHECK: Gene = 27; // Complex gene
+pub const SENSE: Gene = 26; // Complex gene
 pub const TURN: Gene = 27; // Complex gene
 pub const MOVE: Gene = 28;
 pub const ATTACK: Gene = 29;

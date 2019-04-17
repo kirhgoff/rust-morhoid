@@ -191,13 +191,21 @@ impl Affector for World {
                     Entity::Cell(target_hash) => {
                         let mut state = self.cell_states.get_mut(target_hash);
                         let old_health = state.health;
-                        state.health -= damage;
-
-                        if self.cell_states.get(target_hash).health < 0 {
+                        
+                        if state.health > damage {
+                            state.health -= damage;
+                            self.update_health(x, y, damage);
+                        } else {
                             self.set_entity(x, y, Entity::Corpse(10), None, None);
+                            self.update_health(x, y, old_health);
                         }
-                        let diff = if state.health < 0 { old_health } else { damage };
-                        self.update_health(x, y, diff);
+//
+//
+//                        if state.health < 0 {
+//                            self.set_entity(x, y, Entity::Corpse(10), None, None);
+//                        }
+//                        let diff = if state.health < 0 { old_health } else { damage };
+//                        self.update_health(x, y, diff);
                     }
                     _ => {}
                 }

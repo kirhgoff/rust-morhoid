@@ -59,10 +59,10 @@ impl Processor {
                     index += 1
                 },
                 TURN => {
-                    let new_direction = genome.genes[index += 1] % Direction::SIZE;
+                    index += 1;
+                    let new_direction = genome.genes[index] % Direction::SIZE;
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.turn_cost())));
                     actions.push(Box::new(RotateAction::new(x, y, new_direction)));
-                    index += 1
                 },
                 SENSE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
@@ -72,7 +72,7 @@ impl Processor {
                         Entity::Cell(_) => 2,
                         Entity::Corpse(_) => 3
                     }
-                }
+                },
                 _ => {
                     // Jumping
                     index = gene;
