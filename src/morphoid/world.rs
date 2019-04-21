@@ -161,22 +161,26 @@ impl Affector for World {
         self.entities[index] = entity;
     }
 
-    fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType) {
+    fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType) -> HealthType {
+        let mut result = health_delta;
+
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(hash) => {
                 {
-                    // TODO: probably need to make it more tolerant
                     let mut state = self.cell_states.get_mut(hash);
                     state.health += health_delta;
                     //println!("World.update_health x={:?} y={:?} hash={:?} delta={:?} new_health={:?}",
                     //    x, y, hash, health_delta, state.health);
                 }
-                if self.cell_states.get(hash).health < 0 {
+                let new_health = self.cell_states.get(hash).health;
+                if new_health < 0 {
+                    result = health_delta + new_health;
                     self.set_entity(x, y, Entity::Corpse(10), None, None);
                 }
             },
             _ => {}
         }
+        result
     }
 
     fn attack(&mut self, x:Coords, y:Coords, damage: HealthType) {
@@ -185,30 +189,8 @@ impl Affector for World {
         match self.entities[index] {
             Entity::Cell(hash) => {
                 let (new_x, new_y) = self.looking_at(x, y, hash);
-                let target_index = self.get_index(new_x, new_y);
-
-                match self.entities[target_index] {
-                    Entity::Cell(target_hash) => {
-                        let mut state = self.cell_states.get_mut(target_hash);
-                        let old_health = state.health;
-                        
-                        if state.health > damage {
-                            state.health -= damage;
-                            self.update_health(x, y, damage);
-                        } else {
-                            self.set_entity(x, y, Entity::Corpse(10), None, None);
-                            self.update_health(x, y, old_health);
-                        }
-//
-//
-//                        if state.health < 0 {
-//                            self.set_entity(x, y, Entity::Corpse(10), None, None);
-//                        }
-//                        let diff = if state.health < 0 { old_health } else { damage };
-//                        self.update_health(x, y, diff);
-                    }
-                    _ => {}
-                }
+                let health_eaten = self.update_health(new_x, new_y, -damage);
+                self.update_health(x, y, health_eaten);
             }
             _ => {}
         }
@@ -334,12 +316,11 @@ mod tests {
     // TODO: duplicate tests in actions
     #[test]
     fn integration_test_it_reproduces() {
-        let settings = Settings::prod()
-//            .with_reproduce_cost(-8) // it will die after new born
+        let mut prod = Settings::prod();
+        let settings = prod
             .with_reproduce_threshold(9) // it will reproduce on second step
             .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
-            .with_initial_cell_health(10)
-            .build(); // it will have 10 originally
+            .with_initial_cell_health(10);// it will have 10 originally
 
         let new_value =
             settings.initial_cell_health() +
