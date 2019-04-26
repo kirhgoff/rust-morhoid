@@ -16,6 +16,10 @@ pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
 
+pub struct SettingsBuilder {
+    pub settings: Settings
+}
+
 pub struct Settings {
     pub steps_per_turn: usize,
     pub reproduce_cost: HealthType,

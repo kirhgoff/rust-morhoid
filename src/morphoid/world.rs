@@ -316,11 +316,12 @@ mod tests {
     // TODO: duplicate tests in actions
     #[test]
     fn integration_test_it_reproduces() {
-        let mut prod = Settings::prod();
-        let settings = prod
-            .with_reproduce_threshold(9) // it will reproduce on second step
-            .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
-            .with_initial_cell_health(10);// it will have 10 originally
+        let settings =
+            SettingsBuilder::prod()
+                .with_reproduce_threshold(9) // it will reproduce on second step
+                .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
+                .with_initial_cell_health(10)// it will have 10 originally
+                .build();
 
         let new_value =
             settings.initial_cell_health() +
@@ -328,7 +329,7 @@ mod tests {
             settings.reproduce_cost();
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, *settings);
+        let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
@@ -390,13 +391,13 @@ mod tests {
 
     #[test]
     fn integration_test_plant_reproduce_if_have_enough() {
-        let settings = Settings::prod()
+        let settings = SettingsBuilder::prod()
             .with_reproduce_cost(0)
             .with_reproduce_threshold(4) // it will reproduce on first step
             .build(); // it will have 10 originally
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, *settings);
+        let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
         let hash = plant.hash();
@@ -425,7 +426,7 @@ mod tests {
 
     #[test]
     fn integration_test_order_of_execution_parent_killed() {
-        let mut world = World::new(3, 1, Settings::zero());
+        let mut world = World::new(3, 1, SettingsBuilder::zero());
         let parent = Genome::new_yeast();
 
         world.set_cell(1, 0, parent);
@@ -453,7 +454,7 @@ mod tests {
 
     #[test]
     fn integration_test_order_of_execution_parent_gives_birth() {
-        let settings = Settings::zero();
+        let settings = SettingsBuilder::zero();
 
         let mut world = World::new(3, 1, settings);
         let parent = Genome::new_yeast();

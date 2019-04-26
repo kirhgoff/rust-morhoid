@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn integration_updates_genome_states() {
-        let settings = Settings::prod()
+        let settings = SettingsBuilder::prod()
             .with_steps_per_turn(5)
             .with_reproduce_cost(0)
             .with_reproduce_threshold(4) // it will reproduce on first step
@@ -126,7 +126,7 @@ mod tests {
             .build();
 
         let mut processor = Processor::new();
-        let mut world = World::new(2, 1, *settings);
+        let mut world = World::new(2, 1, settings);
 
         let plant = Genome::new_plant();
         let hash = plant.hash();

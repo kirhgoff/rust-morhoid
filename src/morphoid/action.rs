@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn attack_action_works() {
         // TODO: this is not needed
-        let settings = Settings::zero(); // initial health is 10
+        let settings = SettingsBuilder::zero(); // initial health is 10
         let new_value =
             settings.initial_cell_health() +
             settings.attack_cost();
