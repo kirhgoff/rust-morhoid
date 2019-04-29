@@ -143,8 +143,8 @@ mod tests {
             settings.attack_cost();
 
         let mut world = World::new(2, 1, settings);
-        world.set_cell(1, 0, Genome::new_predator());
         world.set_cell(0, 0, Genome::new_plant());
+        world.set_cell(1, 0, Genome::new_predator());
 
         Processor::new().apply(
             &vec![Box::new(AttackAction::new(1, 1, 100))],

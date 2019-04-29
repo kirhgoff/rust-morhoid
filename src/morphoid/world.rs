@@ -27,7 +27,7 @@ impl World {
 
     // TODO: synchronize?
     pub fn tick(&mut self, processor: &mut Processor) {
-        let start_time = PreciseTime::now();
+        //let start_time = PreciseTime::now();
 
         // TODO move to processor?
         // TODO use linked list for performance
@@ -46,7 +46,7 @@ impl World {
         processor.apply(&actions, self);
 
         // whatever you want to do
-        let end_time = PreciseTime::now();
+        //let end_time = PreciseTime::now();
 
         //println!("DEBUG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
     }
@@ -168,8 +168,8 @@ impl Affector for World {
                 {
                     let mut state = self.cell_states.get_mut(hash);
                     state.health += health_delta;
-                    //println!("World.update_health x={:?} y={:?} hash={:?} delta={:?} new_health={:?}",
-                    //    x, y, hash, health_delta, state.health);
+                    println!("DEBUG: Affector.update_health x={:?} y={:?} hash={:?} delta={:?} new_health={:?}",
+                        x, y, hash, health_delta, state.health);
                 }
                 let new_health = self.cell_states.get(hash).health;
                 if new_health < 0 {
@@ -189,9 +189,15 @@ impl Affector for World {
             Entity::Cell(hash) => {
                 let (new_x, new_y) = self.looking_at(x, y, hash);
                 let health_eaten = self.update_health(new_x, new_y, -damage);
+
+                println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} health_eaten: {:?}",
+                         x, y, new_x, new_y, health_eaten);
+
                 self.update_health(x, y, health_eaten);
             }
-            _ => {}
+            other => {
+                println!("DEBUG: Affector.attack other: {:?}", other)
+            }
         }
     }
 
@@ -208,13 +214,15 @@ impl Perceptor for World {
         &self.entities[self.get_index(x, y)]
     }
 
-    // TODO: should not be mut
-    fn get_state_mut(&mut self, hash: GenomeId) -> &mut CellState {
-        self.cell_states.get_mut(hash)
+    fn get_state(&self, genome_id: GenomeId) -> &CellState {
+        self.cell_states.get(genome_id)
     }
 
-    fn get_state(&self, hash: GenomeId) -> &CellState {
-        self.cell_states.get(hash)
+    fn get_state_by_pos(&self, x:Coords, y:Coords) -> Option<&CellState> {
+        match self.get_entity(x, y) {
+            Entity::Cell(genome_id) => Some(self.get_state(*genome_id)),
+            _ => None
+        }
     }
 
     fn get_genome(&self, hash: GenomeId) -> Option<&Genome> {
@@ -310,6 +318,18 @@ mod tests {
 
         world.set_nothing(2, 0);
         assert_eq!(world.find_target_around(1, 1), Some((0,1)));
+    }
+
+    #[test]
+    fn test_update_health() {
+        let settings = Settings::prod();
+        let initial_cell_health = settings.initial_cell_health();
+
+        let mut world = World::new(1, 1, settings);
+        world.set_cell(0, 0, Genome::new_plant());
+
+        let state = world.get_state_by_pos(0, 0).expect("There should be cell here");
+        assert_eq!(state.health, initial_cell_health);
     }
 
     // TODO: duplicate tests in actions

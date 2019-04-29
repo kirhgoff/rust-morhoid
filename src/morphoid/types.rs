@@ -103,12 +103,10 @@ pub trait Affector {
 }
 
 pub trait Perceptor {
-    // TODO do I need this method?
-    fn get_state_mut(&mut self, hash: GenomeId) -> &mut CellState;
-
     fn get_entity(&self, x: Coords, y: Coords) -> &Entity;
-    fn get_state(&self, hash: GenomeId) -> &CellState;
-    fn get_genome(&self, hash: GenomeId) -> Option<&Genome>;
+    fn get_state(&self, genome_id: GenomeId) -> &CellState;
+    fn get_state_by_pos(&self, x:Coords, y:Coords) -> Option<&CellState>;
+    fn get_genome(&self, genome_id: GenomeId) -> Option<&Genome>;
     fn looking_at(&self, x: Coords, y: Coords, hash: GenomeId) -> (Coords, Coords); // TODO: return type?
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
     fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
