@@ -38,8 +38,7 @@ impl World {
                 let idx = self.get_index(x, y);
                 let entity = self.entities[idx];
 
-                println!("DEBUG: World.tick x: {:?} y: {:?} idx: {:?}", x, y, idx);
-
+                //println!("DEBUG: World.tick x: {:?} y: {:?} idx: {:?}", x, y, idx);
                 let mut action_batch = processor.process_entity(x, y, entity, self, &self.settings);
                 actions.append(&mut action_batch);
             }
@@ -49,7 +48,7 @@ impl World {
         // whatever you want to do
         let end_time = PreciseTime::now();
 
-        println!("DEBUG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
+        //println!("DEBUG World.tick actions: {:?} time: {:?}", actions.len(), start_time.to(end_time));
     }
 
     fn get_index(&self, x: Coords, y: Coords) -> usize {
@@ -103,7 +102,7 @@ impl Affector for World {
         self.set_entity(
             x,
             y,
-            Entity::Cell(genome.hash()),
+            Entity::Cell(genome.id()),
             Some(genome),
             Some(CellState::new(initial_health, Direction::North))
         );
@@ -332,7 +331,7 @@ mod tests {
         let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
-        let hash = plant.hash();
+        let hash = plant.id();
 
         world.set_cell(0, 0, plant);
         world.set_nothing(1, 0);
@@ -400,7 +399,7 @@ mod tests {
         let mut world = World::new(2, 1, settings);
         let mut plant = Genome::new_plant();
         plant.mutate(1, REPRODUCE);
-        let hash = plant.hash();
+        let hash = plant.id();
 
         world.set_cell(0, 0, plant);
         world.set_nothing(1, 0);
@@ -428,6 +427,7 @@ mod tests {
     fn integration_test_order_of_execution_parent_killed() {
         let mut world = World::new(3, 1, SettingsBuilder::zero());
         let parent = Genome::new_yeast();
+        let parent_genome_id = parent.id();
 
         world.set_cell(1, 0, parent);
         world.set_cell(2, 0, Genome::new_predator());
@@ -435,7 +435,7 @@ mod tests {
         Processor::new().apply(
             &vec![
                 Box::new(AttackAction::new(2, 0, 100)),
-                Box::new(ReproduceAction::new(0, 0, parent.hash()))
+                Box::new(ReproduceAction::new(0, 0, parent_genome_id))
             ],
             &mut world
         );
@@ -458,13 +458,14 @@ mod tests {
 
         let mut world = World::new(3, 1, settings);
         let parent = Genome::new_yeast();
+        let parent_genome_id = parent.id();
 
         world.set_cell(1, 0, parent);
         world.set_cell(2, 0, Genome::new_predator());
 
         Processor::new().apply(
             &vec![
-                Box::new(ReproduceAction::new(0, 0, parent.hash())),
+                Box::new(ReproduceAction::new(0, 0, parent_genome_id)),
                 Box::new(AttackAction::new(2, 0, 100))
             ],
             &mut world

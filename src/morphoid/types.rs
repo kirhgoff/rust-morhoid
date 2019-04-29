@@ -20,6 +20,7 @@ pub struct SettingsBuilder {
     pub settings: Settings
 }
 
+#[derive(Clone)]
 pub struct Settings {
     pub steps_per_turn: usize,
     pub reproduce_cost: HealthType,

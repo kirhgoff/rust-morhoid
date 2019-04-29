@@ -93,7 +93,7 @@ impl SettingsBuilder {
     }
 
     pub fn build(&mut self) -> Settings {
-        self.settings
+        self.settings.clone()
     }
 }
 

@@ -7,7 +7,7 @@ impl GenomeStorage {
     }
 
     pub fn put(&mut self, genome:Genome) -> GenomeId {
-        let hash = genome.hash();
+        let hash = genome.id();
         self.genomes.insert(hash, genome);
         hash
     }
@@ -29,14 +29,14 @@ mod tests {
     fn it_can_read_and_write_genomes() {
         let mut storage = GenomeStorage::new();
         let genome = Genome::new_plant();
-        let genome_hash = genome.hash();
+        let genome_hash = genome.id();
 
         let hash = storage.put(genome);
         assert_ne!(hash, 0);
         assert_eq!(genome_hash, hash);
 
         let found_genome = storage.get(hash).unwrap();
-        assert_eq!(hash, found_genome.hash());
+        assert_eq!(hash, found_genome.id());
         //assert_eq!(*found_genome, genome); // TODO: what about moving?
     }
 }

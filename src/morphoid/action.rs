@@ -100,7 +100,7 @@ mod tests {
     fn update_health_action_works() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         assert_eq!(world.get_state(hash).health, 10);
@@ -117,7 +117,7 @@ mod tests {
     fn reproduce_action_works() {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_cell(0, 0, plant);
 
         Processor::new().apply(
@@ -170,7 +170,7 @@ mod tests {
         let mut plant = Genome::new_plant();
         plant.mutate(0, MOVE);
 
-        let hash = plant.hash();
+        let hash = plant.id();
 
         world.set_cell(0, 0, plant);
 
@@ -201,7 +201,7 @@ mod tests {
         plant.mutate(0, TURN);
         plant.mutate(1, 1); // Rotate clockwise by 1
 
-        let hash = plant.hash();
+        let hash = plant.id();
 
         world.set_cell(0, 0, plant);
 

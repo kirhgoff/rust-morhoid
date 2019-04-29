@@ -129,11 +129,11 @@ mod tests {
         let mut world = World::new(2, 1, settings);
 
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_cell(0, 0, plant);
 
         let plant2 = Genome::new_plant();
-        let hash2 = plant2.hash();
+        let hash2 = plant2.id();
         world.set_cell(1, 0, plant2);
 
         for i in 0..10 {
@@ -152,7 +152,7 @@ mod tests {
     fn integration_can_do_kill_entity_action() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         match world.get_entity(0, 0) {
@@ -175,7 +175,7 @@ mod tests {
     fn integration_can_do_update_health() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         Processor::new().apply(

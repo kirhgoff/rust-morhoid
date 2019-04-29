@@ -35,7 +35,7 @@ impl Genome {
     }
 
     // TODO: rename to genome_id
-    pub fn hash(&self) -> GenomeId {
+    pub fn id(&self) -> GenomeId {
         self.id
     }
 
@@ -84,7 +84,7 @@ mod tests {
     fn debug_impl() {
         let genome1 = Genome::new_plant();
         let genome2 = Genome::new_plant();
-        assert_ne!(genome1.hash(), genome2.hash());
+        assert_ne!(genome1.id(), genome2.id());
         assert_eq!("Genome genes: 31 31 31", format!("{:?}", genome1).split_at(22).0);
     }
 
@@ -92,7 +92,7 @@ mod tests {
     fn clone() {
         let genome1 = Genome::new_plant();
         let genome2 = genome1.clone();
-        assert_ne!(genome1.hash(), genome2.hash());
+        assert_ne!(genome1.id(), genome2.id());
         assert_eq!(genome1, genome2);
     }
 
