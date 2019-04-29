@@ -66,6 +66,11 @@ impl World {
             remainder
         }
     }
+
+    // TODO: understand consequences of a lifetime here
+    fn settings(&self) -> &'static Settings {
+        &self.settings
+    }
 }
 
 impl fmt::Display for World {
@@ -87,6 +92,11 @@ impl fmt::Display for World {
 }
 
 impl Affector for World {
+    // TODO: understand consequences of a lifetime here
+    fn settings(&self) -> &'static Settings {
+        &self.settings
+    }
+
     fn set_nothing(&mut self, x:Coords, y:Coords) {
         self.set_entity(
             x,
@@ -145,8 +155,8 @@ impl Affector for World {
         //println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
         match self.entities[index] {
             Entity::Cell(hash) => {
-                self.cell_states.remove(hash);
                 self.genomes.remove(hash); // TODO: should we?
+                self.cell_states.remove(hash);
             },
             _ => {}
         }
@@ -159,8 +169,6 @@ impl Affector for World {
         }
         self.entities[index] = entity;
     }
-
-    // TODO: CURRENT - decide what to return in case of positive delta
 
     /// Returns positive amount of health bitten from target
     ///
@@ -228,6 +236,11 @@ impl Affector for World {
 
 
 impl Perceptor for World {
+    // TODO: understand consequences of a lifetime here
+    fn settings(&self) -> &'static Settings {
+        &self.settings
+    }
+
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity {
         &self.entities[self.get_index(x, y)]
     }
@@ -401,32 +414,41 @@ mod tests {
                 .with_reproduce_threshold(9) // it will reproduce on second step
                 .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
                 .with_initial_cell_health(10)// it will have 10 originally
+                .with_reproduce_cost(6)// it will have 9 after reproduction
                 .build();
+
+        let initial_cell_health = settings.initial_cell_health();
 
         let new_value =
             settings.initial_cell_health() +
-            settings.photosynthesys_adds() +
+            settings.photosynthesys_adds() -
             settings.reproduce_cost();
 
-        let mut processor = Processor::new();
         let mut world = World::new(2, 1, settings);
+
         let mut plant = Genome::new_plant();
-        plant.mutate(1, REPRODUCE);
-        let hash = plant.id();
+        let genome_id = plant.id();
+        plant.mutate(0, REPRODUCE);
 
-        world.set_cell(0, 0, plant);
-        world.set_nothing(1, 0);
+        world.set_nothing(0, 0);
+        world.set_entity(
+            1,
+            0,
+            Entity::Cell(genome_id),
+            Some(plant),
+            Some(CellState { health: initial_cell_health, direction: Direction::North })
+        );
 
-        world.tick(&mut processor);
+        world.tick(&mut Processor::new());
 
-        // Checking old entity state
-        let cell_state = world.get_state(hash);
-        assert_eq!(cell_state.health, new_value);
+        assert_eq!(world.get_state_by_pos(1, 0).unwrap().health, new_value);
 
-        match world.get_entity(1, 0) {
-            Entity::Cell(another_hash) => assert_ne!(*another_hash, hash),
+        match world.get_entity(0, 0) {
+            Entity::Cell(another) => assert_ne!(*another, genome_id),
             _ => panic!("New cell was not reproduced!")
         }
+
+        assert_eq!(world.get_state_by_pos(0, 0).unwrap().health, initial_cell_health);
     }
 
     #[test]

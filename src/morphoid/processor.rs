@@ -10,7 +10,7 @@ impl Processor {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
-                //println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
+                println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
@@ -36,16 +36,15 @@ impl Processor {
 
         let mut index = start_index;
         for _ in 0..settings.steps_per_turn() {
-            //println!("DEBUG: Processor.execute gene: {:?} index={:?}", genome_id, index);
             let gene = genome.genes[index];
+            println!("DEBUG: Processor.execute gene: {:?} index={:?}, genome_id: {:?}", gene, index, genome_id);
+
             match gene {
                 ATTACK => {
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.attack_cost())));
                     actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())));
                     index += 1
                 },
                 REPRODUCE => {
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
                     actions.push(Box::new(ReproduceAction::new(x, y, genome_id)));
                     index += 1
                 },
@@ -54,19 +53,19 @@ impl Processor {
                     index += 1
                 },
                 MOVE => {
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.move_cost())));
                     actions.push(Box::new(MoveAction::new(x, y)));
                     index += 1
                 },
                 TURN => {
                     index += 1;
                     let new_direction = genome.genes[index] % Direction::SIZE;
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.turn_cost())));
                     actions.push(Box::new(RotateAction::new(x, y, new_direction)));
                 },
                 SENSE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
                     let (target_x, target_y) = perceptor.looking_at(x, y, genome_id);
+
+                    // This is just a conditional operator
                     index += match perceptor.get_entity(target_x, target_y) {
                         Entity::Nothing => 1,
                         Entity::Cell(_) => 2,
@@ -74,7 +73,7 @@ impl Processor {
                     }
                 },
                 _ => {
-                    // Jumping
+                    // Goto
                     index = gene;
                 }
             }
