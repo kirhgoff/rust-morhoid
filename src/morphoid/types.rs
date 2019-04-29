@@ -90,8 +90,8 @@ pub struct World {
     pub cell_states: CellStateStorage,
 }
 
-pub trait Affector {
-    fn settings(&self) -> &Settings;
+pub trait Affector<'a> {
+    fn settings(&self) -> &'a Settings;
 
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome);
     fn set_nothing(&mut self, x: Coords, y: Coords);

@@ -66,11 +66,6 @@ impl World {
             remainder
         }
     }
-
-    // TODO: understand consequences of a lifetime here
-    fn settings(&self) -> &'static Settings {
-        &self.settings
-    }
 }
 
 impl fmt::Display for World {
@@ -91,9 +86,9 @@ impl fmt::Display for World {
     }
 }
 
-impl Affector for World {
+impl<'a> Affector<'a> for World {
     // TODO: understand consequences of a lifetime here
-    fn settings(&self) -> &'static Settings {
+    fn settings(&self) -> &'a Settings {
         &self.settings
     }
 
