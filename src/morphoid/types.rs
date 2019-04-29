@@ -53,6 +53,7 @@ pub enum Direction {
     NorthWest
 }
 
+#[derive(Debug)]
 pub struct CellState {
     pub health: HealthType,
     pub direction: Direction

@@ -2,7 +2,7 @@ extern crate time;
 
 use std::fmt;
 use morphoid::types::*;
-use self::time::PreciseTime;
+//use self::time::PreciseTime;
 use std::vec::Vec;
 
 impl World {
@@ -160,21 +160,39 @@ impl Affector for World {
         self.entities[index] = entity;
     }
 
+    // TODO: CURRENT - decide what to return in case of positive delta
+
+    /// Returns positive amount of health bitten from target
+    ///
+    /// # Arguments
+    ///
+    /// * `x`
+    /// * `y`
+    /// * `health_delta` - will be added to cell's health
+
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType) -> HealthType {
-        let mut result = health_delta;
+        let old_health;
+        let new_health;
+
+        let mut result = -health_delta;
 
         match self.entities[self.get_index(x, y)] {
-            Entity::Cell(hash) => {
+            Entity::Cell(genome_id) => {
+                // TODO: understand, still awkward
                 {
-                    let mut state = self.cell_states.get_mut(hash);
+                    let mut state = self.cell_states.get_mut(genome_id);
+                    old_health = state.health;
+
                     state.health += health_delta;
-                    println!("DEBUG: Affector.update_health x={:?} y={:?} hash={:?} delta={:?} new_health={:?}",
-                        x, y, hash, health_delta, state.health);
+                    new_health = state.health;
+
+                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
+                             x, y, genome_id, health_delta, state.health);
                 }
-                let new_health = self.cell_states.get(hash).health;
+
                 if new_health < 0 {
-                    result = health_delta + new_health;
-                    self.set_entity(x, y, Entity::Corpse(10), None, None);
+                    result = old_health;
+                    self.set_entity(x, y, Entity::Corpse(666), None, None);
                 }
             },
             _ => {}
@@ -321,15 +339,58 @@ mod tests {
     }
 
     #[test]
-    fn test_update_health() {
+    fn test_update_health_addition() {
         let settings = Settings::prod();
         let initial_cell_health = settings.initial_cell_health();
 
         let mut world = World::new(1, 1, settings);
         world.set_cell(0, 0, Genome::new_plant());
 
-        let state = world.get_state_by_pos(0, 0).expect("There should be cell here");
-        assert_eq!(state.health, initial_cell_health);
+        // we always receive negative value from update
+        assert_eq!(world.update_health(0, 0, 10), - 10);
+
+        assert_eq!(
+            world.get_state_by_pos(0, 0).expect("There should be cell here").health,
+            initial_cell_health + 10
+        );
+    }
+
+    #[test]
+    fn test_update_health_small_damage() {
+        let settings = Settings::prod();
+        let initial_cell_health = settings.initial_cell_health();
+
+        let mut world = World::new(1, 1, settings);
+        world.set_cell(0, 0, Genome::new_plant());
+
+        assert_eq!(
+            world.update_health(0, 0, - initial_cell_health + 5),
+            initial_cell_health - 5
+        );
+
+        assert_eq!(
+            world.get_state_by_pos(0, 0).expect("There should be cell here").health,
+            5
+        );
+    }
+
+    #[test]
+    fn test_update_health_big_damage() {
+        let settings = Settings::prod();
+        let initial_cell_health = settings.initial_cell_health();
+
+        let mut world = World::new(1, 1, settings);
+        world.set_cell(0, 0, Genome::new_plant());
+
+        assert_eq!(
+            world.update_health(0, 0, - initial_cell_health - 1),
+            initial_cell_health // You can ony eat what is there
+        );
+
+        match world.get_entity(0, 0) {
+            Entity::Cell(_) => panic!("Cell should be dead!"),
+            _ => {}
+        }
     }
 
     // TODO: duplicate tests in actions
