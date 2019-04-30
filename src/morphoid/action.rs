@@ -40,7 +40,8 @@ impl ReproduceAction {
 impl Action for ReproduceAction {
     fn execute(&self, affector: &mut Affector) {
         println!("ReproduceAction.execute x={:?} y={:?}", self.x, self.y);
-        affector.update_health(self.x, self.y, affector.settings().reproduce_cost());
+        let cost = affector.settings().reproduce_cost();
+        affector.update_health(self.x, self.y, cost);
 
         let new_genome_option = affector.build_child_genome_for(self.parent_genome_id);
         if let Some(new_genome) = new_genome_option {
