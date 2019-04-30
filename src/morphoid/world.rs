@@ -86,9 +86,9 @@ impl fmt::Display for World {
     }
 }
 
-impl<'a> Affector<'a> for World {
+impl Affector for World {
     // TODO: understand consequences of a lifetime here
-    fn settings(&self) -> &'a Settings {
+    fn settings<'a>(&'a self) -> &'a Settings {
         &self.settings
     }
 
@@ -231,8 +231,7 @@ impl<'a> Affector<'a> for World {
 
 
 impl Perceptor for World {
-    // TODO: understand consequences of a lifetime here
-    fn settings(&self) -> &'static Settings {
+    fn settings<'a>(&'a self) -> &'a Settings {
         &self.settings
     }
 
