@@ -45,7 +45,7 @@ impl Processor {
                     index += 1
                 },
                 REPRODUCE => {
-                    actions.push(Box::new(ReproduceAction::new(x, y, genome_id)));
+                    actions.push(Box::new(ReproduceAction::new(x, y)));
                     index += 1
                 },
                 PHOTOSYNTHESYS => {
@@ -63,13 +63,13 @@ impl Processor {
                 },
                 SENSE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
-                    let (target_x, target_y) = perceptor.looking_at(x, y, genome_id);
-
-                    // This is just a conditional operator
-                    index += match perceptor.get_entity(target_x, target_y) {
-                        Entity::Nothing => 1,
-                        Entity::Cell(_) => 2,
-                        Entity::Corpse(_) => 3
+                    if let Some((target_x, target_y)) = perceptor.looking_at(x, y) {
+                        // This is just a conditional operator
+                        index += match perceptor.get_entity(target_x, target_y) {
+                            Entity::Nothing => 1,
+                            Entity::Cell(_) => 2,
+                            Entity::Corpse(_) => 3
+                        }
                     }
                 },
                 _ => {

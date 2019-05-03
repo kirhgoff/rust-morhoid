@@ -87,11 +87,6 @@ impl fmt::Display for World {
 }
 
 impl Affector for World {
-    // TODO: understand consequences of a lifetime here
-    fn settings<'a>(&'a self) -> &'a Settings {
-        &self.settings
-    }
-
     fn set_nothing(&mut self, x:Coords, y:Coords) {
         self.set_entity(
             x,
@@ -117,16 +112,17 @@ impl Affector for World {
         let old_index = self.get_index(x, y);
 
         match self.entities[old_index] {
-            Entity::Cell(hash) => {
-                let (new_x, new_y) = self.looking_at(x, y, hash);
-                let new_index = self.get_index(new_x, new_y);
+            Entity::Cell(genome_id) => {
+                if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                    let new_index = self.get_index(new_x, new_y);
 
-                match self.entities[new_index] {
-                    Entity::Nothing => {
-                        self.entities[new_index] = Entity::Cell(hash);
-                        self.entities[old_index] = Entity::Nothing;
+                    match self.entities[new_index] {
+                        Entity::Nothing => {
+                            self.entities[new_index] = Entity::Cell(genome_id);
+                            self.entities[old_index] = Entity::Nothing;
+                        }
+                        _ => {}
                     }
-                    _ => {}
                 }
             }
             _ => {}
@@ -169,8 +165,8 @@ impl Affector for World {
     ///
     /// # Arguments
     ///
-    /// * `x`
-    /// * `y`
+    /// * `x` - x coord of changed entity
+    /// * `y` - y coord of changed entity
     /// * `health_delta` - will be added to cell's health
 
     fn update_health(&mut self, x:Coords, y:Coords, health_delta: HealthType) -> HealthType {
@@ -203,18 +199,31 @@ impl Affector for World {
         result
     }
 
+    fn punish_for_action(&mut self, x:Coords, y:Coords, gene: Gene) {
+        let value = match gene {
+            SENSE => self.settings.sense_cost(),
+            TURN => self.settings.turn_cost(),
+            MOVE => self.settings.move_cost(),
+            ATTACK => self.settings.attack_cost(),
+            REPRODUCE => self.settings.reproduce_cost(),
+            _ => 0
+        };
+        println!("DEBUG: Affector.punish_for_action x={:?} y={:?} gene={:?}", x, y, gene);
+
+        self.update_health(x, y, -value);
+    }
+
     fn attack(&mut self, x:Coords, y:Coords, damage: HealthType) {
-        let index = self.get_index(x, y);
+        match self.entities[self.get_index(x, y)] {
+            Entity::Cell(_) => {
+                if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                    let health_eaten = self.update_health(new_x, new_y, -damage);
 
-        match self.entities[index] {
-            Entity::Cell(hash) => {
-                let (new_x, new_y) = self.looking_at(x, y, hash);
-                let health_eaten = self.update_health(new_x, new_y, -damage);
+                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} health_eaten: {:?}",
+                             x, y, new_x, new_y, health_eaten);
 
-                println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} health_eaten: {:?}",
-                         x, y, new_x, new_y, health_eaten);
-
-                self.update_health(x, y, health_eaten);
+                    self.update_health(x, y, health_eaten);
+                }
             }
             other => {
                 println!("DEBUG: Affector.attack other: {:?}", other)
@@ -222,25 +231,46 @@ impl Affector for World {
         }
     }
 
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome> {
+    fn reproduce(&mut self, x:Coords, y:Coords) {
+        let new_genome = match self.get_entity(x, y) {
+            Entity::Cell(genome_id) => self.build_child_genome_for(*genome_id),
+            _ => None
+        };
+
+        match new_genome {
+            Some(new_genome) => {
+                if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                    println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking at new_x:{:?},new_y:{:?}",
+                        x, y, new_x, new_y);
+
+                    self.set_cell(new_x, new_y, new_genome);
+                }
+            },
+            _ => {
+                println!("DEBUG: Affector.reproduce new genome is shit")
+            }
+        }
+
+    }
+
+    fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome> {
         self.genomes
             .get(parent_genome_id)
-            .map(|genome| genome.clone()) // TODO: mutate
+            .map(|genome| genome.clone())
     }
 }
 
 
 impl Perceptor for World {
-    fn settings<'a>(&'a self) -> &'a Settings {
-        &self.settings
-    }
-
     fn get_entity(&self, x:Coords, y:Coords) -> &Entity {
         &self.entities[self.get_index(x, y)]
     }
 
     fn get_state(&self, genome_id: GenomeId) -> &CellState {
-        self.cell_states.get(genome_id)
+        let result = self.cell_states.get(genome_id);
+        println!("DEBUG: Perceptor.get_state genome_id={:?} state={:?}",
+                 genome_id, result);
+        result
     }
 
     fn get_state_by_pos(&self, x:Coords, y:Coords) -> Option<&CellState> {
@@ -254,10 +284,15 @@ impl Perceptor for World {
         self.genomes.get(hash)
     }
 
-    fn looking_at(&self, x: i32, y: i32, hash: u64) -> (Coords, Coords) {
-        let cell_state = self.cell_states.get(hash);
-        let (dx, dy) = cell_state.direction.shift();
-        (x + dx, y + dy)
+    fn looking_at(&self, x: i32, y: i32) ->Option<(Coords, Coords)> {
+        match self.get_entity(x, y) {
+            Entity::Cell(genome_id) => {
+                let cell_state = self.cell_states.get(*genome_id);
+                let (dx, dy) = cell_state.direction.shift();
+                Some((x + dx, y + dy))
+            },
+            _ => None
+        }
     }
 
     fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
@@ -413,10 +448,7 @@ mod tests {
 
         let initial_cell_health = settings.initial_cell_health();
 
-        let new_value =
-            settings.initial_cell_health() +
-            settings.photosynthesys_adds() -
-            settings.reproduce_cost();
+        let new_value = settings.initial_cell_health() - settings.reproduce_cost();
 
         let mut world = World::new(2, 1, settings);
 
@@ -430,12 +462,15 @@ mod tests {
             0,
             Entity::Cell(genome_id),
             Some(plant),
-            Some(CellState { health: initial_cell_health, direction: Direction::North })
+            Some(CellState { health: initial_cell_health, direction: Direction::West })
         );
 
         world.tick(&mut Processor::new());
 
-        assert_eq!(world.get_state_by_pos(1, 0).unwrap().health, new_value);
+        let current_health = world.get_state_by_pos(1, 0).unwrap().health;
+
+        println!("TEST: curent_health: {:?} expected: {:?}", current_health, new_value);
+        assert_eq!(new_value, current_health);
 
         match world.get_entity(0, 0) {
             Entity::Cell(another) => assert_ne!(*another, genome_id),
@@ -523,16 +558,14 @@ mod tests {
     #[test]
     fn integration_test_order_of_execution_parent_killed() {
         let mut world = World::new(3, 1, SettingsBuilder::zero());
-        let parent = Genome::new_yeast();
-        let parent_genome_id = parent.id();
 
-        world.set_cell(1, 0, parent);
+        world.set_cell(1, 0, Genome::new_yeast());
         world.set_cell(2, 0, Genome::new_predator());
 
         Processor::new().apply(
             &vec![
                 Box::new(AttackAction::new(2, 0, 100)),
-                Box::new(ReproduceAction::new(0, 0, parent_genome_id))
+                Box::new(ReproduceAction::new(0, 0))
             ],
             &mut world
         );
@@ -554,15 +587,12 @@ mod tests {
         let settings = SettingsBuilder::zero();
 
         let mut world = World::new(3, 1, settings);
-        let parent = Genome::new_yeast();
-        let parent_genome_id = parent.id();
-
-        world.set_cell(1, 0, parent);
+        world.set_cell(1, 0, Genome::new_yeast());
         world.set_cell(2, 0, Genome::new_predator());
 
         Processor::new().apply(
             &vec![
-                Box::new(ReproduceAction::new(0, 0, parent_genome_id)),
+                Box::new(ReproduceAction::new(0, 0)),
                 Box::new(AttackAction::new(2, 0, 100))
             ],
             &mut world

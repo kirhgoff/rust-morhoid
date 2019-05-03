@@ -2,6 +2,7 @@ use morphoid::types::*;
 
 // ---------------------------------
 
+// TODO: delete me
 impl KillAction {
     pub fn new(x: Coords, y: Coords) -> KillAction {
         KillAction { x, y }
@@ -32,21 +33,15 @@ impl Action for UpdateHealthAction {
 // --------------------------------
 
 impl ReproduceAction {
-    pub fn new(x: Coords, y: Coords, parent_genome_id: GenomeId) -> ReproduceAction {
-        ReproduceAction { x, y, parent_genome_id }
+    pub fn new(x: Coords, y: Coords) -> ReproduceAction {
+        ReproduceAction { x, y }
     }
 }
 
 impl Action for ReproduceAction {
     fn execute(&self, affector: &mut Affector) {
-        println!("ReproduceAction.execute x={:?} y={:?}", self.x, self.y);
-        let cost = affector.settings().reproduce_cost();
-        affector.update_health(self.x, self.y, cost);
-
-        let new_genome_option = affector.build_child_genome_for(self.parent_genome_id);
-        if let Some(new_genome) = new_genome_option {
-            affector.set_cell(self.x, self.y, new_genome);
-        }
+        affector.punish_for_action(self.x, self.y, REPRODUCE);
+        affector.reproduce(self.x, self.y);
     }
 }
 
@@ -60,7 +55,7 @@ impl AttackAction {
 
 impl Action for AttackAction {
     fn execute(&self, affector: &mut Affector) {
-        affector.update_health(self.x, self.y, affector.settings().attack_cost());
+        affector.punish_for_action(self.x, self.y, ATTACK);
         affector.attack(self.x, self.y, self.damage);
     }
 }
@@ -75,7 +70,7 @@ impl MoveAction {
 
 impl Action for MoveAction {
     fn execute(&self, affector: &mut Affector) {
-        affector.update_health(self.x, self.y, affector.settings().move_cost());
+        affector.punish_for_action(self.x, self.y, MOVE);
         affector.move_cell(self.x, self.y);
     }
 }
@@ -91,7 +86,7 @@ impl RotateAction {
 
 impl Action for RotateAction {
     fn execute(&self, affector: &mut Affector) {
-        affector.update_health(self.x, self.y, affector.settings().turn_cost());
+        affector.punish_for_action(self.x, self.y, TURN);
         affector.rotate_cell(self.x, self.y, self.value);
     }
 }
@@ -123,17 +118,17 @@ mod tests {
     fn reproduce_action_works() {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
-        let hash = plant.id();
+        let genome_id = plant.id();
         world.set_cell(0, 0, plant);
 
         Processor::new().apply(
-            &vec![Box::new(ReproduceAction::new(1, 0, hash))],
+            &vec![Box::new(ReproduceAction::new(1, 0))],
             &mut world
         );
 
         match world.get_entity(1, 0) {
             Entity::Cell(new_hash) => {
-                assert_ne!(*new_hash, hash);
+                assert_ne!(*new_hash, genome_id);
                 assert_eq!(world.get_state(*new_hash).health, 10);
             },
             _ => panic!("Cant find reproduced entity")

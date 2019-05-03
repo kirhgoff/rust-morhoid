@@ -91,8 +91,6 @@ pub struct World {
 }
 
 pub trait Affector {
-    fn settings<'a>(&'a self) -> &'a Settings;
-
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome);
     fn set_nothing(&mut self, x: Coords, y: Coords);
     fn set_entity(&mut self, x: Coords, y: Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
@@ -100,19 +98,20 @@ pub trait Affector {
     fn move_cell(&mut self, x: Coords, y: Coords);
     fn rotate_cell(&mut self, x: Coords, y: Coords, value: Gene);
 
+    fn punish_for_action(&mut self, x: Coords, y: Coords, gene: Gene);
     fn update_health(&mut self, x: Coords, y: Coords, health_delta: HealthType) -> HealthType;
-    fn build_child_genome_for(&mut self, parent_genome_id: GenomeId) -> Option<Genome>;
     fn attack(&mut self, x: Coords, y: Coords, damage: HealthType);
+    fn reproduce(&mut self, x: Coords, y: Coords);
+
+    fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome>;
 }
 
 pub trait Perceptor {
-    fn settings(&self) -> &Settings;
-
     fn get_entity(&self, x: Coords, y: Coords) -> &Entity;
     fn get_state(&self, genome_id: GenomeId) -> &CellState;
     fn get_state_by_pos(&self, x:Coords, y:Coords) -> Option<&CellState>;
     fn get_genome(&self, genome_id: GenomeId) -> Option<&Genome>;
-    fn looking_at(&self, x: Coords, y: Coords, hash: GenomeId) -> (Coords, Coords); // TODO: return type?
+    fn looking_at(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
     fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
     fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
 }
@@ -136,8 +135,7 @@ pub struct UpdateHealthAction {
 
 pub struct ReproduceAction {
     pub x: Coords,
-    pub y: Coords,
-    pub parent_genome_id: GenomeId
+    pub y: Coords
 }
 
 pub struct AttackAction {
