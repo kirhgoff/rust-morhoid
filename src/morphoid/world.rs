@@ -138,6 +138,8 @@ impl Affector for World {
             Entity::Cell(genome_id) => {
                 let mut cell_state = self.cell_states.get_mut(genome_id);
                 cell_state.direction = cell_state.direction.rotate(value);
+                println!("DEBUG: world.rotate_cell rotated x:{:?}, y:{:?}, value:{:?}, new direction:{:?}",
+                    x, y, value, cell_state.direction);
             }
             _ => {}
         }
@@ -220,11 +222,10 @@ impl Affector for World {
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(_) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
+                             x, y, new_x, new_y, damage);
+
                     let health_eaten = self.update_health(new_x, new_y, -damage);
-
-                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} health_eaten: {:?}",
-                             x, y, new_x, new_y, health_eaten);
-
                     self.update_health(x, y, health_eaten);
                 }
             }
@@ -382,7 +383,11 @@ mod tests {
         assert_eq!(Some((1, -1)), world.looking_at(0,0));
 
         // Turn north-east
-        world.rotate_cell(0, 0, 10);
+        world.rotate_cell(0, 0, 9);
+        assert_eq!(Some((1, -1)), world.looking_at(0,0));
+
+        // Turn east
+        world.rotate_cell(0, 0, 1);
         assert_eq!(Some((1, 0)), world.looking_at(0,0));
 
     }
@@ -530,7 +535,7 @@ mod tests {
         for i in (0..27).step_by(3) {
             genome.mutate(i, ATTACK);
             genome.mutate(i + 1, TURN);
-            genome.mutate(i + 1, 1);
+            genome.mutate(i + 2, 1);
         }
 
         world.set_cell_ext(1, 1, genome, Direction::North);

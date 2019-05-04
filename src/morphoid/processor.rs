@@ -10,7 +10,7 @@ impl Processor {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
-                println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
+                println!("DEBUG: Processor.process_entity [cell] ---- x: {:?} y:{:?}, genome: {:?}", x, y, genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
@@ -57,9 +57,9 @@ impl Processor {
                     index += 1
                 },
                 TURN => {
-                    index += 1;
-                    let new_direction = genome.genes[index] % Direction::SIZE;
+                    let new_direction = genome.genes[index + 1] % Direction::SIZE;
                     actions.push(Box::new(RotateAction::new(x, y, new_direction)));
+                    index += 2
                 },
                 SENSE => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
