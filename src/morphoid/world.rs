@@ -130,11 +130,9 @@ impl Affector for World {
     }
 
     fn rotate_cell(&mut self, x:Coords, y:Coords, value: Gene) {
-        let index = self.get_index(x, y);
-
-        match self.entities[index] {
-            Entity::Cell(hash) => {
-                let mut cell_state = self.cell_states.get_mut(hash);
+        match self.entities[self.get_index(x, y)] {
+            Entity::Cell(genome_id) => {
+                let mut cell_state = self.cell_states.get_mut(genome_id);
                 cell_state.direction = cell_state.direction.rotate(value);
             }
             _ => {}
@@ -337,7 +335,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_index_test() {
+    fn test_get_index() {
         let world = World::prod(2, 1);
 
         assert_eq!(world.get_index(-2,0), 0);
@@ -360,8 +358,34 @@ mod tests {
     }
 
     #[test]
+    fn test_looking_at() {
+        let mut world = World::prod(1, 1);
+        let plant = Genome::new_plant();
+
+        world.set_entity(
+            1,
+            0,
+            Entity::Cell(plant.id()),
+            Some(plant),
+            Some(CellState { health: 10, direction: Direction::North })
+        );
+
+        assert_eq!(Some((0, -1)), world.looking_at(0,0));
+
+        // Turn north-east
+        world.rotate_cell(0, 0, 1);
+        assert_eq!(Some((1, -1)), world.looking_at(0,0));
+
+        // Turn north-east
+        world.rotate_cell(0, 0, 10);
+        assert_eq!(Some((1, 0)), world.looking_at(0,0));
+
+    }
+
+
+    #[test]
     fn test_find_target_around() {
-        let mut world = World::new(3, 3, Settings::prod());
+        let mut world = World::prod(3, 3);
         for x in 0..3 {
             for y in 0..3 {
                 world.set_cell(x, y, Genome::new_predator());
