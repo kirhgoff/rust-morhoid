@@ -119,10 +119,10 @@ mod tests {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
         let genome_id = plant.id();
-        world.set_cell(0, 0, plant);
+        world.set_cell_ext(0, 0, plant, Direction::East);
 
         Processor::new().apply(
-            &vec![Box::new(ReproduceAction::new(1, 0))],
+            &vec![Box::new(ReproduceAction::new(0, 0))],
             &mut world
         );
 
@@ -144,8 +144,8 @@ mod tests {
             settings.attack_cost();
 
         let mut world = World::new(2, 1, settings);
-        world.set_cell(0, 0, Genome::new_plant());
-        world.set_cell(1, 0, Genome::new_predator());
+        world.set_cell_ext(0, 0, Genome::new_plant(), Direction::East);
+        world.set_cell_ext(1, 0, Genome::new_predator(), Direction::West);
 
         Processor::new().apply(
             &vec![Box::new(AttackAction::new(1, 1, 100))],
@@ -171,9 +171,9 @@ mod tests {
         let mut plant = Genome::new_plant();
         plant.mutate(0, MOVE);
 
-        let hash = plant.id();
+        let genome_id = plant.id();
 
-        world.set_cell(0, 0, plant);
+        world.set_cell_ext(0, 0, plant, Direction::East);
 
         Processor::new().apply(
             &vec![Box::new(MoveAction::new(0, 0))],
@@ -187,7 +187,7 @@ mod tests {
 
         match world.get_entity(1, 0) {
             Entity::Cell(new_hash) => {
-                assert_eq!(*new_hash, hash);
+                assert_eq!(*new_hash, genome_id);
             },
             _ => panic!("Cell should have moved in")
         }

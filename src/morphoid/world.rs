@@ -98,13 +98,17 @@ impl Affector for World {
     }
 
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome) {
+        self.set_cell_ext(x, y, genome, Direction::North);
+    }
+
+    fn set_cell_ext(&mut self, x:Coords, y:Coords, genome:Genome, direction: Direction) {
         let initial_health = self.settings.initial_cell_health;
         self.set_entity(
             x,
             y,
             Entity::Cell(genome.id()),
             Some(genome),
-            Some(CellState::new(initial_health, Direction::North))
+            Some(CellState::new(initial_health, direction))
         );
     }
 
@@ -190,6 +194,7 @@ impl Affector for World {
                 if new_health < 0 {
                     result = old_health;
                     self.set_entity(x, y, Entity::Corpse(666), None, None);
+                    println!("DEBUG: Affector.update_health killed x={:?} y={:?}", x, y);
                 }
             },
             _ => {}
@@ -476,9 +481,8 @@ mod tests {
 
         let mut world = World::new(2, 1, settings);
 
-        let mut plant = Genome::new_plant();
+        let plant = Genome::new_yeast();
         let genome_id = plant.id();
-        plant.mutate(0, REPRODUCE);
 
         world.set_nothing(0, 0);
         world.set_entity(
@@ -506,7 +510,10 @@ mod tests {
 
     #[test]
     fn integration_test_and_then_there_were_none() {
-        let settings = Settings::prod();
+        let settings = SettingsBuilder::prod()
+            .with_attack_cost(1)
+            .with_attack_damage(100) // one shot kills
+            .build();
         let mut processor = Processor::new();
         let mut world = World::new(3, 3, settings);
 
@@ -518,7 +525,15 @@ mod tests {
                 }
             }
         }
-        world.set_cell(1, 1, Genome::new_predator());
+
+        let mut genome = Genome::new_predator();
+        for i in (0..27).step_by(3) {
+            genome.mutate(i, ATTACK);
+            genome.mutate(i + 1, TURN);
+            genome.mutate(i + 1, 1);
+        }
+
+        world.set_cell_ext(1, 1, genome, Direction::North);
 
         // One shot kills
         for _ in 0..9 {
@@ -531,7 +546,9 @@ mod tests {
                 if x != y {
                     match world.get_entity(x, y) {
                         Entity::Corpse(_) => {},
-                        _ => panic!("This guys is not dead!")
+                        _ => {
+                            panic!(format!("This guys is not dead! x = {:?}, y = {:?}", x, y))
+                        }
                     }
                 }
             }
@@ -557,7 +574,7 @@ mod tests {
         plant.mutate(1, REPRODUCE);
         let hash = plant.id();
 
-        world.set_cell(0, 0, plant);
+        world.set_cell_ext(0, 0, plant, Direction::East);
         world.set_nothing(1, 0);
 
         world.tick(&mut processor);
@@ -583,13 +600,13 @@ mod tests {
     fn integration_test_order_of_execution_parent_killed() {
         let mut world = World::new(3, 1, SettingsBuilder::zero());
 
-        world.set_cell(1, 0, Genome::new_yeast());
-        world.set_cell(2, 0, Genome::new_predator());
+        world.set_cell_ext(1, 0, Genome::new_yeast(), Direction::West);
+        world.set_cell_ext(2, 0, Genome::new_predator(), Direction::West);
 
         Processor::new().apply(
             &vec![
                 Box::new(AttackAction::new(2, 0, 100)),
-                Box::new(ReproduceAction::new(0, 0))
+                Box::new(ReproduceAction::new(1, 0))
             ],
             &mut world
         );
@@ -611,18 +628,17 @@ mod tests {
         let settings = SettingsBuilder::zero();
 
         let mut world = World::new(3, 1, settings);
-        world.set_cell(1, 0, Genome::new_yeast());
-        world.set_cell(2, 0, Genome::new_predator());
+        world.set_cell_ext(1, 0, Genome::new_yeast(), Direction::West);
+        world.set_cell_ext(2, 0, Genome::new_predator(), Direction::West);
 
         Processor::new().apply(
             &vec![
-                Box::new(ReproduceAction::new(0, 0)),
+                Box::new(ReproduceAction::new(1, 0)),
                 Box::new(AttackAction::new(2, 0, 100))
             ],
             &mut world
         );
 
-        // attack came first, sad
         match world.get_entity(1, 0) {
             Entity::Corpse(_) => {},
             _ => panic!("Parent should have been destroyed")

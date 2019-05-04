@@ -92,6 +92,7 @@ pub struct World {
 
 pub trait Affector {
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome);
+    fn set_cell_ext(&mut self, x:Coords, y:Coords, genome:Genome, direction:Direction);
     fn set_nothing(&mut self, x: Coords, y: Coords);
     fn set_entity(&mut self, x: Coords, y: Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
