@@ -202,9 +202,9 @@ mod tests {
         plant.mutate(0, TURN);
         plant.mutate(1, 1); // Rotate clockwise by 1
 
-        let hash = plant.id();
+        let genome_id = plant.id();
 
-        world.set_cell(0, 0, plant);
+        world.set_cell_ext(0, 0, plant, Direction::North);
 
         Processor::new().apply(
             &vec![Box::new(RotateAction::new(0, 0, 1))],
@@ -212,10 +212,10 @@ mod tests {
         );
 
         match world.get_entity(1, 0) {
-            Entity::Cell(new_hash) => {
-                let cell_state = world.get_state(*new_hash);
-                assert_eq!(cell_state.direction, Direction::NorthEast);
-                assert_eq!(hash, *new_hash);
+            Entity::Cell(new_genome_id) => {
+                let cell_state = world.get_state(*new_genome_id);
+                assert_eq!(Direction::NorthEast, cell_state.direction);
+                assert_eq!(genome_id, *new_genome_id);
             },
             _ => {}
         }

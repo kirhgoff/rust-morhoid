@@ -1,10 +1,8 @@
 #[macro_use] extern crate itertools;
 #[macro_use] extern crate lazy_static;
-#[macro_use] extern crate enum_primitive;
 
 extern crate actix_web;
 extern crate core;
-extern crate num;
 
 use actix_web::{server, App, HttpRequest, Responder};
 use std::env;

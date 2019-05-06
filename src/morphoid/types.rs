@@ -1,9 +1,4 @@
-extern crate enum_primitive;
-extern crate num;
-
 use std::collections::HashMap;
-
-use num::FromPrimitive;
 
 pub type Coords = i32;
 pub type GenomeId = u64;
@@ -46,18 +41,16 @@ pub enum Entity {
     Corpse(i64)
 }
 
-enum_from_primitive! {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum Direction {
-        North = 0,
-        NorthEast,
-        East,
-        SouthEast,
-        South,
-        SouthWest,
-        West,
-        NorthWest
-    }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    North = 0,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest
 }
 
 #[derive(Debug)]

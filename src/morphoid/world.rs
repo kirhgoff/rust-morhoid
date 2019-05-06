@@ -383,13 +383,16 @@ mod tests {
         assert_eq!(Some((1, -1)), world.looking_at(0,0));
 
         // Turn north-east
-        world.rotate_cell(0, 0, 9);
-        assert_eq!(Some((1, -1)), world.looking_at(0,0));
-
-        // Turn east
         world.rotate_cell(0, 0, 1);
         assert_eq!(Some((1, 0)), world.looking_at(0,0));
 
+        // Turn east
+        world.rotate_cell(0, 0, 1);
+        assert_eq!(Some((1, 1)), world.looking_at(0,0));
+
+        // Turn east
+        world.rotate_cell(0, 0, 2);
+        assert_eq!(Some((-1, 1)), world.looking_at(0,0));
     }
 
 
