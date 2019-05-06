@@ -544,7 +544,7 @@ mod tests {
         world.set_cell_ext(1, 1, genome, Direction::North);
 
         // One shot kills
-        for _ in 0..9 {
+        for _ in 0..(2 * 9) {
             world.tick(&mut processor)
         }
 
