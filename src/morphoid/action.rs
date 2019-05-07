@@ -2,6 +2,7 @@ use morphoid::types::*;
 
 // ---------------------------------
 
+// TODO: delete me
 impl KillAction {
     pub fn new(x: Coords, y: Coords) -> KillAction {
         KillAction { x, y }
@@ -32,35 +33,30 @@ impl Action for UpdateHealthAction {
 // --------------------------------
 
 impl ReproduceAction {
-    pub fn new(x: Coords, y: Coords, parent_genome_id: GenomeId) -> ReproduceAction {
-        ReproduceAction { x, y, parent_genome_id }
+    pub fn new(x: Coords, y: Coords) -> ReproduceAction {
+        ReproduceAction { x, y }
     }
 }
 
 impl Action for ReproduceAction {
     fn execute(&self, affector: &mut Affector) {
-        //println!("ReproduceAction.execute x={:?} y={:?}", self.x, self.y);
-        let new_genome_option = affector.build_child_genome_for(self.parent_genome_id);
-        if let Some(new_genome) = new_genome_option {
-            affector.set_cell(self.x, self.y, new_genome);
-        }
+        affector.punish_for_action(self.x, self.y, REPRODUCE);
+        affector.reproduce(self.x, self.y);
     }
 }
 
 // --------------------------------
 
 impl AttackAction {
-    pub fn new(victim_x: Coords, victim_y: Coords, attacker_x: Coords, attacker_y: Coords, damage: HealthType) -> AttackAction {
-        AttackAction { victim_x, victim_y, attacker_x, attacker_y, damage }
+    pub fn new(x: Coords, y: Coords, damage: HealthType) -> AttackAction {
+        AttackAction { x, y, damage }
     }
 }
 
 impl Action for AttackAction {
     fn execute(&self, affector: &mut Affector) {
-        println!("AttackAction.execute x={:?} y={:?} health_delta={:?}", self.victim_x, self.victim_y, self.damage);
-        affector.update_health(self.victim_x, self.victim_y, -1 * self.damage);
-        affector.update_health(self.attacker_x, self.attacker_y, self.damage);
-        // TODO: some punishment for not having enough energy?
+        affector.punish_for_action(self.x, self.y, ATTACK);
+        affector.attack(self.x, self.y, self.damage);
     }
 }
 
@@ -74,6 +70,7 @@ impl MoveAction {
 
 impl Action for MoveAction {
     fn execute(&self, affector: &mut Affector) {
+        affector.punish_for_action(self.x, self.y, MOVE);
         affector.move_cell(self.x, self.y);
     }
 }
@@ -89,6 +86,7 @@ impl RotateAction {
 
 impl Action for RotateAction {
     fn execute(&self, affector: &mut Affector) {
+        affector.punish_for_action(self.x, self.y, TURN);
         affector.rotate_cell(self.x, self.y, self.value);
     }
 }
@@ -103,7 +101,7 @@ mod tests {
     fn update_health_action_works() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         assert_eq!(world.get_state(hash).health, 10);
@@ -120,17 +118,17 @@ mod tests {
     fn reproduce_action_works() {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
-        world.set_cell(0, 0, plant);
+        let genome_id = plant.id();
+        world.set_cell_ext(0, 0, plant, Direction::East);
 
         Processor::new().apply(
-            &vec![Box::new(ReproduceAction::new(1, 0, hash))],
+            &vec![Box::new(ReproduceAction::new(0, 0))],
             &mut world
         );
 
         match world.get_entity(1, 0) {
             Entity::Cell(new_hash) => {
-                assert_ne!(*new_hash, hash);
+                assert_ne!(*new_hash, genome_id);
                 assert_eq!(world.get_state(*new_hash).health, 10);
             },
             _ => panic!("Cant find reproduced entity")
@@ -140,22 +138,17 @@ mod tests {
     #[test]
     fn attack_action_works() {
         // TODO: this is not needed
-        let settings = Settings {
-            steps_per_turn: 2,
-            reproduce_cost: -8, // it will die after new born
-            reproduce_threshold: 9, // it will reproduce on second step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-            attack_damage: 4,
-        };
+        let settings = SettingsBuilder::zero(); // initial health is 10
+        let new_value =
+            settings.initial_cell_health() +
+            settings.attack_cost();
 
         let mut world = World::new(2, 1, settings);
-
-        world.set_cell(1, 0, Genome::new_predator());
-        world.set_cell(0, 0, Genome::new_plant());
+        world.set_cell_ext(0, 0, Genome::new_plant(), Direction::East);
+        world.set_cell_ext(1, 0, Genome::new_predator(), Direction::West);
 
         Processor::new().apply(
-            &vec![Box::new(AttackAction::new(0, 0, 1, 1, 100))],
+            &vec![Box::new(AttackAction::new(1, 1, 100))],
             &mut world
         );
 
@@ -166,7 +159,7 @@ mod tests {
 
         match world.get_entity(1, 0) {
             Entity::Cell(genome_id) => {
-                assert_eq!(world.get_state(*genome_id).health, 110);
+                assert!(world.get_state(*genome_id).health > new_value);
             },
             _ => panic!("Predator cell should have high health!"),
         }
@@ -178,9 +171,9 @@ mod tests {
         let mut plant = Genome::new_plant();
         plant.mutate(0, MOVE);
 
-        let hash = plant.hash();
+        let genome_id = plant.id();
 
-        world.set_cell(0, 0, plant);
+        world.set_cell_ext(0, 0, plant, Direction::East);
 
         Processor::new().apply(
             &vec![Box::new(MoveAction::new(0, 0))],
@@ -194,7 +187,7 @@ mod tests {
 
         match world.get_entity(1, 0) {
             Entity::Cell(new_hash) => {
-                assert_eq!(*new_hash, hash);
+                assert_eq!(*new_hash, genome_id);
             },
             _ => panic!("Cell should have moved in")
         }
@@ -209,9 +202,9 @@ mod tests {
         plant.mutate(0, TURN);
         plant.mutate(1, 1); // Rotate clockwise by 1
 
-        let hash = plant.hash();
+        let genome_id = plant.id();
 
-        world.set_cell(0, 0, plant);
+        world.set_cell_ext(0, 0, plant, Direction::North);
 
         Processor::new().apply(
             &vec![Box::new(RotateAction::new(0, 0, 1))],
@@ -219,10 +212,10 @@ mod tests {
         );
 
         match world.get_entity(1, 0) {
-            Entity::Cell(new_hash) => {
-                let cell_state = world.get_state(*new_hash);
-                assert_eq!(cell_state.direction, Direction::NorthEast);
-                assert_eq!(hash, *new_hash);
+            Entity::Cell(new_genome_id) => {
+                let cell_state = world.get_state(*new_genome_id);
+                assert_eq!(Direction::NorthEast, cell_state.direction);
+                assert_eq!(genome_id, *new_genome_id);
             },
             _ => {}
         }

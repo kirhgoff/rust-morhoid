@@ -10,7 +10,7 @@ impl Processor {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
-                //println!("DEBUG: Processor.process_entity [cell] genome: {:?}", genome_id);
+                println!("DEBUG: Processor.process_entity [cell] ---- x: {:?} y:{:?}, genome: {:?}", x, y, genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
@@ -36,43 +36,50 @@ impl Processor {
 
         let mut index = start_index;
         for _ in 0..settings.steps_per_turn() {
-//            println!("DEBUG: Processor.execute gene: {:?} index={:?}", genome_id, index);
             let gene = genome.genes[index];
+            println!("DEBUG: Processor.execute gene: {:?} index={:?}, genome_id: {:?}", gene, index, genome_id);
+
             match gene {
                 ATTACK => {
-                    match perceptor.find_target_around(x, y) {
-                        Some((victim_x, victim_y)) => {
-                            actions.push(Box::new(
-                                AttackAction::new(victim_x, victim_y, x, y, settings.attack_damage()))
-                            );
-                        },
-                        _ => {}
-                    }
+                    actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())));
+                    index += 1
                 },
                 REPRODUCE => {
-                    // TODO: move all to action?
-                    if perceptor.get_state(genome_id).health > settings.reproduce_threshold() {
-                        actions.push(Box::new(UpdateHealthAction::new(x, y, settings.reproduce_cost())));
-                        match perceptor.find_vacant_place_around(x, y) {
-                            Some((new_x, new_y)) => {
-                                //TODO extract to a method
-                                actions.push(Box::new(ReproduceAction::new(new_x, new_y, genome_id)));
-                            },
-                            _ => {}
-                        }
-                    }
-                }, // 30
+                    actions.push(Box::new(ReproduceAction::new(x, y)));
+                    index += 1
+                },
                 PHOTOSYNTHESYS => {
                     actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
-                }, // 31
+                    index += 1
+                },
+                MOVE => {
+                    actions.push(Box::new(MoveAction::new(x, y)));
+                    index += 1
+                },
+                TURN => {
+                    let new_direction = genome.genes[index + 1] % Direction::SIZE;
+                    actions.push(Box::new(RotateAction::new(x, y, new_direction)));
+                    index += 2
+                },
+                SENSE => {
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
+                    if let Some((target_x, target_y)) = perceptor.looking_at(x, y) {
+                        // This is just a conditional operator
+                        index += match perceptor.get_entity(target_x, target_y) {
+                            Entity::Nothing => 1,
+                            Entity::Cell(_) => 2,
+                            Entity::Corpse(_) => 3
+                        }
+                    }
+                },
                 _ => {
-                    println!("Unknown gene");
+                    // Goto
+                    index = gene;
                 }
             }
 
-            index += 1;
-            if index >= GENE_LENGTH {
-                index = index % GENE_LENGTH
+            if index >= GENOME_LENGTH {
+                index = index % GENOME_LENGTH
             }
         }
         self.update_genome_index(genome_id, index);
@@ -110,24 +117,22 @@ mod tests {
 
     #[test]
     fn integration_updates_genome_states() {
-        let settings = Settings {
-            steps_per_turn: 5,
-            reproduce_cost: -0,
-            reproduce_threshold: 4, // it will reproduce on first step
-            photosynthesys_adds: 5, // it will have 10 + 5 health after first step
-            initial_cell_health: 10, // it will have 10 originally
-            attack_damage: 4,
-        };
+        let settings = SettingsBuilder::prod()
+            .with_steps_per_turn(5)
+            .with_reproduce_cost(0)
+            .with_reproduce_threshold(4) // it will reproduce on first step
+            .with_attack_damage(4)
+            .build();
 
         let mut processor = Processor::new();
         let mut world = World::new(2, 1, settings);
 
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_cell(0, 0, plant);
 
         let plant2 = Genome::new_plant();
-        let hash2 = plant2.hash();
+        let hash2 = plant2.id();
         world.set_cell(1, 0, plant2);
 
         for i in 0..10 {
@@ -137,7 +142,7 @@ mod tests {
         }
 
         // make sure it is going around the genes array and not crash
-        for _ in 0..GENE_LENGTH {
+        for _ in 0..GENOME_LENGTH {
             world.tick(&mut processor);
         }
     }
@@ -146,7 +151,7 @@ mod tests {
     fn integration_can_do_kill_entity_action() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         match world.get_entity(0, 0) {
@@ -169,7 +174,7 @@ mod tests {
     fn integration_can_do_update_health() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.hash();
+        let hash = plant.id();
         world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
 
         Processor::new().apply(

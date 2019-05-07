@@ -3,6 +3,7 @@
 
 extern crate actix_web;
 extern crate core;
+extern crate rand;
 
 use actix_web::{server, App, HttpRequest, Responder};
 use std::env;
@@ -17,6 +18,8 @@ use std::sync::Mutex;
 
 use core::mem;
 
+use rand::Rng;
+
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
     static ref WORLD: Mutex<World> = Mutex::new(build_new_world());
@@ -30,14 +33,10 @@ lazy_static! {
 //5    0
 
 fn build_new_world() -> World {
-    let settings = Settings {
-        steps_per_turn: 1,
-        reproduce_cost: -10,
-        reproduce_threshold: 20,
-        photosynthesys_adds: 5,
-        initial_cell_health: 10,
-        attack_damage: 100,
-    };
+    let mut rng = rand::thread_rng();
+    //let dice = Uniform::from(0..8);
+
+    let settings = Settings ::prod();
     let mut world = World::new(20, 20, settings);
     let coords_vec = vec![
         (2,1), (3,1), (5,1),(6,1),
@@ -48,9 +47,13 @@ fn build_new_world() -> World {
     ];
     for (x, y) in coords_vec.iter() {
         let mut genome = Genome::new_reproducing_plant();
-        world.set_cell(*x + 7, *y + 7, genome);
+        let direction = Direction::by_value(rng.gen_range(0, 8));
+        println!("DIRECTION> {:?}", direction);
+        world.set_cell_ext(*x + 7, *y + 7, genome, direction);
     }
-    world.set_cell(4 + 7, 3 + 7, Genome::new_predator());
+    world.set_cell_ext(4 + 7, 3 + 7, Genome::new_predator(), Direction::North);
+    world.set_cell_ext(3 + 7, 2 + 7, Genome::new_predator(), Direction::West);
+    world.set_cell_ext(5 + 7, 2 + 7, Genome::new_predator(), Direction::East);
     world
 }
 
