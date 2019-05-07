@@ -78,8 +78,8 @@ impl Processor {
                 }
             }
 
-            if index >= GENE_LENGTH {
-                index = index % GENE_LENGTH
+            if index >= GENOME_LENGTH {
+                index = index % GENOME_LENGTH
             }
         }
         self.update_genome_index(genome_id, index);
@@ -142,7 +142,7 @@ mod tests {
         }
 
         // make sure it is going around the genes array and not crash
-        for _ in 0..GENE_LENGTH {
+        for _ in 0..GENOME_LENGTH {
             world.tick(&mut processor);
         }
     }

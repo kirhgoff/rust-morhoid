@@ -6,8 +6,8 @@ pub type Gene = usize;
 pub type HealthType = i32;
 pub type GeneIndex = usize; // TODO: rename in other places
 
-// TODO: rename to GENOME_LENGTH
-pub const GENE_LENGTH: usize = 64;
+pub const GENOME_LENGTH: usize = 64;
+pub const GENE_COUNT: usize = 64;
 
 pub const SENSE: Gene = 26; // Complex gene
 pub const TURN: Gene = 27; // Complex gene
@@ -65,7 +65,7 @@ pub struct CellStateStorage {
 
 pub struct Genome {
     pub id: GenomeId,
-    pub genes: [Gene; GENE_LENGTH]
+    pub genes: [Gene; GENOME_LENGTH]
 }
 
 pub struct GenomeState {

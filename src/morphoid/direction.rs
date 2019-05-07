@@ -30,7 +30,11 @@ impl Direction {
 
     /// value is Gene because it is passed from genome
     pub fn rotate(&self, value: Gene) -> Direction {
-        Direction::DIRECTIONS[(*self as usize + value) % Direction::SIZE]
+        Direction::by_value(*self as usize + value)
+    }
+
+    pub fn by_value(value: Gene) -> Direction {
+        Direction::DIRECTIONS[value % Direction::SIZE]
     }
 }
 

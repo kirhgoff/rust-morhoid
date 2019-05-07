@@ -4,6 +4,7 @@ use std::fmt;
 use morphoid::types::*;
 //use self::time::PreciseTime;
 use std::vec::Vec;
+use rand::{Rng};
 
 impl World {
     pub fn prod(width:Coords, height:Coords) -> World {
@@ -247,7 +248,9 @@ impl Affector for World {
                     println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking at new_x:{:?},new_y:{:?}",
                         x, y, new_x, new_y);
 
-                    self.set_cell(new_x, new_y, new_genome);
+                    let mut rng = rand::thread_rng();
+                    let direction = Direction::by_value(rng.gen_range(0, 8));
+                    self.set_cell_ext(new_x, new_y, new_genome, direction);
                 }
             },
             _ => {
@@ -258,9 +261,21 @@ impl Affector for World {
     }
 
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome> {
+        let mut rng = rand::thread_rng();
+
+        let probability = rng.gen_bool(0.5);
+        let index = rng.gen_range(0, GENOME_LENGTH);
+        let new_gene = rng.gen_range(0, GENE_COUNT);
+
         self.genomes
             .get(parent_genome_id)
-            .map(|genome| genome.clone())
+            .map(|genome| {
+                let mut result = genome.clone();
+                if probability {
+                    result.mutate(index, new_gene);
+                }
+                result
+            })
     }
 }
 

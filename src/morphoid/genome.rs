@@ -15,23 +15,23 @@ impl Genome {
     }
 
     pub fn new_plant() -> Genome {
-        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]}
+        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENOME_LENGTH]}
     }
 
     pub fn new_reproducing_plant() -> Genome {
-        let mut genes = [PHOTOSYNTHESYS; GENE_LENGTH];
-        for i in 0..GENE_LENGTH {
+        let mut genes = [PHOTOSYNTHESYS; GENOME_LENGTH];
+        for i in 0..GENOME_LENGTH {
             if i % 2 != 0 { genes[i] = REPRODUCE; }
         }
         Genome {id: Genome::new_id(), genes: genes}
     }
 
     pub fn new_predator() -> Genome {
-        Genome {id: Genome::new_id(), genes: [ATTACK; GENE_LENGTH]}
+        Genome {id: Genome::new_id(), genes: [ATTACK; GENOME_LENGTH]}
     }
 
     pub fn new_yeast() -> Genome {
-        Genome {id: Genome::new_id(), genes: [REPRODUCE; GENE_LENGTH]}
+        Genome {id: Genome::new_id(), genes: [REPRODUCE; GENOME_LENGTH]}
     }
 
     // TODO: rename to genome_id
@@ -44,7 +44,7 @@ impl Genome {
     }
 
     pub fn clone(&self) -> Genome {
-        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENE_LENGTH]};
+        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENOME_LENGTH]};
         new_genome.genes.copy_from_slice(&self.genes[..]);
         new_genome
     }
