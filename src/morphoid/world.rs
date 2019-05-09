@@ -199,14 +199,14 @@ impl Affector for World {
                     state.health += health_delta;
                     new_health = state.health;
 
-                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
-                             x, y, genome_id, health_delta, state.health);
+//                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
+//                             x, y, genome_id, health_delta, state.health);
                 }
 
                 if new_health < 0 {
                     result = old_health;
                     self.set_entity(x, y, Entity::Corpse(666), None, None);
-                    println!("DEBUG: Affector.update_health killed x={:?} y={:?}", x, y);
+                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
                 }
             },
             _ => {}
@@ -223,7 +223,7 @@ impl Affector for World {
             REPRODUCE => self.settings.reproduce_cost(),
             _ => 0
         };
-        println!("DEBUG: Affector.punish_for_action x={:?} y={:?} gene={:?}", x, y, gene);
+        // println!("DEBUG: Affector.punish_for_action x={:?} y={:?} gene={:?}", x, y, gene);
 
         self.update_health(x, y, -value);
     }
@@ -254,12 +254,18 @@ impl Affector for World {
         match new_genome {
             Some(new_genome) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
-                    println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking at new_x:{:?},new_y:{:?}",
-                        x, y, new_x, new_y);
+                    // Can reproduce only on corpse or empty space
+                    match self.get_entity(x, y) {
+                        Entity::Cell(_) => {},
+                        _ => {
+                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
+                                     x, y, new_x, new_y);
 
-                    let mut rng = rand::thread_rng();
-                    let direction = Direction::by_value(rng.gen_range(0, 8));
-                    self.set_cell_ext(new_x, new_y, new_genome, direction);
+                            let mut rng = rand::thread_rng();
+                            let direction = Direction::by_value(rng.gen_range(0, 8));
+                            self.set_cell_ext(new_x, new_y, new_genome, direction);
+                        }
+                    }
                 }
             },
             _ => {

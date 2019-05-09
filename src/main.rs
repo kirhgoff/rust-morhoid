@@ -58,9 +58,7 @@ fn build_new_world() -> World {
 }
 
 fn world_state(_req: &HttpRequest) -> impl Responder {
-    let result = format!("{}", WORLD.lock().unwrap());
-    println!("Got result");
-    result
+    format!("{}", WORLD.lock().unwrap())
 }
 
 fn reset_world(_req: &HttpRequest) -> impl Responder {
