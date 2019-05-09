@@ -71,12 +71,21 @@ impl World {
 
 impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn icon_for(desc: &GenomeDesc) -> char {
+            match desc {
+                x if x.attacks > x.photosynthesys => '☭',
+                x if x.photosynthesys > x.attacks => '☼',
+                x if x.reproduces > x.attacks + x.photosynthesys => '♡',
+                _ => '⌇'
+            }
+        }
+
         for line in self.entities.as_slice().chunks(self.width as usize) {
             for &entity in line {
                 let symbol = match entity {
                     Entity::Nothing => ' ',
-                    Entity::Cell(genome_id) => '◼',
-                    Entity::Corpse(_) => '†',
+                    Entity::Cell(genome_id) => icon_for(&self.genomes.describe(genome_id).unwrap()),
+                    Entity::Corpse(_) => '✞',
                 };
                 write!(f, "{}", symbol)?;
             }
