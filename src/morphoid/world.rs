@@ -74,9 +74,9 @@ impl fmt::Display for World {
         for line in self.entities.as_slice().chunks(self.width as usize) {
             for &entity in line {
                 let symbol = match entity {
-                    Entity::Nothing => '◻',
-                    Entity::Cell(_) => '◼',
-                    Entity::Corpse(_) => 'x',
+                    Entity::Nothing => ' ',
+                    Entity::Cell(genome_id) => '◼',
+                    Entity::Corpse(_) => '†',
                 };
                 write!(f, "{}", symbol)?;
             }

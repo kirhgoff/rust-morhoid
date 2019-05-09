@@ -72,6 +72,12 @@ pub struct GenomeState {
     pub current_gene: GeneIndex,
 }
 
+pub struct GenomeDesc {
+    pub reproduces: usize,
+    pub attacks: usize,
+    pub photosynthesys: usize
+}
+
 // TODO: move to processor
 pub struct GenomeStorage {
     pub genomes: HashMap<GenomeId, Genome>

@@ -34,7 +34,6 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [REPRODUCE; GENOME_LENGTH]}
     }
 
-    // TODO: rename to genome_id
     pub fn id(&self) -> GenomeId {
         self.id
     }
