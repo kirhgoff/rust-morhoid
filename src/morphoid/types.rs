@@ -80,7 +80,8 @@ pub struct GenomeDesc {
 
 // TODO: move to processor
 pub struct GenomeStorage {
-    pub genomes: HashMap<GenomeId, Genome>
+    pub genomes: HashMap<GenomeId, Genome>,
+    pub descriptors: HashMap<GenomeId, GenomeDesc>
 }
 
 pub struct Processor {

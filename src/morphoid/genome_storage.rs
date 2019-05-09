@@ -3,21 +3,32 @@ use morphoid::types::*;
 
 impl GenomeStorage {
     pub fn new() -> GenomeStorage {
-        GenomeStorage {genomes: HashMap::new()}
+        GenomeStorage {
+            genomes: HashMap::new(),
+            descriptors: HashMap::new()
+        }
     }
 
     pub fn put(&mut self, genome:Genome) -> GenomeId {
-        let hash = genome.id();
-        self.genomes.insert(hash, genome);
-        hash
+        let id = genome.id();
+
+        self.descriptors.insert(id, GenomeDesc::build_from(&genome));
+        self.genomes.insert(id, genome);
+
+        id
     }
 
-    pub fn get(&self, hash: GenomeId) -> Option<&Genome> {
-        self.genomes.get(&hash)
+    pub fn remove(&mut self, id: GenomeId) {
+        self.genomes.remove(&id);
+        self.descriptors.remove(&id);
     }
 
-    pub fn remove(&mut self, hash: GenomeId) {
-        self.genomes.remove(&hash);
+    pub fn get(&self, id: GenomeId) -> Option<&Genome> {
+        self.genomes.get(&id)
+    }
+
+    pub fn describe(&self, id: GenomeId) -> Option<&GenomeDesc> {
+        self.descriptors.get(&id)
     }
 }
 
@@ -26,17 +37,26 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_can_read_and_write_genomes() {
+    fn test_get_and_put() {
         let mut storage = GenomeStorage::new();
         let genome = Genome::new_plant();
-        let genome_hash = genome.id();
+        let old_id = genome.id();
 
-        let hash = storage.put(genome);
-        assert_ne!(hash, 0);
-        assert_eq!(genome_hash, hash);
+        let new_id = storage.put(genome);
+        assert_ne!(new_id, 0);
+        assert_eq!(old_id, new_id);
 
-        let found_genome = storage.get(hash).unwrap();
-        assert_eq!(hash, found_genome.id());
-        //assert_eq!(*found_genome, genome); // TODO: what about moving?
+        let found_genome = storage.get(new_id).unwrap();
+        assert_eq!(new_id, found_genome.id());
+    }
+
+    #[test]
+    fn test_describe() {
+        let mut storage = GenomeStorage::new();
+        let id = storage.put(Genome::new_plant());
+
+        let desc = storage.describe(id).unwrap();
+        assert_eq!(0, desc.attacks);
+        assert_eq!(GENOME_LENGTH, desc.photosynthesys);
     }
 }
