@@ -73,10 +73,10 @@ impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fn icon_for(desc: &GenomeDesc) -> char {
             match desc {
-                x if x.attacks > x.photosynthesys => '☭',
+                x if x.reproduces > x.attacks + x.photosynthesys => '8',
+                x if x.attacks > x.photosynthesys => '>',
                 x if x.photosynthesys > x.attacks => '☼',
-                x if x.reproduces > x.attacks + x.photosynthesys => '♡',
-                _ => '⌇'
+                _ => '.'
             }
         }
 
@@ -85,7 +85,7 @@ impl fmt::Display for World {
                 let symbol = match entity {
                     Entity::Nothing => ' ',
                     Entity::Cell(genome_id) => icon_for(&self.genomes.describe(genome_id).unwrap()),
-                    Entity::Corpse(_) => '✞',
+                    Entity::Corpse(_) => '+',
                 };
                 write!(f, "{}", symbol)?;
             }
@@ -148,8 +148,8 @@ impl Affector for World {
             Entity::Cell(genome_id) => {
                 let mut cell_state = self.cell_states.get_mut(genome_id);
                 cell_state.direction = cell_state.direction.rotate(value);
-                println!("DEBUG: world.rotate_cell rotated x:{:?}, y:{:?}, value:{:?}, new direction:{:?}",
-                    x, y, value, cell_state.direction);
+//                println!("DEBUG: world.rotate_cell rotated x:{:?}, y:{:?}, value:{:?}, new direction:{:?}",
+//                    x, y, value, cell_state.direction);
             }
             _ => {}
         }
@@ -206,7 +206,7 @@ impl Affector for World {
                 if new_health < 0 {
                     result = old_health;
                     self.set_entity(x, y, Entity::Corpse(666), None, None);
-                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
+//                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
                 }
             },
             _ => {}
@@ -232,15 +232,15 @@ impl Affector for World {
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(_) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
-                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
-                             x, y, new_x, new_y, damage);
+//                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
+//                             x, y, new_x, new_y, damage);
 
                     let health_eaten = self.update_health(new_x, new_y, -damage);
                     self.update_health(x, y, health_eaten);
                 }
             }
-            other => {
-                println!("DEBUG: Affector.attack other: {:?}", other)
+            _other => {
+//                println!("DEBUG: Affector.attack other: {:?}", other)
             }
         }
     }
@@ -258,8 +258,8 @@ impl Affector for World {
                     match self.get_entity(x, y) {
                         Entity::Cell(_) => {},
                         _ => {
-                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
-                                     x, y, new_x, new_y);
+//                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
+//                                     x, y, new_x, new_y);
 
                             let mut rng = rand::thread_rng();
                             let direction = Direction::by_value(rng.gen_range(0, 8));
@@ -269,7 +269,7 @@ impl Affector for World {
                 }
             },
             _ => {
-                println!("DEBUG: Affector.reproduce new genome is shit")
+//                println!("DEBUG: Affector.reproduce new genome is shit")
             }
         }
 
@@ -302,8 +302,8 @@ impl Perceptor for World {
 
     fn get_state(&self, genome_id: GenomeId) -> &CellState {
         let result = self.cell_states.get(genome_id);
-        println!("DEBUG: Perceptor.get_state genome_id={:?} state={:?}",
-                 genome_id, result);
+//        println!("DEBUG: Perceptor.get_state genome_id={:?} state={:?}",
+//                 genome_id, result);
         result
     }
 

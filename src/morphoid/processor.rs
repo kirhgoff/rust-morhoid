@@ -37,8 +37,8 @@ impl Processor {
         let mut index = start_index;
         for _ in 0..settings.steps_per_turn() {
             let gene = genome.genes[index];
-            println!("DEBUG: Processor.execute x:{:?} y:{:?} genome_id: {:?} index={:?} gene: {:?}",
-                     x, y, genome_id, index, gene);
+//            println!("DEBUG: Processor.execute x:{:?} y:{:?} genome_id: {:?} index={:?} gene: {:?}",
+//                     x, y, genome_id, index, gene);
 
             match gene {
                 ATTACK => {

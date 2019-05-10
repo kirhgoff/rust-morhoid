@@ -18,7 +18,8 @@ use std::sync::Mutex;
 
 use core::mem;
 
-use rand::Rng;
+use rand::{Rng};
+use rand::prelude::ThreadRng;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -34,27 +35,54 @@ lazy_static! {
 
 fn build_new_world() -> World {
     let mut rng = rand::thread_rng();
-    //let dice = Uniform::from(0..8);
 
     let settings = Settings ::prod();
-    let mut world = World::new(20, 20, settings);
-    let coords_vec = vec![
-        (2,1), (3,1), (5,1),(6,1),
-        (1,2), (2,2), (3,2), (4,2), (5,2), (6,2), (7,2),
-        (2,3), (3,3), (4,3), (5,3), (6,3),
-        (3,4), (4,4), (5,4),
-        (4,5)
-    ];
-    for (x, y) in coords_vec.iter() {
-        let mut genome = Genome::new_reproducing_plant();
-        let direction = Direction::by_value(rng.gen_range(0, 8));
-        println!("DIRECTION> {:?}", direction);
-        world.set_cell_ext(*x + 7, *y + 7, genome, direction);
+    let width = 40;
+    let height = 20;
+    let mut world = World::new(width, height, settings);
+//    let coords_vec = vec![
+//        (2,1), (3,1), (5,1),(6,1),
+//        (1,2), (2,2), (3,2), (4,2), (5,2), (6,2), (7,2),
+//        (2,3), (3,3), (4,3), (5,3), (6,3),
+//        (3,4), (4,4), (5,4),
+//        (4,5)
+//    ];
+    for x in 0..width {
+        for y in 0..height {
+            if rng.gen_ratio(1,3) {
+                let mut genome = create_random_entity(&mut rng);
+                let direction = Direction::by_value(rng.gen_range(0, 8));
+
+                world.set_cell_ext(x, y, genome, direction);
+            } else {
+                world.set_nothing(x, y);
+            }
+        }
     }
-    world.set_cell_ext(4 + 7, 3 + 7, Genome::new_predator(), Direction::North);
-    world.set_cell_ext(3 + 7, 2 + 7, Genome::new_predator(), Direction::West);
-    world.set_cell_ext(5 + 7, 2 + 7, Genome::new_predator(), Direction::East);
     world
+}
+
+fn create_random_entity(rng: &mut ThreadRng) -> Genome {
+    let mut genome = Genome::new_plant();
+    let mut i = 0;
+    while i < GENOME_LENGTH - 4 {
+        let index = rng.gen_range(0, KNOWN_GENES.len());
+        let gene = KNOWN_GENES[index];
+        genome.mutate(i, gene);
+        i += 1;
+
+        if gene == SENSE {
+            for _ in 0..2 {
+                genome.mutate(i, rng.gen_range(0, GENOME_LENGTH));
+                i += 1;
+            }
+        }
+        if gene == TURN {
+            genome.mutate(i, rng.gen_range(0, GENOME_LENGTH));
+            i += 1;
+        }
+    }
+    genome
 }
 
 fn world_state(_req: &HttpRequest) -> impl Responder {

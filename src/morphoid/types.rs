@@ -9,12 +9,22 @@ pub type GeneIndex = usize; // TODO: rename in other places
 pub const GENOME_LENGTH: usize = 64;
 pub const GENE_COUNT: usize = 64;
 
+// TODO: convert it to enums
 pub const SENSE: Gene = 26; // Complex gene
 pub const TURN: Gene = 27; // Complex gene
 pub const MOVE: Gene = 28;
 pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
+
+pub const KNOWN_GENES: [Gene;  6] = [
+    SENSE,
+    TURN,
+    MOVE,
+    ATTACK,
+    REPRODUCE,
+    PHOTOSYNTHESYS
+];
 
 pub struct SettingsBuilder {
     pub settings: Settings
