@@ -6,6 +6,7 @@ pub mod settings;
 
 mod action;
 mod genome_storage;
+mod genome_desc;
 mod cell_state_storage;
 mod cell_state;
 mod direction;

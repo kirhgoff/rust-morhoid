@@ -10,7 +10,7 @@ impl Processor {
         let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
         match entity {
             Entity::Cell(genome_id) => {
-                println!("DEBUG: Processor.process_entity [cell] ---- x: {:?} y:{:?}, genome: {:?}", x, y, genome_id);
+                //println!("DEBUG: Processor.process_entity [cell] ---- x: {:?} y:{:?}, genome: {:?}", x, y, genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
             }
@@ -37,7 +37,8 @@ impl Processor {
         let mut index = start_index;
         for _ in 0..settings.steps_per_turn() {
             let gene = genome.genes[index];
-            println!("DEBUG: Processor.execute gene: {:?} index={:?}, genome_id: {:?}", gene, index, genome_id);
+//            println!("DEBUG: Processor.execute x:{:?} y:{:?} genome_id: {:?} index={:?} gene: {:?}",
+//                     x, y, genome_id, index, gene);
 
             match gene {
                 ATTACK => {
