@@ -10,14 +10,18 @@ pub const GENOME_LENGTH: usize = 64;
 pub const GENE_COUNT: usize = 64;
 
 // TODO: convert it to enums
-pub const SENSE: Gene = 26; // Complex gene
-pub const TURN: Gene = 27; // Complex gene
+pub const DEFILE: Gene = 25;
+pub const SENSE: Gene = 26;
+// Complex gene
+pub const TURN: Gene = 27;
+// Complex gene
 pub const MOVE: Gene = 28;
 pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
 pub const PHOTOSYNTHESYS: Gene = 31;
 
-pub const KNOWN_GENES: [Gene;  6] = [
+pub const KNOWN_GENES: [Gene; 7] = [
+    DEFILE,
     SENSE,
     TURN,
     MOVE,
@@ -38,17 +42,21 @@ pub struct Settings {
     pub photosynthesys_adds: HealthType,
     pub initial_cell_health: HealthType,
     pub attack_damage: HealthType,
+    pub defile_damage: HealthType,
     pub attack_cost: HealthType,
     pub move_cost: HealthType,
     pub turn_cost: HealthType,
     pub sense_cost: HealthType,
+    pub defile_cost: HealthType,
+    pub corpse_decay: HealthType,
+    pub corpse_initial: HealthType,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Entity {
     Nothing,
     Cell(GenomeId),
-    Corpse(i64)
+    Corpse(HealthType),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,22 +68,22 @@ pub enum Direction {
     South,
     SouthWest,
     West,
-    NorthWest
+    NorthWest,
 }
 
 #[derive(Debug)]
 pub struct CellState {
     pub health: HealthType,
-    pub direction: Direction
+    pub direction: Direction,
 }
 
 pub struct CellStateStorage {
-    pub states: HashMap<GenomeId,CellState>
+    pub states: HashMap<GenomeId, CellState>
 }
 
 pub struct Genome {
     pub id: GenomeId,
-    pub genes: [Gene; GENOME_LENGTH]
+    pub genes: [Gene; GENOME_LENGTH],
 }
 
 pub struct GenomeState {
@@ -85,13 +93,13 @@ pub struct GenomeState {
 pub struct GenomeDesc {
     pub reproduces: usize,
     pub attacks: usize,
-    pub photosynthesys: usize
+    pub photosynthesys: usize,
 }
 
 // TODO: move to processor
 pub struct GenomeStorage {
     pub genomes: HashMap<GenomeId, Genome>,
-    pub descriptors: HashMap<GenomeId, GenomeDesc>
+    pub descriptors: HashMap<GenomeId, GenomeDesc>,
 }
 
 pub struct Processor {
@@ -103,14 +111,16 @@ pub struct World {
     pub height: Coords,
     pub settings: Settings,
     pub entities: Vec<Entity>,
-    pub genomes: GenomeStorage, // TODO: move to processor
+    pub genomes: GenomeStorage,
+    // TODO: move to processor
     pub cell_states: CellStateStorage,
 }
 
 pub trait Affector {
-    fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome);
-    fn set_cell_ext(&mut self, x:Coords, y:Coords, genome:Genome, direction:Direction);
+    fn set_cell(&mut self, x: Coords, y: Coords, genome: Genome);
+    fn set_cell_ext(&mut self, x: Coords, y: Coords, genome: Genome, direction: Direction);
     fn set_nothing(&mut self, x: Coords, y: Coords);
+    fn set_corpse(&mut self, x: Coords, y: Coords, value: HealthType);
     fn set_entity(&mut self, x: Coords, y: Coords, entity: Entity, genome: Option<Genome>, initial_state: Option<CellState>);
 
     fn move_cell(&mut self, x: Coords, y: Coords);
@@ -119,6 +129,7 @@ pub trait Affector {
     fn punish_for_action(&mut self, x: Coords, y: Coords, gene: Gene);
     fn update_health(&mut self, x: Coords, y: Coords, health_delta: HealthType) -> HealthType;
     fn attack(&mut self, x: Coords, y: Coords, damage: HealthType);
+    fn defile(&mut self, x: Coords, y: Coords, damage: HealthType);
     fn reproduce(&mut self, x: Coords, y: Coords);
 
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome>;
@@ -127,10 +138,10 @@ pub trait Affector {
 pub trait Perceptor {
     fn get_entity(&self, x: Coords, y: Coords) -> &Entity;
     fn get_state(&self, genome_id: GenomeId) -> &CellState;
-    fn get_state_by_pos(&self, x:Coords, y:Coords) -> Option<&CellState>;
+    fn get_state_by_pos(&self, x: Coords, y: Coords) -> Option<&CellState>;
     fn get_genome(&self, genome_id: GenomeId) -> Option<&Genome>;
     fn looking_at(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
-    fn find_vacant_place_around(&self, x:Coords, y:Coords) -> Option<(Coords, Coords)>;
+    fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
     fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
 }
 
@@ -142,24 +153,24 @@ pub trait Action {
 // TODO: make coords keep two coords
 pub struct KillAction {
     pub x: Coords,
-    pub y: Coords
+    pub y: Coords,
 }
 
 pub struct UpdateHealthAction {
     pub x: Coords,
     pub y: Coords,
-    pub health_delta: HealthType
+    pub health_delta: HealthType,
 }
 
 pub struct ReproduceAction {
     pub x: Coords,
-    pub y: Coords
+    pub y: Coords,
 }
 
 pub struct AttackAction {
     pub x: Coords,
     pub y: Coords,
-    pub damage: HealthType
+    pub damage: HealthType,
 }
 
 pub struct MoveAction {
@@ -170,7 +181,7 @@ pub struct MoveAction {
 pub struct RotateAction {
     pub x: Coords,
     pub y: Coords,
-    pub value: Gene // new_direction += value % 8 ?
+    pub value: Gene, // new_direction += value % 8 ?
 }
 
 pub struct SenseAction {
@@ -179,4 +190,10 @@ pub struct SenseAction {
     pub jump_nothing: Gene,
     pub jump_relative: Gene,
     pub jump_cell: Gene, // TODO: add enemy vs relative
+}
+
+pub struct DefileAction {
+    pub x: Coords,
+    pub y: Coords,
+    pub damage: HealthType,
 }

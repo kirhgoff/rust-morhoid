@@ -93,12 +93,27 @@ impl Action for RotateAction {
 
 // --------------------------------
 
+impl DefileAction {
+    pub fn new(x: Coords, y: Coords, damage: HealthType) -> DefileAction {
+        DefileAction { x, y, damage }
+    }
+}
+
+impl Action for DefileAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.punish_for_action(self.x, self.y, DEFILE);
+        affector.defile(self.x, self.y, self.damage);
+    }
+}
+
+// --------------------------------
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn update_health_action_works() {
+    fn test_update_health() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.id();
@@ -115,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn reproduce_action_works() {
+    fn test_reproduce() {
         let mut world = World::prod(2, 1);
         let plant = Genome::new_plant();
         let genome_id = plant.id();
@@ -136,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn attack_action_works() {
+    fn test_attack() {
         // TODO: this is not needed
         let settings = SettingsBuilder::zero(); // initial health is 10
         let new_value =
@@ -166,7 +181,7 @@ mod tests {
     }
 
     #[test]
-    fn move_action_works() {
+    fn test_move() {
         let mut world = World::prod(2, 1);
         let mut plant = Genome::new_plant();
         plant.mutate(0, MOVE);
@@ -194,9 +209,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate_action_works() {
-        // TODO: try creating function in function
-
+    fn test_rotate() {
         let mut world = World::prod(1, 1);
         let mut plant = Genome::new_plant();
         plant.mutate(0, TURN);
@@ -220,4 +233,44 @@ mod tests {
             _ => {}
         }
     }
+
+    #[test]
+    fn test_defile() {
+        let settings = SettingsBuilder::prod()
+            .with_initial_cell_health(10)
+            .with_corpse_initial(10)
+            .with_defile_damage(5)
+            .with_defile_cost(5)
+            .build();
+
+        let new_health =
+            settings.initial_cell_health() +
+                settings.defile_cost() -
+                settings.defile_damage();
+
+        let mut world = World::new(2, 1, settings);
+        world.set_cell_ext(0, 0, Genome::new_predator(), Direction::East);
+        world.set_corpse(1, 0, 10);
+
+        Processor::new().apply(
+            &vec![Box::new(DefileAction::new(0, 0, -5))],
+            &mut world
+        );
+
+        match world.get_entity(0, 0) {
+            Entity::Cell(genome_id) => {
+                assert_eq!(new_health, world.get_state(*genome_id).health);
+            },
+            _ => panic!("There should be a predator"),
+        }
+
+        match world.get_entity(1, 0) {
+            Entity::Corpse(remains) => {
+                assert_eq!(5, *remains)
+            },
+            _ => panic!("Corpse should stay here"),
+        }
+
+    }
+
 }

@@ -98,13 +98,11 @@ impl fmt::Display for World {
 
 impl Affector for World {
     fn set_nothing(&mut self, x:Coords, y:Coords) {
-        self.set_entity(
-            x,
-            y,
-            Entity::Nothing,
-            None,
-            None
-        );
+        self.set_entity(x, y, Entity::Nothing, None, None);
+    }
+
+    fn set_corpse(&mut self, x:Coords, y:Coords, value:HealthType) {
+        self.set_entity(x, y, Entity::Corpse(value), None, None);
     }
 
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome) {
@@ -191,7 +189,6 @@ impl Affector for World {
 
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(genome_id) => {
-                // TODO: understand, still awkward
                 {
                     let mut state = self.cell_states.get_mut(genome_id);
                     old_health = state.health;
@@ -205,13 +202,46 @@ impl Affector for World {
 
                 if new_health < 0 {
                     result = old_health;
-                    self.set_entity(x, y, Entity::Corpse(666), None, None);
+                    let corpse_health = self.settings.corpse_initial();
+                    self.set_entity(x, y, Entity::Corpse(corpse_health), None, None);
 //                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
+                }
+            },
+            Entity::Corpse(remains) => {
+                let new_remains = remains + health_delta;
+                if new_remains > 0 {
+                    self.set_corpse(x, y, new_remains);
+                } else {
+                    self.set_nothing(x, y);
+                    result = remains;
                 }
             },
             _ => {}
         }
         result
+    }
+
+    fn defile(&mut self, x:Coords, y:Coords, damage: HealthType) {
+        println!("Damage is {:?}", damage);
+        match self.entities[self.get_index(x, y)] {
+            Entity::Cell(_) => {
+                if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                    if let Entity::Corpse(remains) = self.entities[self.get_index(new_x, new_y)] {
+                        let mut result = -damage;
+                        let new_remains = remains + damage;
+                        if new_remains > 0 {
+                            self.set_corpse(new_x, new_y, new_remains);
+                        } else {
+                            self.set_nothing(new_x, new_y);
+                            result = remains;
+                        }
+                        println!("Result is {:?}", result);
+                        self.update_health(x, y, result);
+                    }
+                }
+            },
+            _ => {}
+        }
     }
 
     fn punish_for_action(&mut self, x:Coords, y:Coords, gene: Gene) {
@@ -221,6 +251,7 @@ impl Affector for World {
             MOVE => self.settings.move_cost(),
             ATTACK => self.settings.attack_cost(),
             REPRODUCE => self.settings.reproduce_cost(),
+            DEFILE => self.settings.defile_cost(),
             _ => 0
         };
         // println!("DEBUG: Affector.punish_for_action x={:?} y={:?} gene={:?}", x, y, gene);
@@ -238,7 +269,7 @@ impl Affector for World {
                     let health_eaten = self.update_health(new_x, new_y, -damage);
                     self.update_health(x, y, health_eaten);
                 }
-            }
+            },
             _other => {
 //                println!("DEBUG: Affector.attack other: {:?}", other)
             }

@@ -41,6 +41,10 @@ impl Processor {
 //                     x, y, genome_id, index, gene);
 
             match gene {
+                DEFILE => {
+                    actions.push(Box::new(DefileAction::new(x, y, settings.defile_damage())));
+                    index += 1
+                },
                 ATTACK => {
                     actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())));
                     index += 1
