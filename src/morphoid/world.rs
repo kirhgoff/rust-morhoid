@@ -196,8 +196,8 @@ impl Affector for World {
                     state.health += health_delta;
                     new_health = state.health;
 
-//                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
-//                             x, y, genome_id, health_delta, state.health);
+                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
+                             x, y, genome_id, health_delta, state.health);
                 }
 
                 if new_health < 0 {
@@ -227,8 +227,8 @@ impl Affector for World {
             Entity::Cell(_) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
                     if let Entity::Corpse(remains) = self.entities[self.get_index(new_x, new_y)] {
-                        let mut result = -damage;
-                        let new_remains = remains + damage;
+                        let mut result = damage;
+                        let new_remains = remains - damage;
                         if new_remains > 0 {
                             self.set_corpse(new_x, new_y, new_remains);
                         } else {
@@ -256,7 +256,7 @@ impl Affector for World {
         };
         // println!("DEBUG: Affector.punish_for_action x={:?} y={:?} gene={:?}", x, y, gene);
 
-        self.update_health(x, y, -value);
+        self.update_health(x, y, value);
     }
 
     fn attack(&mut self, x:Coords, y:Coords, damage: HealthType) {
@@ -309,6 +309,7 @@ impl Affector for World {
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome> {
         let mut rng = rand::thread_rng();
 
+        // TODO: move all that stats to settings
         let probability = rng.gen_bool(0.5);
         let index = rng.gen_range(0, GENOME_LENGTH);
         let new_gene = rng.gen_range(0, GENE_COUNT);
@@ -541,12 +542,12 @@ mod tests {
                 .with_reproduce_threshold(9) // it will reproduce on second step
                 .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
                 .with_initial_cell_health(10)// it will have 10 originally
-                .with_reproduce_cost(6)// it will have 9 after reproduction
+                .with_reproduce_cost(-6)// it will have 9 after reproduction
                 .build();
 
         let initial_cell_health = settings.initial_cell_health();
 
-        let new_value = settings.initial_cell_health() - settings.reproduce_cost();
+        let new_value = settings.initial_cell_health() + settings.reproduce_cost();
 
         let mut world = World::new(2, 1, settings);
 
@@ -566,7 +567,7 @@ mod tests {
 
         let current_health = world.get_state_by_pos(1, 0).unwrap().health;
 
-        println!("TEST: curent_health: {:?} expected: {:?}", current_health, new_value);
+        println!("TEST: current_health: {:?} expected: {:?}", current_health, new_value);
         assert_eq!(new_value, current_health);
 
         match world.get_entity(0, 0) {

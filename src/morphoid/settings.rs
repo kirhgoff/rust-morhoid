@@ -18,7 +18,7 @@ impl Settings {
             move_cost: -5,
             turn_cost: -5,
             sense_cost: -5,
-            defile_cost: 1,
+            defile_cost: -1,
             corpse_decay: -2,
             corpse_initial: 20
         }

@@ -240,12 +240,12 @@ mod tests {
             .with_initial_cell_health(10)
             .with_corpse_initial(10)
             .with_defile_damage(5)
-            .with_defile_cost(5)
+            .with_defile_cost(-3)
             .build();
 
         let new_health =
             settings.initial_cell_health() +
-                settings.defile_cost() -
+                settings.defile_cost() +
                 settings.defile_damage();
 
         let mut world = World::new(2, 1, settings);
@@ -253,7 +253,7 @@ mod tests {
         world.set_corpse(1, 0, 10);
 
         Processor::new().apply(
-            &vec![Box::new(DefileAction::new(0, 0, -5))],
+            &vec![Box::new(DefileAction::new(0, 0, 5))],
             &mut world
         );
 
