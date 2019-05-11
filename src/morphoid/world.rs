@@ -204,16 +204,7 @@ impl Affector for World {
                     result = old_health;
                     let corpse_health = self.settings.corpse_initial();
                     self.set_entity(x, y, Entity::Corpse(corpse_health), None, None);
-//                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
-                }
-            },
-            Entity::Corpse(remains) => {
-                let new_remains = remains + health_delta;
-                if new_remains > 0 {
-                    self.set_corpse(x, y, new_remains);
-                } else {
-                    self.set_nothing(x, y);
-                    result = remains;
+                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
                 }
             },
             _ => {}
@@ -263,15 +254,15 @@ impl Affector for World {
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(_) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
-//                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
-//                             x, y, new_x, new_y, damage);
+                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
+                             x, y, new_x, new_y, damage);
 
                     let health_eaten = self.update_health(new_x, new_y, -damage);
                     self.update_health(x, y, health_eaten);
                 }
             },
             _other => {
-//                println!("DEBUG: Affector.attack other: {:?}", other)
+                println!("DEBUG: Affector.attack other: {:?}", _other)
             }
         }
     }
@@ -286,11 +277,11 @@ impl Affector for World {
             Some(new_genome) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
                     // Can reproduce only on corpse or empty space
-                    match self.get_entity(x, y) {
+                    match self.get_entity(new_x, new_y) {
                         Entity::Cell(_) => {},
                         _ => {
-//                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
-//                                     x, y, new_x, new_y);
+                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
+                                     x, y, new_x, new_y);
 
                             let mut rng = rand::thread_rng();
                             let direction = Direction::by_value(rng.gen_range(0, 8));
@@ -300,7 +291,7 @@ impl Affector for World {
                 }
             },
             _ => {
-//                println!("DEBUG: Affector.reproduce new genome is shit")
+                println!("DEBUG: Affector.reproduce new genome is shit")
             }
         }
 
@@ -681,6 +672,7 @@ mod tests {
             &mut world
         );
 
+        println!("World: [{}]", world);
         // attack came first, sad
         match world.get_entity(1, 0) {
             Entity::Corpse(_) => {},
