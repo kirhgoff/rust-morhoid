@@ -13,7 +13,10 @@ impl Processor {
                 //println!("DEBUG: Processor.process_entity [cell] ---- x: {:?} y:{:?}, genome: {:?}", x, y, genome_id);
                 let mut actions = self.execute(x, y, genome_id, perceptor, settings);
                 all_actions.append(&mut actions);
-            }
+            },
+            Entity::Corpse(_) => {
+                all_actions.push(Box::new(DecayAction::new(x, y, settings.corpse_decay())));
+            },
             _ => {
                 //println!("DEBUG: Processor.process_entity [other] {:?}", otherwise);
             },
@@ -41,6 +44,10 @@ impl Processor {
 //                     x, y, genome_id, index, gene);
 
             match gene {
+                DEFILE => {
+                    actions.push(Box::new(DefileAction::new(x, y, settings.defile_damage())));
+                    index += 1
+                },
                 ATTACK => {
                     actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())));
                     index += 1
@@ -149,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn integration_can_do_kill_entity_action() {
+    fn integration_test_kill_action() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.id();
@@ -172,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn integration_can_do_update_health() {
+    fn integration_test_update_health() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
         let hash = plant.id();

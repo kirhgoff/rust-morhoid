@@ -6,6 +6,7 @@
         fetch("/reset");
 
         setTimeout(render, 50);
+
       }
 
       function render() {
@@ -32,9 +33,19 @@
             font-family: Courier New, Courier, serif;
             font-size: 32px
         }
+        #display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #legend {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <pre id="display">Initializing world...</pre>
+    <pre id="legend">[+] corpse, [o] plant, [x] predator [.] weirdo</pre>
 </body>
 </html>

@@ -73,9 +73,10 @@ impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fn icon_for(desc: &GenomeDesc) -> char {
             match desc {
-                x if x.reproduces > x.attacks + x.photosynthesys => '8',
-                x if x.attacks > x.photosynthesys => '>',
-                x if x.photosynthesys > x.attacks => '☼',
+                x if x.reproduces > x.attacks + x.photosynthesys => '*',
+                x if x.attacks > x.photosynthesys + x.defiles  => 'x',
+                x if x.photosynthesys > x.attacks + x.defiles => 'o',
+                x if x.defiles > x.attacks + x.photosynthesys => '@',
                 _ => '.'
             }
         }
@@ -98,13 +99,11 @@ impl fmt::Display for World {
 
 impl Affector for World {
     fn set_nothing(&mut self, x:Coords, y:Coords) {
-        self.set_entity(
-            x,
-            y,
-            Entity::Nothing,
-            None,
-            None
-        );
+        self.set_entity(x, y, Entity::Nothing, None, None);
+    }
+
+    fn set_corpse(&mut self, x:Coords, y:Coords, value:HealthType) {
+        self.set_entity(x, y, Entity::Corpse(value), None, None);
     }
 
     fn set_cell(&mut self, x:Coords, y:Coords, genome:Genome) {
@@ -191,7 +190,6 @@ impl Affector for World {
 
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(genome_id) => {
-                // TODO: understand, still awkward
                 {
                     let mut state = self.cell_states.get_mut(genome_id);
                     old_health = state.health;
@@ -205,13 +203,36 @@ impl Affector for World {
 
                 if new_health < 0 {
                     result = old_health;
-                    self.set_entity(x, y, Entity::Corpse(666), None, None);
+                    let corpse_health = self.settings.corpse_initial();
+                    self.set_entity(x, y, Entity::Corpse(corpse_health), None, None);
 //                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
                 }
             },
             _ => {}
         }
         result
+    }
+
+    fn defile(&mut self, x:Coords, y:Coords, damage: HealthType) {
+        //println!("Damage is {:?}", damage);
+        match self.entities[self.get_index(x, y)] {
+            Entity::Cell(_) => {
+                if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                    if let Entity::Corpse(remains) = self.entities[self.get_index(new_x, new_y)] {
+                        let mut result = damage;
+                        let new_remains = remains - damage;
+                        if new_remains > 0 {
+                            self.set_corpse(new_x, new_y, new_remains);
+                        } else {
+                            self.set_nothing(new_x, new_y);
+                            result = remains;
+                        }
+                        self.update_health(x, y, result);
+                    }
+                }
+            },
+            _ => {}
+        }
     }
 
     fn punish_for_action(&mut self, x:Coords, y:Coords, gene: Gene) {
@@ -221,11 +242,12 @@ impl Affector for World {
             MOVE => self.settings.move_cost(),
             ATTACK => self.settings.attack_cost(),
             REPRODUCE => self.settings.reproduce_cost(),
+            DEFILE => self.settings.defile_cost(),
             _ => 0
         };
         // println!("DEBUG: Affector.punish_for_action x={:?} y={:?} gene={:?}", x, y, gene);
 
-        self.update_health(x, y, -value);
+        self.update_health(x, y, value);
     }
 
     fn attack(&mut self, x:Coords, y:Coords, damage: HealthType) {
@@ -238,9 +260,9 @@ impl Affector for World {
                     let health_eaten = self.update_health(new_x, new_y, -damage);
                     self.update_health(x, y, health_eaten);
                 }
-            }
+            },
             _other => {
-//                println!("DEBUG: Affector.attack other: {:?}", other)
+//                println!("DEBUG: Affector.attack other: {:?}", _other)
             }
         }
     }
@@ -255,7 +277,7 @@ impl Affector for World {
             Some(new_genome) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
                     // Can reproduce only on corpse or empty space
-                    match self.get_entity(x, y) {
+                    match self.get_entity(new_x, new_y) {
                         Entity::Cell(_) => {},
                         _ => {
 //                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
@@ -275,9 +297,20 @@ impl Affector for World {
 
     }
 
+    fn decay(&mut self, x:Coords, y:Coords, decay: HealthType) {
+        if let Entity::Corpse(remains) = self.entities[self.get_index(x, y)] {
+            if remains > decay {
+                self.set_corpse(x, y, remains + decay);
+            } else {
+                self.set_nothing(x, y);
+            }
+        }
+    }
+
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome> {
         let mut rng = rand::thread_rng();
 
+        // TODO: move all that stats to settings
         let probability = rng.gen_bool(0.5);
         let index = rng.gen_range(0, GENOME_LENGTH);
         let new_gene = rng.gen_range(0, GENE_COUNT);
@@ -327,42 +360,6 @@ impl Perceptor for World {
             },
             _ => None
         }
-    }
-
-    fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
-        let results: Vec<(Coords, Coords)> = iproduct!(x-1..x+1, y-1..y+1)
-            .into_iter()
-            .filter(|(i,j)| {
-                match self.get_entity(*i, *j) {
-                    Entity::Nothing => true,
-                    _ => false
-                }
-            })
-            .collect();
-
-        // TODO: why, why?
-        match results.first() {
-            Some(x) => Some(*x),
-            _ => None
-        }
-    }
-
-    // TODO: extract method
-    fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
-        iproduct!(-1..2, -1..2)
-            .into_iter()
-            .filter(|(dx, dy)| *dx != 0 || *dy != 0) // remove self
-            .map(|(dx, dy)| (dy, dx)) // turn around so it is clockwise
-            .map(|(dx, dy)| (x + dx, y + dy))
-            .filter(|(other_x, other_y)| {
-                match self.get_entity(*other_x, *other_y) {
-                    Entity::Cell(_) =>  true,
-                    _ => false
-                }
-            })
-            .collect::<Vec<(Coords,Coords)>>()
-            .first() // TODO: randomize
-            .map(|coords| *coords)
     }
 }
 
@@ -427,27 +424,6 @@ mod tests {
 
 
     #[test]
-    fn test_find_target_around() {
-        let mut world = World::prod(3, 3);
-        for x in 0..3 {
-            for y in 0..3 {
-                world.set_cell(x, y, Genome::new_predator());
-            }
-        }
-
-        assert_eq!(world.find_target_around(1, 1), Some((0,0)));
-
-        world.set_nothing(0, 0);
-        assert_eq!(world.find_target_around(1, 1), Some((1,0)));
-
-        world.set_nothing(1, 0);
-        assert_eq!(world.find_target_around(1, 1), Some((2,0)));
-
-        world.set_nothing(2, 0);
-        assert_eq!(world.find_target_around(1, 1), Some((0,1)));
-    }
-
-    #[test]
     fn test_update_health_addition() {
         let settings = Settings::prod();
         let initial_cell_health = settings.initial_cell_health();
@@ -510,12 +486,12 @@ mod tests {
                 .with_reproduce_threshold(9) // it will reproduce on second step
                 .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
                 .with_initial_cell_health(10)// it will have 10 originally
-                .with_reproduce_cost(6)// it will have 9 after reproduction
+                .with_reproduce_cost(-6)// it will have 9 after reproduction
                 .build();
 
         let initial_cell_health = settings.initial_cell_health();
 
-        let new_value = settings.initial_cell_health() - settings.reproduce_cost();
+        let new_value = settings.initial_cell_health() + settings.reproduce_cost();
 
         let mut world = World::new(2, 1, settings);
 
@@ -535,7 +511,7 @@ mod tests {
 
         let current_health = world.get_state_by_pos(1, 0).unwrap().health;
 
-        println!("TEST: curent_health: {:?} expected: {:?}", current_health, new_value);
+        println!("TEST: current_health: {:?} expected: {:?}", current_health, new_value);
         assert_eq!(new_value, current_health);
 
         match world.get_entity(0, 0) {
@@ -551,6 +527,7 @@ mod tests {
         let settings = SettingsBuilder::prod()
             .with_attack_cost(1)
             .with_attack_damage(100) // one shot kills
+            .with_corpse_decay(0) // we need corpses to stay
             .build();
         let mut processor = Processor::new();
         let mut world = World::new(3, 3, settings);
@@ -649,6 +626,7 @@ mod tests {
             &mut world
         );
 
+        println!("World: [{}]", world);
         // attack came first, sad
         match world.get_entity(1, 0) {
             Entity::Corpse(_) => {},
