@@ -26,13 +26,6 @@ lazy_static! {
     static ref WORLD: Mutex<World> = Mutex::new(build_new_world());
 }
 
-//  12345678
-//1  00 00
-//2 0000000
-//3  00000
-//4   000
-//5    0
-
 fn build_new_world() -> World {
     let mut rng = rand::thread_rng();
 
@@ -40,13 +33,7 @@ fn build_new_world() -> World {
     let width = 40;
     let height = 20;
     let mut world = World::new(width, height, settings);
-//    let coords_vec = vec![
-//        (2,1), (3,1), (5,1),(6,1),
-//        (1,2), (2,2), (3,2), (4,2), (5,2), (6,2), (7,2),
-//        (2,3), (3,3), (4,3), (5,3), (6,3),
-//        (3,4), (4,4), (5,4),
-//        (4,5)
-//    ];
+
     for x in 0..width {
         for y in 0..height {
             if rng.gen_ratio(1,3) {
