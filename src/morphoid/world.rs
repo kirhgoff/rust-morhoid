@@ -73,9 +73,10 @@ impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fn icon_for(desc: &GenomeDesc) -> char {
             match desc {
-                x if x.reproduces > x.attacks + x.photosynthesys => '8',
-                x if x.attacks > x.photosynthesys => '>',
-                x if x.photosynthesys > x.attacks => '☼',
+                x if x.reproduces > x.attacks + x.photosynthesys => '*',
+                x if x.attacks > x.photosynthesys + x.defiles  => 'x',
+                x if x.photosynthesys > x.attacks + x.defiles => 'o',
+                x if x.defiles > x.attacks + x.photosynthesys => '@',
                 _ => '.'
             }
         }
@@ -196,15 +197,15 @@ impl Affector for World {
                     state.health += health_delta;
                     new_health = state.health;
 
-                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
-                             x, y, genome_id, health_delta, state.health);
+//                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
+//                             x, y, genome_id, health_delta, state.health);
                 }
 
                 if new_health < 0 {
                     result = old_health;
                     let corpse_health = self.settings.corpse_initial();
                     self.set_entity(x, y, Entity::Corpse(corpse_health), None, None);
-                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
+//                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
                 }
             },
             _ => {}
@@ -213,7 +214,7 @@ impl Affector for World {
     }
 
     fn defile(&mut self, x:Coords, y:Coords, damage: HealthType) {
-        println!("Damage is {:?}", damage);
+        //println!("Damage is {:?}", damage);
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(_) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
@@ -226,7 +227,6 @@ impl Affector for World {
                             self.set_nothing(new_x, new_y);
                             result = remains;
                         }
-                        println!("Result is {:?}", result);
                         self.update_health(x, y, result);
                     }
                 }
@@ -254,15 +254,15 @@ impl Affector for World {
         match self.entities[self.get_index(x, y)] {
             Entity::Cell(_) => {
                 if let Some((new_x, new_y)) = self.looking_at(x, y) {
-                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
-                             x, y, new_x, new_y, damage);
+//                    println!("DEBUG: Affector.attack x: {:?} y: {:?} new_x: {:?}, new_y: {:?} damage: {:?}",
+//                             x, y, new_x, new_y, damage);
 
                     let health_eaten = self.update_health(new_x, new_y, -damage);
                     self.update_health(x, y, health_eaten);
                 }
             },
             _other => {
-                println!("DEBUG: Affector.attack other: {:?}", _other)
+//                println!("DEBUG: Affector.attack other: {:?}", _other)
             }
         }
     }
@@ -280,8 +280,8 @@ impl Affector for World {
                     match self.get_entity(new_x, new_y) {
                         Entity::Cell(_) => {},
                         _ => {
-                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
-                                     x, y, new_x, new_y);
+//                            println!("DEBUG: Affector.reproduce x:{:?}, y:{:?} looking_at: ({:?}, {:?})",
+//                                     x, y, new_x, new_y);
 
                             let mut rng = rand::thread_rng();
                             let direction = Direction::by_value(rng.gen_range(0, 8));
@@ -291,10 +291,20 @@ impl Affector for World {
                 }
             },
             _ => {
-                println!("DEBUG: Affector.reproduce new genome is shit")
+//                println!("DEBUG: Affector.reproduce new genome is shit")
             }
         }
 
+    }
+
+    fn decay(&mut self, x:Coords, y:Coords, decay: HealthType) {
+        if let Entity::Corpse(remains) = self.entities[self.get_index(x, y)] {
+            if remains > decay {
+                self.set_corpse(x, y, remains + decay);
+            } else {
+                self.set_nothing(x, y);
+            }
+        }
     }
 
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome> {
@@ -350,42 +360,6 @@ impl Perceptor for World {
             },
             _ => None
         }
-    }
-
-    fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
-        let results: Vec<(Coords, Coords)> = iproduct!(x-1..x+1, y-1..y+1)
-            .into_iter()
-            .filter(|(i,j)| {
-                match self.get_entity(*i, *j) {
-                    Entity::Nothing => true,
-                    _ => false
-                }
-            })
-            .collect();
-
-        // TODO: why, why?
-        match results.first() {
-            Some(x) => Some(*x),
-            _ => None
-        }
-    }
-
-    // TODO: extract method
-    fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)> {
-        iproduct!(-1..2, -1..2)
-            .into_iter()
-            .filter(|(dx, dy)| *dx != 0 || *dy != 0) // remove self
-            .map(|(dx, dy)| (dy, dx)) // turn around so it is clockwise
-            .map(|(dx, dy)| (x + dx, y + dy))
-            .filter(|(other_x, other_y)| {
-                match self.get_entity(*other_x, *other_y) {
-                    Entity::Cell(_) =>  true,
-                    _ => false
-                }
-            })
-            .collect::<Vec<(Coords,Coords)>>()
-            .first() // TODO: randomize
-            .map(|coords| *coords)
     }
 }
 
@@ -448,27 +422,6 @@ mod tests {
         assert_eq!(Some((-1, 1)), world.looking_at(0,0));
     }
 
-
-    #[test]
-    fn test_find_target_around() {
-        let mut world = World::prod(3, 3);
-        for x in 0..3 {
-            for y in 0..3 {
-                world.set_cell(x, y, Genome::new_predator());
-            }
-        }
-
-        assert_eq!(world.find_target_around(1, 1), Some((0,0)));
-
-        world.set_nothing(0, 0);
-        assert_eq!(world.find_target_around(1, 1), Some((1,0)));
-
-        world.set_nothing(1, 0);
-        assert_eq!(world.find_target_around(1, 1), Some((2,0)));
-
-        world.set_nothing(2, 0);
-        assert_eq!(world.find_target_around(1, 1), Some((0,1)));
-    }
 
     #[test]
     fn test_update_health_addition() {

@@ -108,6 +108,20 @@ impl Action for DefileAction {
 
 // --------------------------------
 
+impl DecayAction {
+    pub fn new(x: Coords, y: Coords, decay: HealthType) -> DecayAction {
+        DecayAction { x, y, decay }
+    }
+}
+
+impl Action for DecayAction {
+    fn execute(&self, affector: &mut Affector) {
+        affector.decay(self.x, self.y, self.decay);
+    }
+}
+
+// --------------------------------
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,7 +166,6 @@ mod tests {
 
     #[test]
     fn test_attack() {
-        // TODO: this is not needed
         let settings = SettingsBuilder::zero(); // initial health is 10
         let new_value =
             settings.initial_cell_health() +
@@ -273,4 +286,20 @@ mod tests {
 
     }
 
+    #[test]
+    fn test_decay() {
+        let mut world = World::prod(1, 1);
+
+        world.set_corpse(0, 0, 10);
+
+        Processor::new().apply(
+            &vec![Box::new(DecayAction::new(0, 0, -3))],
+            &mut world
+        );
+
+        match world.get_entity(0, 0) {
+            Entity::Corpse(remains) => assert_eq!(7, *remains),
+            _ => panic!("Corpse should be here"),
+        }
+    }
 }

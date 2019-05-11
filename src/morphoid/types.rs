@@ -94,6 +94,7 @@ pub struct GenomeDesc {
     pub reproduces: usize,
     pub attacks: usize,
     pub photosynthesys: usize,
+    pub defiles: usize
 }
 
 // TODO: move to processor
@@ -131,6 +132,7 @@ pub trait Affector {
     fn attack(&mut self, x: Coords, y: Coords, damage: HealthType);
     fn defile(&mut self, x: Coords, y: Coords, damage: HealthType);
     fn reproduce(&mut self, x: Coords, y: Coords);
+    fn decay(&mut self, x: Coords, y: Coords, decay: HealthType);
 
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome>;
 }
@@ -141,8 +143,6 @@ pub trait Perceptor {
     fn get_state_by_pos(&self, x: Coords, y: Coords) -> Option<&CellState>;
     fn get_genome(&self, genome_id: GenomeId) -> Option<&Genome>;
     fn looking_at(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
-    fn find_vacant_place_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
-    fn find_target_around(&self, x: Coords, y: Coords) -> Option<(Coords, Coords)>;
 }
 
 pub trait Action {
@@ -196,4 +196,10 @@ pub struct DefileAction {
     pub x: Coords,
     pub y: Coords,
     pub damage: HealthType,
+}
+
+pub struct DecayAction {
+    pub x: Coords,
+    pub y: Coords,
+    pub decay: HealthType,
 }

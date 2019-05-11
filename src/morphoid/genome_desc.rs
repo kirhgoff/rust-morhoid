@@ -6,12 +6,14 @@ impl GenomeDesc {
         let mut reproduces: usize = 0;
         let mut attacks: usize = 0;
         let mut photosynthesys: usize = 0;
+        let mut defiles: usize = 0;
 
         for gene in genome.genes.iter() {
             match *gene {
                 ATTACK => attacks += 1,
                 REPRODUCE => reproduces += 1,
                 PHOTOSYNTHESYS => photosynthesys += 1,
+                DEFILE => defiles += 1,
                 _ => {}
             }
         }
@@ -19,7 +21,8 @@ impl GenomeDesc {
         GenomeDesc {
             reproduces: reproduces,
             attacks: attacks,
-            photosynthesys: photosynthesys
+            photosynthesys: photosynthesys,
+            defiles: defiles
         }
     }
 }
