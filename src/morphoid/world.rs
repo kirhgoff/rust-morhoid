@@ -527,6 +527,7 @@ mod tests {
         let settings = SettingsBuilder::prod()
             .with_attack_cost(1)
             .with_attack_damage(100) // one shot kills
+            .with_corpse_decay(0) // we need corpses to stay
             .build();
         let mut processor = Processor::new();
         let mut world = World::new(3, 3, settings);
