@@ -92,7 +92,7 @@ fn initialize() {
 }
 
 fn main() {
-    println!("Starting...");
+    println!("Starting morphoid.");
     let port = env::var("PORT")
         .unwrap_or_else(|_| "8080".to_string())
         .parse()
