@@ -32,7 +32,7 @@ fn build_new_world() -> World {
 
     let settings = Settings ::prod();
     let width = 40;
-    let height = 20;
+    let height = 40;
     let mut world = World::new(width, height, settings);
 
     for x in 0..width {
