@@ -1,17 +1,18 @@
 // #[macro_use] extern crate itertools;
 #[macro_use] extern crate lazy_static;
+extern crate json;
 
 extern crate actix_web;
 extern crate core;
 extern crate rand;
+extern crate futures;
 
-use actix_web::{server, App, HttpRequest, Responder};
 use std::env;
 
 pub mod morphoid;
 use morphoid::types::*;
 
-use actix_web::fs;
+use actix_web::*;
 use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
@@ -82,19 +83,47 @@ fn reset_world(_req: &HttpRequest) -> impl Responder {
     "OK"
 }
 
+fn api_get_world(_req: &HttpRequest) -> HttpResponse {
+    let world = WORLD.lock().unwrap();
+
+    let out_json = json::object! {
+        "width" => world.width,
+        "height" => world.height,
+        "data" => format!("{}", world),
+    };
+
+    let response = out_json.dump();
+
+    //println!("Sending: {:?}", response);
+
+    HttpResponse::Ok()
+        // TODO: remove this - dangerous
+        .header("Access-Control-Allow-Origin", "*")
+        .content_type("application/json")
+        .body(response)
+}
+
 fn initialize() {
     thread::spawn(|| {
         loop {
-            thread::sleep(Duration::from_millis(500));
+            // TODO: wtf?! is it really a solution?
+            thread::sleep(Duration::from_millis(700));
             WORLD.lock().unwrap().tick(&mut PROCESSOR.lock().unwrap());
         }
     });
 }
 
+//fn test() {
+//    let resp = test::TestRequest::with_header("content-type", "text/plain")
+//        .run(&api_get_world)
+//        .unwrap();
+//    assert_eq!(resp.status(), http::StatusCode::OK);
+//}
+
 fn main() {
     println!("Starting morphoid.");
     let port = env::var("PORT")
-        .unwrap_or_else(|_| "8080".to_string())
+        .unwrap_or_else(|_| "6060".to_string())
         .parse()
         .expect("PORT must be a number");
 
@@ -105,6 +134,13 @@ fn main() {
         App::new()
             .resource("/world", |r| r.f(world_state))
             .resource("/reset", |r| r.f(reset_world))
+            // TODO: properly name, add parameter https://docs.rs/actix-web/0.6.1/actix_web/struct.Path.html
+            .resource("/world/get", |r| r.f(api_get_world))
+//            .service(
+//                web::resource("/extractor2")
+//                    .data(web::JsonConfig::default().limit(1024)) // <- limit size of the payload (resource level)
+//                    .route(web::post().to_async(extract_item)),
+//            )
             .handler(
                 "/",
                 fs::StaticFiles::new("static/")
