@@ -26,6 +26,7 @@ jobs:
           name: Nightly Build
           command: |
             pwd
+            ls ../ui/build/
             rustup run nightly rustc --version --verbose
             rustup run nightly cargo --version --verbose
             rustup run nightly cargo build
