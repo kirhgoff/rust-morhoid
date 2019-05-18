@@ -19,9 +19,11 @@ jobs:
       - run:
           name: Run webpack
           command: |
+            pwd
             cd ui
             npm install
             npx webpack
+            ls -rtla
       - run:
           name: Nightly Build
           command: |
