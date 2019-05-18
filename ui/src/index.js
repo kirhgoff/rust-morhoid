@@ -28,7 +28,7 @@ class GameDisplay extends React.Component {
 
   reload() {
     console.log("GameDisplay.reload");
-    fetch('http://lvh.me:6060/world/get')
+    fetch('http://lvh.me:8080/world/get')
         .then(response => {
           const result = response.json();
           console.log("Result: >>>>> ", result);

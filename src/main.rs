@@ -129,7 +129,7 @@ fn main() {
     println!("Starting morphoid.");
     
     let port = env::var("PORT")
-        .unwrap_or_else(|_| "6060".to_string())
+        .unwrap_or_else(|_| "8080".to_string())
         .parse()
         .expect("PORT must be a number");
 
