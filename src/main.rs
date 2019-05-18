@@ -21,6 +21,7 @@ use core::mem;
 
 use rand::{Rng};
 use rand::prelude::ThreadRng;
+use actix_web::http::ContentEncoding;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -120,8 +121,13 @@ fn initialize() {
 //    assert_eq!(resp.status(), http::StatusCode::OK);
 //}
 
+const INDEX_CSS: &str = include_str!("../ui/build/index.css");
+const INDEX_HTML: &str = include_str!("../ui/build/index.html");
+const BUNDLE_JS: &str = include_str!("../ui/build/bundle.js");
+
 fn main() {
     println!("Starting morphoid.");
+    
     let port = env::var("PORT")
         .unwrap_or_else(|_| "6060".to_string())
         .parse()
@@ -132,21 +138,26 @@ fn main() {
     // Start a server, configuring the resources to serve.
     server::new(|| {
         App::new()
+            .default_encoding(ContentEncoding::Identity)
+            // API
             .resource("/world", |r| r.f(world_state))
             .resource("/reset", |r| r.f(reset_world))
             // TODO: properly name, add parameter https://docs.rs/actix-web/0.6.1/actix_web/struct.Path.html
             .resource("/world/get", |r| r.f(api_get_world))
-//            .service(
-//                web::resource("/extractor2")
-//                    .data(web::JsonConfig::default().limit(1024)) // <- limit size of the payload (resource level)
-//                    .route(web::post().to_async(extract_item)),
-//            )
-            .handler(
-                "/",
-                fs::StaticFiles::new("static/")
-                    .unwrap()
-                    .index_file("index.html")
-            )
+
+            // Static part
+            .resource("/bundle.js", |r| r.f(|_| {
+                HttpResponse::Ok().content_type("text/javascript").body(BUNDLE_JS)
+            }))
+            .resource("/index.css", |r| r.f(|_| {
+                HttpResponse::Ok().content_type("text/css").body(INDEX_CSS)
+            }))
+            .resource("/index.html", |r| r.f(|_| {
+                HttpResponse::Ok().content_type("text/html").body(INDEX_HTML)
+            }))
+            .resource("/", |r| r.f(|_| {
+                HttpResponse::Ok().content_type("text/html").body(INDEX_HTML)
+            }))
     })
     .bind(("0.0.0.0", port))
     .expect(&format!("Can not bind to port {:?}", port))
