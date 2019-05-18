@@ -19,14 +19,11 @@ jobs:
       - run:
           name: Run webpack
           command: |
-            pwd
             cd ui
             npm install
       - run:
           name: Nightly Build
           command: |
-            pwd
-            ls ../ui/build/
             rustup run nightly rustc --version --verbose
             rustup run nightly cargo --version --verbose
             rustup run nightly cargo build
@@ -39,4 +36,4 @@ jobs:
           paths:
             - "~/.cargo"
             - "./target"
-            - "./ui/build/node_modules"
+            - "./ui/node_modules"
