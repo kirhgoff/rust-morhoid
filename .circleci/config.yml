@@ -23,6 +23,10 @@ jobs:
             cd ui
             npm install
             npx webpack
+            echo "-------------ui folder contents"
+            ls -rtla
+            cd build
+            echo "-------------build folder contents"
             ls -rtla
       - run:
           name: Nightly Build
