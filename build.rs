@@ -9,6 +9,4 @@ fn main() {
         .args(&["webpack"])
         .current_dir(&Path::new(&"./ui"))
         .status().unwrap();
-
-    println!("warning=dssdfsdfsdfsdfs");
 }
