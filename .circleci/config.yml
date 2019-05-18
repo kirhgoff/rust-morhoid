@@ -22,15 +22,10 @@ jobs:
             pwd
             cd ui
             npm install
-            npx webpack
-            echo "-------------ui folder contents"
-            ls -rtla
-            cd build
-            echo "-------------build folder contents"
-            ls -rtla
       - run:
           name: Nightly Build
           command: |
+            pwd
             rustup run nightly rustc --version --verbose
             rustup run nightly cargo --version --verbose
             rustup run nightly cargo build
