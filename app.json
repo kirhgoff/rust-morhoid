@@ -1,0 +1,11 @@
+{
+    "name": "Morphoid",
+    "description": "Artificial life simulation",
+    "repository": "https://github.com/kirhgoff/rust-morphoid",
+    "success_url": "/",
+    "keywords": ["rust", "actix", "react"],
+    "website": "https://morphoid.herokuapp.com",
+    "env": {
+      "BUILDPACK_URL": "https://github.com/emk/heroku-buildpack-rust.git"
+    }
+  }
