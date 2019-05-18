@@ -15,12 +15,12 @@ module.exports = {
           loader: "babel-loader"
         }
       },
+      // {
+      //   test:/\.css$/,
+      //   use: ['style-loader','css-loader']
+      // },
       {
-        test:/\.css$/,
-        use: ['style-loader','css-loader']
-      },
-      {
-        test: /\.(htm|html)$/,
+        test: /\.(htm|html|css)$/,
         use: {
           loader: "file-loader",
           options: {
