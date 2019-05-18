@@ -7,10 +7,10 @@ jobs:
       # your own using the Dockerfile provided below
       # and replace here. I put my own image here for
       # the example.
-      - image: abronan/rust-circleci:latest
+      - image: kirhgoff/rust-npm-circleci:latest
 
     environment:
-      TZ: "/usr/share/zoneinfo/Europe/Paris"
+      TZ: "/usr/share/zoneinfo/Australia/melbourne"
 
     steps:
       - checkout
@@ -20,6 +20,7 @@ jobs:
           name: Run webpack
           command: |
             cd ui
+            npm install
             npx webpack
       - run:
           name: Nightly Build
