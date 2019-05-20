@@ -7,5 +7,13 @@
     "website": "https://morphoid.herokuapp.com",
     "env": {
       "BUILDPACK_URL": "https://github.com/emk/heroku-buildpack-rust.git"
-    }
+    },
+    "buildpacks": [
+      {
+        "url": "https://github.com/emk/heroku-buildpack-rust.git"
+      },
+      {
+        "url": "heroku/ruby"
+      }
+    ]
   }
