@@ -16,11 +16,11 @@ jobs:
       - checkout
       - restore_cache:
           key: project-cache
-      - run:
-          name: Run webpack
-          command: |
-            cd ui
-            npm install
+#      - run:
+#          name: Run webpack
+#          command: |
+#            cd ui
+#            npm install
       - run:
           name: Nightly Build
           command: |

@@ -121,9 +121,9 @@ fn initialize() {
 //    assert_eq!(resp.status(), http::StatusCode::OK);
 //}
 
-const INDEX_CSS: &str = include_str!("../ui/build/index.css");
-const INDEX_HTML: &str = include_str!("../ui/build/index.html");
-const BUNDLE_JS: &str = include_str!("../ui/build/bundle.js");
+const INDEX_CSS: &str = include_str!("../ui/index.css");
+const INDEX_HTML: &str = include_str!("../ui/index.html");
+const BUNDLE_JS: &str = include_str!("../ui/bundle.js");
 
 fn main() {
     println!("Starting morphoid.");
