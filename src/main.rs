@@ -144,7 +144,6 @@ fn main() {
             .resource("/reset", |r| r.f(reset_world))
             // TODO: properly name, add parameter https://docs.rs/actix-web/0.6.1/actix_web/struct.Path.html
             .resource("/world/get", |r| r.f(api_get_world))
-
             // Static part
             .resource("/bundle.js", |r| r.f(|_| {
                 HttpResponse::Ok().content_type("text/javascript").body(BUNDLE_JS)
