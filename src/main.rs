@@ -1,5 +1,6 @@
 // #[macro_use] extern crate itertools;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate serde_derive;
 extern crate json;
 
 extern crate actix_web;
@@ -22,6 +23,10 @@ use core::mem;
 use rand::{Rng};
 use rand::prelude::ThreadRng;
 use actix_web::http::ContentEncoding;
+use actix_web::middleware::Logger;
+use actix_web::{
+    http::header, middleware::cors::Cors, App, HttpServer,
+};
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -84,25 +89,40 @@ fn reset_world(_req: &HttpRequest) -> impl Responder {
     "OK"
 }
 
-fn api_get_world(_req: &HttpRequest) -> HttpResponse {
+#[derive(Deserialize, Serialize, Debug)]
+pub struct WorldView {
+    width: i32,
+    height: i32,
+    data: String,
+}
+
+pub fn api_get_world() -> web::Json<WorldView> {
     let world = WORLD.lock().unwrap();
 
-    let out_json = json::object! {
-        "width" => world.width,
-        "height" => world.height,
-        "data" => format!("{}", world),
-    };
-
-    let response = out_json.dump();
-
-    //println!("Sending: {:?}", response);
-
-    HttpResponse::Ok()
-        // TODO: remove this - dangerous
-        .header("Access-Control-Allow-Origin", "*")
-        .content_type("application/json")
-        .body(response)
+    web::Json(WorldView {
+        width: world.width,
+        height: world.height,
+        data: format!("{}", world),
+    })
 }
+
+//fn api_get_world(_req: &HttpRequest) -> HttpResponse {
+//    let world = WORLD.lock().unwrap();
+//
+//    let out_json = json::object! {
+//        "width" => world.width,
+//        "height" => world.height,
+//        "data" => format!("{}", world),
+//    };
+//
+//    let response = out_json.dump();
+//
+//    //println!("Sending: {:?}", response);
+//
+//    HttpResponse::Ok()
+//        .content_type("application/json")
+//        .body(response)
+//}
 
 fn initialize() {
     thread::spawn(|| {
@@ -114,20 +134,11 @@ fn initialize() {
     });
 }
 
-//fn test() {
-//    let resp = test::TestRequest::with_header("content-type", "text/plain")
-//        .run(&api_get_world)
-//        .unwrap();
-//    assert_eq!(resp.status(), http::StatusCode::OK);
-//}
-
-const INDEX_CSS: &str = include_str!("../ui/index.css");
-const INDEX_HTML: &str = include_str!("../ui/index.html");
-const BUNDLE_JS: &str = include_str!("../ui/bundle.js");
-
 fn main() {
     println!("Starting morphoid.");
-    
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+
     let port = env::var("PORT")
         .unwrap_or_else(|_| "8080".to_string())
         .parse()
@@ -136,27 +147,18 @@ fn main() {
     initialize();
 
     // Start a server, configuring the resources to serve.
-    server::new(|| {
+    HttpServer::new(move || {
         App::new()
-            .default_encoding(ContentEncoding::Identity)
-            // API
-            .resource("/world", |r| r.f(world_state))
-            .resource("/reset", |r| r.f(reset_world))
-            // TODO: properly name, add parameter https://docs.rs/actix-web/0.6.1/actix_web/struct.Path.html
-            .resource("/world/get", |r| r.f(api_get_world))
-            // Static part
-            .resource("/bundle.js", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/javascript").body(BUNDLE_JS)
-            }))
-            .resource("/index.css", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/css").body(INDEX_CSS)
-            }))
-            .resource("/index.html", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/html").body(INDEX_HTML)
-            }))
-            .resource("/", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/html").body(INDEX_HTML)
-            }))
+            .wrap(
+            Cors::new()
+                .allowed_origin("*")
+                .allowed_methods(vec!["GET", "POST"])
+                .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+                .allowed_header(header::CONTENT_TYPE)
+                .max_age(3600)
+            )
+            .wrap(Logger::default())
+            .service(web::resource("/world/get").route(web::get().to(api_get_world)))
     })
     .bind(("0.0.0.0", port))
     .expect(&format!("Can not bind to port {:?}", port))
