@@ -17,11 +17,6 @@ jobs:
       - restore_cache:
           key: project-cache
       - run:
-          name: Run webpack
-          command: |
-            cd ui
-            npm install
-      - run:
           name: Nightly Build
           command: |
             rustup run nightly rustc --version --verbose
@@ -36,4 +31,3 @@ jobs:
           paths:
             - "~/.cargo"
             - "./target"
-            - "./ui/node_modules"
