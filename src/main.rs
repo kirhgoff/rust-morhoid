@@ -39,7 +39,7 @@ fn build_new_world() -> World {
     for x in 0..width {
         for y in 0..height {
             if rng.gen_ratio(1,3) {
-                let mut genome = create_random_entity(&mut rng);
+                let genome = create_random_entity(&mut rng);
                 let direction = Direction::by_value(rng.gen_range(0, 8));
 
                 world.set_cell_ext(x, y, genome, direction);
