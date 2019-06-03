@@ -4,7 +4,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use self::itertools::Itertools;
-use morphoid::types::*;
+use crate::morphoid::types::*;
 
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);

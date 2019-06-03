@@ -9,7 +9,7 @@ extern crate rand;
 extern crate futures;
 
 pub mod morphoid;
-use morphoid::types::*;
+use crate::morphoid::types::*;
 
 use actix_web::*;
 use std::thread;

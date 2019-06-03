@@ -1,4 +1,4 @@
-use morphoid::types::*;
+use crate::morphoid::types::*;
 
 
 impl GenomeDesc {

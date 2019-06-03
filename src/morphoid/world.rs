@@ -1,7 +1,7 @@
 extern crate time;
 
 use std::fmt;
-use morphoid::types::*;
+use crate::morphoid::types::*;
 //use self::time::PreciseTime;
 use std::vec::Vec;
 use rand::{Rng};

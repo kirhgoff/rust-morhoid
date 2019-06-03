@@ -1,4 +1,4 @@
-use morphoid::types::*;
+use crate::morphoid::types::*;
 use std::collections::HashMap;
 
 impl Processor {
