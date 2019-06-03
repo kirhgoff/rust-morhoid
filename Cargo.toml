@@ -2,7 +2,6 @@
 name = "morphoid"
 version = "0.1.0"
 authors = ["Kirill Lastovirya <kirill.lastovirya@gmail.com>"]
-edition = "2018"
 
 [dependencies]
 itertools = "0.8.0"
