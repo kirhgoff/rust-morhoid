@@ -17,15 +17,15 @@ jobs:
       - restore_cache:
           key: project-cache
       - run:
-          name: Nightly Build
+          name: Stable Build
           command: |
-            rustup run nightly rustc --version --verbose
-            rustup run nightly cargo --version --verbose
-            rustup run nightly cargo build
+            rustup run stable rustc --version --verbose
+            rustup run stable cargo --version --verbose
+            rustup run stable cargo build
 
       - run:
           name: Test
-          command: rustup run nightly cargo test
+          command: rustup run stable cargo test
       - save_cache:
           key: project-cache
           paths:
