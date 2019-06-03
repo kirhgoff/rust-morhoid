@@ -3,11 +3,10 @@
 extern crate json;
 
 extern crate actix_web;
+extern crate actix_files;
 extern crate core;
 extern crate rand;
 extern crate futures;
-
-use std::env;
 
 pub mod morphoid;
 use morphoid::types::*;
@@ -21,7 +20,8 @@ use core::mem;
 
 use rand::{Rng};
 use rand::prelude::ThreadRng;
-use actix_web::http::ContentEncoding;
+
+use actix_files as fs;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -74,17 +74,13 @@ fn create_random_entity(rng: &mut ThreadRng) -> Genome {
     genome
 }
 
-fn world_state(_req: &HttpRequest) -> impl Responder {
-    format!("{}", WORLD.lock().unwrap())
-}
-
-fn reset_world(_req: &HttpRequest) -> impl Responder {
+fn api_reset_world(_req: HttpRequest) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
     mem::replace(&mut *world, build_new_world());
-    "OK"
+    HttpResponse::Ok()
 }
 
-fn api_get_world(_req: &HttpRequest) -> HttpResponse {
+fn api_get_world(_req: HttpRequest) -> HttpResponse {
     let world = WORLD.lock().unwrap();
 
     let out_json = json::object! {
@@ -95,71 +91,38 @@ fn api_get_world(_req: &HttpRequest) -> HttpResponse {
 
     let response = out_json.dump();
 
-    //println!("Sending: {:?}", response);
-
     HttpResponse::Ok()
-        // TODO: remove this - dangerous
-        .header("Access-Control-Allow-Origin", "*")
         .content_type("application/json")
         .body(response)
 }
 
-fn initialize() {
+fn initialize_world() {
     thread::spawn(|| {
         loop {
             // TODO: wtf?! is it really a solution?
-            thread::sleep(Duration::from_millis(700));
+            thread::sleep(Duration::from_millis(500));
             WORLD.lock().unwrap().tick(&mut PROCESSOR.lock().unwrap());
         }
     });
 }
 
-//fn test() {
-//    let resp = test::TestRequest::with_header("content-type", "text/plain")
-//        .run(&api_get_world)
-//        .unwrap();
-//    assert_eq!(resp.status(), http::StatusCode::OK);
-//}
-
-const INDEX_CSS: &str = include_str!("../ui/build/index.css");
-const INDEX_HTML: &str = include_str!("../ui/build/index.html");
-const BUNDLE_JS: &str = include_str!("../ui/build/bundle.js");
-
-fn main() {
+fn main() -> std::io::Result<()> {
     println!("Starting morphoid.");
-    
-    let port = env::var("PORT")
-        .unwrap_or_else(|_| "6060".to_string())
-        .parse()
-        .expect("PORT must be a number");
 
-    initialize();
+    initialize_world();
 
-    // Start a server, configuring the resources to serve.
-    server::new(|| {
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+
+    HttpServer::new(|| {
         App::new()
-            .default_encoding(ContentEncoding::Identity)
-            // API
-            .resource("/world", |r| r.f(world_state))
-            .resource("/reset", |r| r.f(reset_world))
-            // TODO: properly name, add parameter https://docs.rs/actix-web/0.6.1/actix_web/struct.Path.html
-            .resource("/world/get", |r| r.f(api_get_world))
-
-            // Static part
-            .resource("/bundle.js", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/javascript").body(BUNDLE_JS)
-            }))
-            .resource("/index.css", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/css").body(INDEX_CSS)
-            }))
-            .resource("/index.html", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/html").body(INDEX_HTML)
-            }))
-            .resource("/", |r| r.f(|_| {
-                HttpResponse::Ok().content_type("text/html").body(INDEX_HTML)
-            }))
+            .wrap(middleware::Logger::default())
+            .service(web::resource("/reset").route(web::get().to(api_reset_world)))
+            .service(web::resource("/world/get").route(web::get().to(api_get_world)))
+            .service(
+                fs::Files::new("/", "./static/").index_file("index.html"),
+            )
     })
-    .bind(("0.0.0.0", port))
-    .expect(&format!("Can not bind to port {:?}", port))
-    .run();
+    .bind("127.0.0.1:8080")?
+    .run()
 }
