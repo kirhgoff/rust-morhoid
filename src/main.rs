@@ -12,7 +12,7 @@ pub mod morphoid;
 use crate::morphoid::types::*;
 
 use actix_web::*;
-use std::thread;
+use std::{thread, env};
 use std::time::Duration;
 use std::sync::Mutex;
 
@@ -109,6 +109,11 @@ fn initialize_world() {
 fn main() -> std::io::Result<()> {
     println!("Starting morphoid.");
 
+    let port = env::var("PORT")
+        .unwrap_or_else(|_| "8080".to_string())
+        .parse()
+        .expect("PORT must be a number");
+
     initialize_world();
 
     std::env::set_var("RUST_LOG", "actix_web=info");
@@ -123,6 +128,6 @@ fn main() -> std::io::Result<()> {
                 fs::Files::new("/", "./static/").index_file("index.html"),
             )
     })
-    .bind("127.0.0.1:8080")?
+    .bind(("127.0.0.1", port))?
     .run()
 }
