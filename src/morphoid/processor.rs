@@ -25,7 +25,7 @@ impl Processor {
     }
 
     // TODO: move to world
-    pub fn apply(&self, actions: &Vec<Box<dyn Action>>, affector: &mut Affector) {
+    pub fn apply(&self, actions: &[Box<dyn Action>], affector: &mut Affector) {
         for action in actions.iter() {
             action.execute(affector);
         }
@@ -87,7 +87,7 @@ impl Processor {
             }
 
             if index >= GENOME_LENGTH {
-                index = index % GENOME_LENGTH
+                index %= GENOME_LENGTH
             }
         }
         self.update_genome_index(genome_id, index);
