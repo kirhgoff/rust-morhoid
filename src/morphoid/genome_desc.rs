@@ -19,10 +19,10 @@ impl GenomeDesc {
         }
 
         GenomeDesc {
-            reproduces: reproduces,
-            attacks: attacks,
-            photosynthesys: photosynthesys,
-            defiles: defiles
+            reproduces,
+            attacks,
+            photosynthesys,
+            defiles
         }
     }
 }

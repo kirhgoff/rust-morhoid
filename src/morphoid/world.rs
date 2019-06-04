@@ -17,10 +17,10 @@ impl World {
             .collect();
 
         World {
-            width: width,
-            height: height,
-            settings: settings,
-            entities: entities,
+            width,
+            height,
+            settings,
+            entities,
             genomes: GenomeStorage::new(),
             cell_states: CellStateStorage::new()
         }
@@ -90,7 +90,7 @@ impl fmt::Display for World {
                 };
                 write!(f, "{}", symbol)?;
             }
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
 
         Ok(())
@@ -124,52 +124,37 @@ impl Affector for World {
     fn move_cell(&mut self, x:Coords, y:Coords) {
         let old_index = self.get_index(x, y);
 
-        match self.entities[old_index] {
-            Entity::Cell(genome_id) => {
-                if let Some((new_x, new_y)) = self.looking_at(x, y) {
-                    let new_index = self.get_index(new_x, new_y);
+        if let Entity::Cell(genome_id) = self.entities[old_index] {
+            if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                let new_index = self.get_index(new_x, new_y);
 
-                    match self.entities[new_index] {
-                        Entity::Nothing => {
-                            self.entities[new_index] = Entity::Cell(genome_id);
-                            self.entities[old_index] = Entity::Nothing;
-                        }
-                        _ => {}
-                    }
+                if let Entity::Nothing = self.entities[new_index] {
+                    self.entities[new_index] = Entity::Cell(genome_id);
+                    self.entities[old_index] = Entity::Nothing;
                 }
             }
-            _ => {}
         }
     }
 
     fn rotate_cell(&mut self, x:Coords, y:Coords, value: Gene) {
-        match self.entities[self.get_index(x, y)] {
-            Entity::Cell(genome_id) => {
-                let mut cell_state = self.cell_states.get_mut(genome_id);
-                cell_state.direction = cell_state.direction.rotate(value);
+        if let Entity::Cell(genome_id) = self.entities[self.get_index(x, y)] {
+            let mut cell_state = self.cell_states.get_mut(genome_id);
+            cell_state.direction = cell_state.direction.rotate(value);
 //                println!("DEBUG: world.rotate_cell rotated x:{:?}, y:{:?}, value:{:?}, new direction:{:?}",
 //                    x, y, value, cell_state.direction);
-            }
-            _ => {}
         }
     }
 
     fn set_entity(&mut self, x:Coords, y:Coords, entity: Entity, genome:Option<Genome>, initial_state: Option<CellState>) {
         let index = self.get_index(x, y);
         //println!("set_entity x: {:?} y: {:?} index={:?}", x, y, index);
-        match self.entities[index] {
-            Entity::Cell(hash) => {
-                self.genomes.remove(hash); // TODO: should we?
-                self.cell_states.remove(hash);
-            },
-            _ => {}
+        if let Entity::Cell(hash) = self.entities[index] {
+            self.genomes.remove(hash); // TODO: should we?
+            self.cell_states.remove(hash);
         }
-        match entity {
-            Entity::Cell(hash) => {
-                self.genomes.put(genome.unwrap());
-                self.cell_states.put(hash, initial_state.unwrap());
-            },
-            _ => {}
+        if let Entity::Cell(hash) = entity {
+            self.genomes.put(genome.unwrap());
+            self.cell_states.put(hash, initial_state.unwrap());
         }
         self.entities[index] = entity;
     }
@@ -188,50 +173,44 @@ impl Affector for World {
 
         let mut result = -health_delta;
 
-        match self.entities[self.get_index(x, y)] {
-            Entity::Cell(genome_id) => {
-                {
-                    let mut state = self.cell_states.get_mut(genome_id);
-                    old_health = state.health;
+        if let Entity::Cell(genome_id) = self.entities[self.get_index(x, y)] {
+            {
+                let mut state = self.cell_states.get_mut(genome_id);
+                old_health = state.health;
 
-                    state.health += health_delta;
-                    new_health = state.health;
+                state.health += health_delta;
+                new_health = state.health;
 
 //                    println!("DEBUG: Affector.update_health x={:?} y={:?} genome_id={:?} delta={:?} new_health={:?}",
 //                             x, y, genome_id, health_delta, state.health);
-                }
+            }
 
-                if new_health < 0 {
-                    result = old_health;
-                    let corpse_health = self.settings.corpse_initial();
-                    self.set_entity(x, y, Entity::Corpse(corpse_health), None, None);
+            if new_health < 0 {
+                result = old_health;
+                let corpse_health = self.settings.corpse_initial();
+                self.set_entity(x, y, Entity::Corpse(corpse_health), None, None);
 //                    println!("DEBUG: Affector.update_health KILLED x={:?} y={:?}", x, y);
-                }
-            },
-            _ => {}
+            }
         }
         result
     }
 
     fn defile(&mut self, x:Coords, y:Coords, damage: HealthType) {
         //println!("Damage is {:?}", damage);
-        match self.entities[self.get_index(x, y)] {
-            Entity::Cell(_) => {
-                if let Some((new_x, new_y)) = self.looking_at(x, y) {
-                    if let Entity::Corpse(remains) = self.entities[self.get_index(new_x, new_y)] {
-                        let mut result = damage;
-                        let new_remains = remains - damage;
-                        if new_remains > 0 {
-                            self.set_corpse(new_x, new_y, new_remains);
-                        } else {
-                            self.set_nothing(new_x, new_y);
-                            result = remains;
-                        }
-                        self.update_health(x, y, result);
+        if let Entity::Cell(_) = self.entities[self.get_index(x, y)] {
+            if let Some((new_x, new_y)) = self.looking_at(x, y) {
+                if let Entity::Corpse(remains) = self.entities[self.get_index(new_x, new_y)] {
+                    let mut result = damage;
+                    let new_remains = remains - damage;
+                    if new_remains > 0 {
+                        self.set_corpse(new_x, new_y, new_remains);
+                    } else {
+                        self.set_nothing(new_x, new_y);
+                        result = remains;
                     }
+                    self.update_health(x, y, result);
                 }
-            },
-            _ => {}
+            }
         }
     }
 
@@ -334,10 +313,7 @@ impl Perceptor for World {
     }
 
     fn get_state(&self, genome_id: GenomeId) -> &CellState {
-        let result = self.cell_states.get(genome_id);
-//        println!("DEBUG: Perceptor.get_state genome_id={:?} state={:?}",
-//                 genome_id, result);
-        result
+        self.cell_states.get(genome_id)
     }
 
     fn get_state_by_pos(&self, x:Coords, y:Coords) -> Option<&CellState> {

@@ -23,7 +23,7 @@ impl Genome {
         for i in 0..GENOME_LENGTH {
             if i % 2 != 0 { genes[i] = REPRODUCE; }
         }
-        Genome {id: Genome::new_id(), genes: genes}
+        Genome {id: Genome::new_id(), genes}
     }
 
     pub fn new_predator() -> Genome {
