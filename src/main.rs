@@ -107,20 +107,19 @@ fn initialize_world() {
 }
 
 fn main() -> std::io::Result<()> {
-    let port_var = env::var("PORT");
-    println!("PORT var is {:?}", port_var);
+    println!("------------------------------------");
 
-    let port:u32 = port_var
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+
+    let port:u32 = env::var("PORT")
         .unwrap_or_else(|_| "8080".to_string())
         .parse()
         .expect("PORT must be a number");
 
-    println!("Starting morphoid on PORT={:?}", port);
+    println!("Starting Morphoid on PORT={:?}", port);
 
     initialize_world();
-
-    std::env::set_var("RUST_LOG", "actix_web=info");
-    env_logger::init();
 
     HttpServer::new(|| {
         App::new()

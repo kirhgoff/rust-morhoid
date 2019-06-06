@@ -65,7 +65,8 @@ impl Processor {
                     index += 1
                 },
                 TURN => {
-                    let new_direction = genome.genes[index + 1] % Direction::SIZE;
+                    // TODO: extract normalize
+                    let new_direction = genome.genes[self.normalize_index(index + 1)] % Direction::SIZE;
                     actions.push(Box::new(RotateAction::new(x, y, new_direction)));
                     index += 2
                 },
@@ -87,7 +88,7 @@ impl Processor {
             }
 
             if index >= GENOME_LENGTH {
-                index = index % GENOME_LENGTH
+                index = self.normalize_index(index)
             }
         }
         self.update_genome_index(genome_id, index);
@@ -96,6 +97,10 @@ impl Processor {
 //                 genome_id, start_index, settings.steps_per_turn(), index);
 
         actions
+    }
+
+    fn normalize_index(&mut self, index: GeneIndex) -> GeneIndex {
+        index % GENOME_LENGTH
     }
 
     fn get_genome_state(&mut self, genome_id: GenomeId) -> &mut GenomeState {
