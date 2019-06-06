@@ -107,12 +107,15 @@ fn initialize_world() {
 }
 
 fn main() -> std::io::Result<()> {
-    println!("Starting morphoid.");
+    let port_var = env::var("PORT");
+    println!("PORT var is {:?}", port_var);
 
-    let port = env::var("PORT")
+    let port = port_var
         .unwrap_or_else(|_| "8080".to_string())
         .parse()
         .expect("PORT must be a number");
+
+    println!("Starting morphoid on PORT={:?}", port);
 
     initialize_world();
 
