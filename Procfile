@@ -1,2 +1,2 @@
-web: ./target/release/morphoid
+web: PORT=$PORT ./target/release/morphoid
 
