@@ -131,6 +131,6 @@ fn main() -> std::io::Result<()> {
                 fs::Files::new("/", "./static/").index_file("index.html"),
             )
     })
-    .bind(("127.0.0.1", port))?
+    .bind(format!("127.0.0.1:{:?}", port))?
     .run()
 }
