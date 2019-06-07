@@ -52,3 +52,27 @@ ol, ul {
 .bordered {
   border: solid 1px black;
 }
+
+.no-discs {
+  list-style: none
+}
+
+.legend-width {
+  max-width: 130px;
+}
+
+.legend div {
+  margin: 5px;
+  /*max-width: 200px; TODO: Why this does not work?*/
+
+}
+
+.legend span {
+  float: left;
+  width: 12px;
+  height: 12px;
+  margin: 2px;
+}
+
+.test {
+}
