@@ -16,5 +16,6 @@ actix-files = "0.1.1"
 futures = "0.1"
 env_logger = "*"
 json = "0.11.13"
-
+serde = "1.0"
+serde_json = "1.0"
 #rollbar = "0.5.1"

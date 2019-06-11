@@ -1,27 +1,28 @@
-// #[macro_use] extern crate itertools;
 #[macro_use] extern crate lazy_static;
-extern crate json;
-
-extern crate actix_web;
-extern crate actix_files;
-extern crate core;
-extern crate rand;
 extern crate futures;
 
-pub mod morphoid;
-use crate::morphoid::types::*;
-
-use actix_web::*;
 use std::{thread, env};
 use std::time::Duration;
 use std::sync::Mutex;
 
+extern crate core;
 use core::mem;
 
+extern crate rand;
 use rand::{Rng};
 use rand::prelude::ThreadRng;
 
+extern crate actix_web;
+extern crate actix_files;
 use actix_files as fs;
+use actix_web::*;
+use actix_web::web::Json;
+
+pub mod morphoid;
+use crate::morphoid::types::*;
+
+pub mod api;
+use crate::api::types::*;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -74,36 +75,30 @@ fn create_random_entity(rng: &mut ThreadRng) -> Genome {
     genome
 }
 
-fn api_reset_world(_req: HttpRequest) -> impl Responder {
-    let mut world = WORLD.lock().expect("Could not lock mutex");
-    mem::replace(&mut *world, build_new_world());
-    HttpResponse::Ok()
-}
-
-fn api_get_world(_req: HttpRequest) -> HttpResponse {
-    let world = WORLD.lock().unwrap();
-
-    let out_json = json::object! {
-        "width" => world.width,
-        "height" => world.height,
-        "data" => format!("{}", world),
-    };
-
-    let response = out_json.dump();
-
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .body(response)
-}
-
-fn initialize_world() {
+pub fn initialize_world() {
     thread::spawn(|| {
         loop {
             // TODO: wtf?! is it really a solution?
             thread::sleep(Duration::from_millis(500));
-            WORLD.lock().unwrap().tick(&mut PROCESSOR.lock().unwrap());
+            WORLD.lock().unwrap()
+                .tick(&mut PROCESSOR.lock().unwrap());
         }
     });
+}
+
+pub fn api_reset_world(_req: HttpRequest) -> impl Responder {
+    let mut world = WORLD.lock().expect("Could not lock mutex");
+
+    mem::replace(&mut *world, build_new_world());
+    HttpResponse::Ok()
+}
+
+pub fn api_get_world(_req: HttpRequest) -> Result<Json<WorldInfo>> {
+    let world = WORLD.lock().unwrap();
+
+    let world_info = WorldInfo::from(&world);
+
+    Ok(Json(world_info))
 }
 
 fn main() -> std::io::Result<()> {
@@ -126,6 +121,7 @@ fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(web::resource("/reset").route(web::get().to(api_reset_world)))
             .service(web::resource("/world/get").route(web::get().to(api_get_world)))
+            //.service(web::resource("/world/get2").route(web::get().to(api_get_world2)))
             .service(
                 fs::Files::new("/", "./static/").index_file("index.html"),
             )
