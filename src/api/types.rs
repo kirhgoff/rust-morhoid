@@ -21,15 +21,10 @@ impl WorldInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct EntityInfo {
-    pub values: Vec<String>
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct WorldInfo2 {
     pub width: Coords,
     pub height: Coords,
-    pub data: Vec<EntityInfo>
+    pub data: Vec<Vec<String>>
 }
 
 impl WorldInfo2 {
@@ -38,7 +33,6 @@ impl WorldInfo2 {
             .entities
             .iter()
             .map(|entity| projection.from(entity, &world))
-            .map(|values| EntityInfo { values })
             .collect();
 
         WorldInfo2 {
@@ -97,8 +91,8 @@ mod tests {
         let world_info = WorldInfo2::from(&world, &projection);
         assert_eq!(world_info.width, 3);
         assert_eq!(world_info.height, 1);
-        assert_eq!(world_info.data[0].values, vec!['o'.to_string()]);
-        assert_eq!(world_info.data[1].values, vec!['+'.to_string()]);
-        assert_eq!(world_info.data[2].values, vec![' '.to_string()]);
+        assert_eq!(world_info.data[0], vec!['o'.to_string()]);
+        assert_eq!(world_info.data[1], vec!['+'.to_string()]);
+        assert_eq!(world_info.data[2], vec![' '.to_string()]);
     }
 }
