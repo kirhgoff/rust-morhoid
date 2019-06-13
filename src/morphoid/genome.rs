@@ -34,6 +34,10 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [REPRODUCE; GENOME_LENGTH]}
     }
 
+    pub fn new_defiler() -> Genome {
+        Genome {id: Genome::new_id(), genes: [DEFILE; GENOME_LENGTH]}
+    }
+
     pub fn id(&self) -> GenomeId {
         self.id
     }

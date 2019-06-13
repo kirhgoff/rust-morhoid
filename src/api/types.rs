@@ -24,6 +24,7 @@ impl WorldInfo {
 pub struct WorldInfo2 {
     pub width: Coords,
     pub height: Coords,
+    // TODO: how to have any struct here
     pub data: Vec<Vec<String>>
 }
 
@@ -43,35 +44,59 @@ impl WorldInfo2 {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectionRawMeta {
+    name: String,
+    comment: String,
+    required: bool
+}
+
+impl ProjectionRawMeta {
+    pub fn new(name: &str, comment: &str, required: bool) -> ProjectionRawMeta {
+        ProjectionRawMeta {
+            name: name.into(),
+            comment: comment.into(),
+            required
+        }
+    }
+}
 
 // Projection actually could return the whole entity info object
 // which could be anything or part of enum
 pub trait Projection {
     fn from(&self, entity: &Entity, world: &World) -> Vec<String>;
+    fn meta(&self) -> Vec<ProjectionRawMeta>;
 }
 
 pub struct GeneTypesProjection;
 
-// TODO: make it serialize GenomeDesc, this is just to make it work
 impl Projection for GeneTypesProjection {
-    fn from(&self, entity: &Entity, world: &World) -> Vec<String> {
-        fn icon_for(desc: &GenomeDesc) -> char {
-            match desc {
-                // TODO: move all to ui, this is presentation layer, send whole desc
-                x if x.reproduces > x.attacks + x.photosynthesys => '*',
-                x if x.attacks > x.photosynthesys + x.defiles  => 'x',
-                x if x.photosynthesys > x.attacks + x.defiles => 'o',
-                x if x.defiles > x.attacks + x.photosynthesys => '@',
-                _ => '.'
-            }
-        }
+    fn meta(&self) -> Vec<ProjectionRawMeta> {
+        // TODO: make constant
+        vec![
+            ProjectionRawMeta::new("type", "Type of cell", true),
+            ProjectionRawMeta::new("reproduces", "Number of reproducing genes", false),
+            ProjectionRawMeta::new("attacks", "Number of attacking genes", false),
+            ProjectionRawMeta::new("photosynthesys", "Number of genes, using solr power", false),
+            ProjectionRawMeta::new("defiles", "Number of defiling genes", false)
+        ]
+    }
 
-        let symbol = match entity {
-            Entity::Nothing => ' ',
-            Entity::Cell(genome_id) => icon_for(&world.genomes.describe(*genome_id).unwrap()),
-            Entity::Corpse(_) => '+',
-        };
-        vec![symbol.to_string()]
+    fn from(&self, entity: &Entity, world: &World) -> Vec<String> {
+        match entity {
+            Entity::Nothing => vec![String::from("nothing")],
+            Entity::Cell(genome_id) => {
+                let desc = world.genomes.describe(*genome_id).unwrap();
+                vec![
+                    String::from("cell"),
+                    desc.reproduces.to_string(),
+                    desc.attacks.to_string(),
+                    desc.photosynthesys.to_string(),
+                    desc.defiles.to_string()
+                ]
+            },
+            Entity::Corpse(_) => vec![String::from("corpse")]
+        }
     }
 }
 
@@ -81,18 +106,33 @@ mod tests {
 
     #[test]
     fn test_world_info() {
-        let mut world = World::prod(3, 1);
+        let mut world = World::prod(3, 2);
+
         world.set_cell(0, 0, Genome::new_plant());
         world.set_corpse(1, 0, 10);
         world.set_nothing(2, 0);
 
+        world.set_cell(0, 1, Genome::new_predator());
+        world.set_cell(1, 1, Genome::new_yeast());
+        world.set_cell(2, 1, Genome::new_defiler());
+
         let projection = GeneTypesProjection {};
 
         let world_info = WorldInfo2::from(&world, &projection);
+
         assert_eq!(world_info.width, 3);
-        assert_eq!(world_info.height, 1);
-        assert_eq!(world_info.data[0], vec!['o'.to_string()]);
-        assert_eq!(world_info.data[1], vec!['+'.to_string()]);
-        assert_eq!(world_info.data[2], vec![' '.to_string()]);
+        assert_eq!(world_info.height, 2);
+
+        assert_eq!(world_info.data[0], fixture(vec!["cell", "0", "0", "64", "0"]));
+        assert_eq!(world_info.data[1], fixture(vec!["corpse"]));
+        assert_eq!(world_info.data[2], fixture(vec!["nothing"]));
+
+        assert_eq!(world_info.data[3], fixture(vec!["cell", "0", "64", "0", "0"]));
+        assert_eq!(world_info.data[4], fixture(vec!["cell", "64", "0", "0", "0"]));
+        assert_eq!(world_info.data[5], fixture(vec!["cell", "0", "0", "0", "64"]));
+    }
+
+    fn fixture(source: Vec<&str>) -> Vec<String> {
+        source.iter().map(|e| e.to_string()).collect()
     }
 }
