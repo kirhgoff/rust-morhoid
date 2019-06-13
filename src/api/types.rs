@@ -7,39 +7,24 @@ use crate::morphoid::types::*;
 pub struct WorldInfo {
     pub width: Coords,
     pub height: Coords,
-    pub data: String
+    // TODO: how to have any struct here
+    pub data: Vec<Vec<String>>,
+    pub meta: Vec<ProjectionRawMeta>
 }
 
 impl WorldInfo {
-    pub fn from<P : Projection>(world: &World, _: &P) -> WorldInfo {
-        WorldInfo {
-            width: world.width,
-            height: world.height,
-            data: format!("{}", world),
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct WorldInfo2 {
-    pub width: Coords,
-    pub height: Coords,
-    // TODO: how to have any struct here
-    pub data: Vec<Vec<String>>
-}
-
-impl WorldInfo2 {
-    pub fn from<P : Projection>(world: &World, projection: &P) -> WorldInfo2 {
+    pub fn from<P : Projection>(world: &World, projection: &P) -> WorldInfo {
         let entities_info = world
             .entities
             .iter()
             .map(|entity| projection.from(entity, &world))
             .collect();
 
-        WorldInfo2 {
+        WorldInfo {
             width: world.width,
             height: world.height,
             data: entities_info,
+            meta: projection.meta()
         }
     }
 }
@@ -69,7 +54,6 @@ pub trait Projection {
 }
 
 pub struct GeneTypesProjection;
-
 impl Projection for GeneTypesProjection {
     fn meta(&self) -> Vec<ProjectionRawMeta> {
         // TODO: make constant
@@ -118,7 +102,7 @@ mod tests {
 
         let projection = GeneTypesProjection {};
 
-        let world_info = WorldInfo2::from(&world, &projection);
+        let world_info = WorldInfo::from(&world, &projection);
 
         assert_eq!(world_info.width, 3);
         assert_eq!(world_info.height, 2);

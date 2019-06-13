@@ -95,14 +95,9 @@ pub fn api_reset_world(_req: HttpRequest) -> impl Responder {
 
 pub fn api_get_world(_req: HttpRequest) -> Result<Json<WorldInfo>> {
     let world = WORLD.lock().unwrap();
+    let projection = GeneTypesProjection {};
 
-    Ok(Json(WorldInfo::from(&world, &GeneTypesProjection {})))
-}
-
-pub fn api_get_world2(_req: HttpRequest) -> Result<Json<WorldInfo2>> {
-    let world = WORLD.lock().unwrap();
-
-    Ok(Json(WorldInfo2::from(&world, &GeneTypesProjection {})))
+    Ok(Json(WorldInfo::from(&world, &projection)))
 }
 
 fn main() -> std::io::Result<()> {
@@ -125,7 +120,6 @@ fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(web::resource("/reset").route(web::get().to(api_reset_world)))
             .service(web::resource("/world/get").route(web::get().to(api_get_world)))
-            .service(web::resource("/world/get2").route(web::get().to(api_get_world2)))
             .service(
                 fs::Files::new("/", "./static/").index_file("index.html"),
             )
