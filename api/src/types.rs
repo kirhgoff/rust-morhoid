@@ -1,7 +1,6 @@
-extern crate serde;
 use serde::{Deserialize, Serialize};
 
-use crate::morphoid::types::*;
+use morphoid::types::*;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WorldInfo {

@@ -1,11 +1,9 @@
-extern crate itertools;
-
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use self::itertools::Itertools;
-use crate::morphoid::types::*;
+use itertools::Itertools;
 
+use crate::types::*;
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
 

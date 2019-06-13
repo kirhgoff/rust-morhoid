@@ -1,4 +1,4 @@
-use crate::morphoid::types::*;
+use crate::types::*;
 
 impl Direction {
     pub const SIZE: usize = 8;
@@ -15,7 +15,7 @@ impl Direction {
     ];
 
     pub fn shift(&self) -> (Coords, Coords) {
-        use crate::Direction::*;
+        use Direction::*;
         match *self {
             North => (0, -1),
             NorthEast => (1, -1),

@@ -1,10 +1,9 @@
-extern crate time;
-
 use std::fmt;
-use crate::morphoid::types::*;
-//use self::time::PreciseTime;
 use std::vec::Vec;
+
 use rand::{Rng};
+
+use crate::types::*;
 
 impl World {
     pub fn prod(width:Coords, height:Coords) -> World {

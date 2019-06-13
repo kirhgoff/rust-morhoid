@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::morphoid::types::*;
+use crate::types::*;
 
 impl CellStateStorage {
     pub fn new() -> CellStateStorage {

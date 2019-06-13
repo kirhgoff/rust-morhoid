@@ -1,6 +1,4 @@
-use crate::morphoid::types::Settings;
-use crate::morphoid::types::SettingsBuilder;
-use crate::morphoid::types::HealthType;
+use crate::types::*;
 
 impl Settings {
     // TODO: add builder

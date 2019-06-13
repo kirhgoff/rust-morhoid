@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::morphoid::types::*;
+use crate::types::*;
 
 impl GenomeStorage {
     pub fn new() -> GenomeStorage {

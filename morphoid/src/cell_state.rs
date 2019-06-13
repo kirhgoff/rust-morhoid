@@ -1,4 +1,4 @@
-use crate::morphoid::types::*;
+use crate::types::*;
 
 impl CellState {
     pub fn new(initial_health: HealthType, direction: Direction) -> CellState {

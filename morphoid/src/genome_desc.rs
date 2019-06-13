@@ -1,5 +1,4 @@
-use crate::morphoid::types::*;
-
+use crate::types::*;
 
 impl GenomeDesc {
     pub fn build_from(genome: &Genome) -> GenomeDesc {
