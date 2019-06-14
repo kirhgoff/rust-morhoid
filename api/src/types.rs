@@ -60,7 +60,7 @@ impl Projection for GeneTypesProjection {
             ProjectionRawMeta::new("type", "Type of cell", true),
             ProjectionRawMeta::new("reproduces", "Number of reproducing genes", false),
             ProjectionRawMeta::new("attacks", "Number of attacking genes", false),
-            ProjectionRawMeta::new("photosynthesys", "Number of genes, using solr power", false),
+            ProjectionRawMeta::new("photosynthesis", "Number of genes, using solr power", false),
             ProjectionRawMeta::new("defiles", "Number of defiling genes", false)
         ]
     }
@@ -74,7 +74,7 @@ impl Projection for GeneTypesProjection {
                     String::from("cell"),
                     desc.reproduces.to_string(),
                     desc.attacks.to_string(),
-                    desc.photosynthesys.to_string(),
+                    desc.photosynthesis.to_string(),
                     desc.defiles.to_string()
                 ]
             },

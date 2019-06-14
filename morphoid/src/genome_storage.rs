@@ -57,6 +57,6 @@ mod tests {
 
         let desc = storage.describe(id).unwrap();
         assert_eq!(0, desc.attacks);
-        assert_eq!(GENOME_LENGTH, desc.photosynthesys);
+        assert_eq!(GENOME_LENGTH, desc.photosynthesis);
     }
 }

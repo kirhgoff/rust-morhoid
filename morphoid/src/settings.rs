@@ -8,7 +8,7 @@ impl Settings {
             steps_per_turn: 1,
             reproduce_cost: -10,
             reproduce_threshold: 20,
-            photosynthesys_adds: 5,
+            photosynthesis_adds: 5,
             initial_cell_health: 10,
             attack_damage: 100,
             defile_damage: 10,
@@ -25,7 +25,7 @@ impl Settings {
     pub fn steps_per_turn(&self) -> usize { self.steps_per_turn }
     pub fn reproduce_cost(&self) -> HealthType { self.reproduce_cost }
     pub fn reproduce_threshold(&self) -> HealthType { self.reproduce_threshold }
-    pub fn photosynthesys_adds(&self) -> HealthType { self.photosynthesys_adds }
+    pub fn photosynthesis_adds(&self) -> HealthType { self.photosynthesis_adds }
     pub fn initial_cell_health(&self) -> HealthType { self.initial_cell_health }
     pub fn attack_damage(&self) -> HealthType { self.attack_damage }
     pub fn attack_cost(&self) -> HealthType { self.attack_cost }
@@ -49,7 +49,7 @@ impl SettingsBuilder {
         SettingsBuilder::prod()
             .with_reproduce_cost(0)
             .with_reproduce_threshold(0)
-            .with_photosynthesys_adds(0)
+            .with_photosynthesis_adds(0)
             .with_attack_damage(0)
             .with_attack_cost(0)
             .with_move_cost(0)
@@ -82,8 +82,8 @@ impl SettingsBuilder {
         self.settings.reproduce_threshold = value; self
     }
 
-    pub fn with_photosynthesys_adds(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.photosynthesys_adds = value; self
+    pub fn with_photosynthesis_adds(&mut self, value: HealthType) -> &mut SettingsBuilder {
+        self.settings.photosynthesis_adds = value; self
     }
 
     pub fn with_initial_cell_health(&mut self, value: HealthType) -> &mut SettingsBuilder {
@@ -132,7 +132,7 @@ mod tests {
         let settings = SettingsBuilder::prod()
             .with_reproduce_cost(1)
             .with_reproduce_threshold(2)
-            .with_photosynthesys_adds(3)
+            .with_photosynthesis_adds(3)
             .with_attack_damage(4)
             .with_attack_cost(5)
             .with_move_cost(6)
@@ -146,7 +146,7 @@ mod tests {
 
         assert_eq!(1, settings.reproduce_cost());
         assert_eq!(2, settings.reproduce_threshold());
-        assert_eq!(3, settings.photosynthesys_adds());
+        assert_eq!(3, settings.photosynthesis_adds());
         assert_eq!(4, settings.attack_damage());
         assert_eq!(5, settings.attack_cost());
         assert_eq!(6, settings.move_cost());

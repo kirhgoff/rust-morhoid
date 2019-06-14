@@ -18,7 +18,7 @@ pub const TURN: Gene = 27;
 pub const MOVE: Gene = 28;
 pub const ATTACK: Gene = 29;
 pub const REPRODUCE: Gene = 30;
-pub const PHOTOSYNTHESYS: Gene = 31;
+pub const PHOTOSYNTHESIS: Gene = 31;
 
 pub const KNOWN_GENES: [Gene; 7] = [
     DEFILE,
@@ -27,7 +27,7 @@ pub const KNOWN_GENES: [Gene; 7] = [
     MOVE,
     ATTACK,
     REPRODUCE,
-    PHOTOSYNTHESYS
+    PHOTOSYNTHESIS
 ];
 
 pub struct SettingsBuilder {
@@ -39,7 +39,7 @@ pub struct Settings {
     pub steps_per_turn: usize,
     pub reproduce_cost: HealthType,
     pub reproduce_threshold: HealthType,
-    pub photosynthesys_adds: HealthType,
+    pub photosynthesis_adds: HealthType,
     pub initial_cell_health: HealthType,
     pub attack_damage: HealthType,
     pub defile_damage: HealthType,
@@ -93,7 +93,7 @@ pub struct GenomeState {
 pub struct GenomeDesc {
     pub reproduces: usize,
     pub attacks: usize,
-    pub photosynthesys: usize,
+    pub photosynthesis: usize,
     pub defiles: usize
 }
 

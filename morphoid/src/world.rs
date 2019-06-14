@@ -72,10 +72,10 @@ impl fmt::Display for World {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fn icon_for(desc: &GenomeDesc) -> char {
             match desc {
-                x if x.reproduces > x.attacks + x.photosynthesys => '*',
-                x if x.attacks > x.photosynthesys + x.defiles  => 'x',
-                x if x.photosynthesys > x.attacks + x.defiles => 'o',
-                x if x.defiles > x.attacks + x.photosynthesys => '@',
+                x if x.reproduces > x.attacks + x.photosynthesis => '*',
+                x if x.attacks > x.photosynthesis + x.defiles  => 'x',
+                x if x.photosynthesis > x.attacks + x.defiles => 'o',
+                x if x.defiles > x.attacks + x.photosynthesis => '@',
                 _ => '.'
             }
         }
@@ -483,7 +483,7 @@ mod tests {
         let settings =
             SettingsBuilder::prod()
                 .with_reproduce_threshold(9) // it will reproduce on second step
-                .with_photosynthesys_adds(5) // it will have 10 + 5 health after first step
+                .with_photosynthesis_adds(5) // it will have 10 + 5 health after first step
                 .with_initial_cell_health(10)// it will have 10 originally
                 .with_reproduce_cost(-6)// it will have 9 after reproduction
                 .build();

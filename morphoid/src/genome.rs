@@ -13,11 +13,11 @@ impl Genome {
     }
 
     pub fn new_plant() -> Genome {
-        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENOME_LENGTH]}
+        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESIS; GENOME_LENGTH]}
     }
 
     pub fn new_reproducing_plant() -> Genome {
-        let mut genes = [PHOTOSYNTHESYS; GENOME_LENGTH];
+        let mut genes = [PHOTOSYNTHESIS; GENOME_LENGTH];
         for i in 0..GENOME_LENGTH {
             if i % 2 != 0 { genes[i] = REPRODUCE; }
         }
@@ -45,7 +45,7 @@ impl Genome {
     }
 
     pub fn clone(&self) -> Genome {
-        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENOME_LENGTH]};
+        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESIS; GENOME_LENGTH]};
         new_genome.genes.copy_from_slice(&self.genes[..]);
         new_genome
     }
