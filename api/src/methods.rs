@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 
-use std::{thread, env};
+use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
 
@@ -9,7 +9,11 @@ use core::mem;
 use rand::{Rng};
 use rand::prelude::ThreadRng;
 
+use actix_web::*;
+use actix_web::web::Json;
+
 use morphoid::types::*;
+use crate::types::*;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());

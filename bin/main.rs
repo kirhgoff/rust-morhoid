@@ -1,11 +1,8 @@
-use actix_files as fs;
 use actix_web::*;
-use actix_web::web::Json;
 
 use std::env;
 
-use crate::api::types::*;
-use crate::api::methods::*;
+use api::methods::*;
 
 fn main() -> std::io::Result<()> {
     println!("------------------------------------");
@@ -28,7 +25,7 @@ fn main() -> std::io::Result<()> {
             .service(web::resource("/reset").route(web::get().to(api_reset_world)))
             .service(web::resource("/world/get").route(web::get().to(api_get_world)))
             .service(
-                fs::Files::new("/", "./static/").index_file("index.html"),
+                actix_files::Files::new("/", "./static/").index_file("index.html"),
             )
     })
     .bind(format!("0.0.0.0:{:?}", port))?
