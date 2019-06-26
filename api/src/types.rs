@@ -61,7 +61,8 @@ impl Projection for GeneTypesProjection {
             ProjectionRawMeta::new("reproduces", "Number of reproducing genes", false),
             ProjectionRawMeta::new("attacks", "Number of attacking genes", false),
             ProjectionRawMeta::new("photosynthesis", "Number of genes, using solr power", false),
-            ProjectionRawMeta::new("defiles", "Number of defiling genes", false)
+            ProjectionRawMeta::new("defiles", "Number of defiling genes", false),
+            ProjectionRawMeta::new("health", "Current cell health", false)
         ]
     }
 
@@ -69,13 +70,15 @@ impl Projection for GeneTypesProjection {
         match entity {
             Entity::Nothing => vec![String::from("nothing")],
             Entity::Cell(genome_id) => {
+                let state = world.get_state(*genome_id);
                 let desc = world.genomes.describe(*genome_id).unwrap();
                 vec![
                     String::from("cell"),
                     desc.reproduces.to_string(),
                     desc.attacks.to_string(),
                     desc.photosynthesis.to_string(),
-                    desc.defiles.to_string()
+                    desc.defiles.to_string(),
+                    state.health.to_string()
                 ]
             },
             Entity::Corpse(_) => vec![String::from("corpse")]
