@@ -70,7 +70,7 @@ pub fn initialize_world() {
     thread::spawn(|| {
         loop {
             // TODO: wtf?! is it really a solution?
-            thread::sleep(Duration::from_millis(500));
+            thread::sleep(Duration::from_millis(50));
             WORLD.lock().unwrap()
                 .tick(&mut PROCESSOR.lock().unwrap());
         }
