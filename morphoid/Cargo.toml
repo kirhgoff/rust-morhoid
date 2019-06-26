@@ -1,0 +1,9 @@
+[package]
+name = "morphoid"
+version = "0.1.0"
+authors = ["Kirill Lastovirya <kirill.lastovirya@gmail.au>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.6.5"
+itertools = "0.8.0"

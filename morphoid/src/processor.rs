@@ -1,4 +1,4 @@
-use crate::morphoid::types::*;
+use crate::types::*;
 use std::collections::HashMap;
 
 impl Processor {
@@ -56,8 +56,8 @@ impl Processor {
                     actions.push(Box::new(ReproduceAction::new(x, y)));
                     index += 1
                 },
-                PHOTOSYNTHESYS => {
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesys_adds())));
+                PHOTOSYNTHESIS => {
+                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesis_adds())));
                     index += 1
                 },
                 MOVE => {

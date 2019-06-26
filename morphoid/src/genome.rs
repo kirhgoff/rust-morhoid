@@ -1,11 +1,9 @@
-extern crate itertools;
-
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use self::itertools::Itertools;
-use crate::morphoid::types::*;
+use itertools::Itertools;
 
+use crate::types::*;
 
 static HASH_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
@@ -15,11 +13,11 @@ impl Genome {
     }
 
     pub fn new_plant() -> Genome {
-        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENOME_LENGTH]}
+        Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESIS; GENOME_LENGTH]}
     }
 
     pub fn new_reproducing_plant() -> Genome {
-        let mut genes = [PHOTOSYNTHESYS; GENOME_LENGTH];
+        let mut genes = [PHOTOSYNTHESIS; GENOME_LENGTH];
         for i in 0..GENOME_LENGTH {
             if i % 2 != 0 { genes[i] = REPRODUCE; }
         }
@@ -34,6 +32,10 @@ impl Genome {
         Genome {id: Genome::new_id(), genes: [REPRODUCE; GENOME_LENGTH]}
     }
 
+    pub fn new_defiler() -> Genome {
+        Genome {id: Genome::new_id(), genes: [DEFILE; GENOME_LENGTH]}
+    }
+
     pub fn id(&self) -> GenomeId {
         self.id
     }
@@ -43,7 +45,7 @@ impl Genome {
     }
 
     pub fn clone(&self) -> Genome {
-        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESYS; GENOME_LENGTH]};
+        let mut new_genome = Genome {id: Genome::new_id(), genes: [PHOTOSYNTHESIS; GENOME_LENGTH]};
         new_genome.genes.copy_from_slice(&self.genes[..]);
         new_genome
     }

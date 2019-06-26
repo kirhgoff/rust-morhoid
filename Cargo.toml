@@ -1,5 +1,5 @@
 [package]
-name = "morphoid"
+name = "rust-morphoid"
 version = "0.1.0"
 authors = ["Kirill Lastovirya <kirill.lastovirya@gmail.com>"]
 edition = "2018"
@@ -16,5 +16,19 @@ actix-files = "0.1.1"
 futures = "0.1"
 env_logger = "*"
 json = "0.11.13"
-
+serde = "1.0"
+serde_json = "1.0"
 #rollbar = "0.5.1"
+
+morphoid = { path = "./morphoid", version = "0.1.0" }
+api = { path = "./api", version = "0.1.0" }
+
+[workspace]
+members= [
+    "morphoid",
+    "api"
+]
+
+[[bin]]
+name = "morphoid"
+path = "bin/main.rs"
