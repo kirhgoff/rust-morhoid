@@ -74,7 +74,62 @@ ol, ul {
   margin: 2px;
 }
 
-.in-a-row {
-  float: left;
+.main-view {
+  display: flex;
+  /*justify-content: space-evenly;*/
+}
+
+.main-view div {
   margin: 10px;
 }
+
+.genome li {
+  display: flex;
+  align-items: stretch;
+}
+
+.genome .index {
+  border-right: 1px black solid;
+  width: 2em;
+  margin: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.genome .value {
+  margin: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.defile {
+  background-color: #F0B8F0;
+}
+
+.reproduce {
+  background-color: #B8F0B8;
+}
+
+.attack {
+  background-color: #F0B8B8;
+}
+
+.photosynthesis {
+  background-color: #F0F0B8;
+}
+
+.sense {
+  background-color: #B8D1F0;
+}
+
+.turn {
+  background-color: #FAD9A0;
+}
+
+.move {
+  background-color: #DBD8D4;
+}
+

@@ -10,7 +10,9 @@ use rand::{Rng};
 use rand::prelude::ThreadRng;
 
 use actix_web::*;
-use actix_web::web::Json;
+use actix_web::web::{Json, Path};
+
+use serde::{Deserialize};
 
 use morphoid::types::*;
 use crate::types::*;
@@ -89,4 +91,32 @@ pub fn api_get_world(_req: HttpRequest) -> Result<Json<WorldInfo>> {
     let projection = GeneTypesProjection {};
 
     Ok(Json(WorldInfo::from(&world, &projection)))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CellCoordsParams { x: Coords, y: Coords }
+
+pub fn api_get_cell(path: Path<CellCoordsParams>) -> Result<Json<Option<CellInfo>>> {
+    let coords = path.into_inner();
+    let world = WORLD.lock().unwrap();
+
+    let info = match world.get_entity(coords.x, coords.y) {
+        Entity::Cell(genome_id) => {
+            let entity_state = world.get_state(*genome_id);
+            let genome = world.get_genome(*genome_id).unwrap();
+
+            Some(CellInfo {
+                x: coords.x,
+                y: coords.y,
+                health: entity_state.health,
+                direction: entity_state.direction as usize,
+                genome_id: genome.id,
+                genome: genome.genes.to_vec()
+
+            })
+        },
+        _ => None
+    };
+
+    Ok(Json(info))
 }

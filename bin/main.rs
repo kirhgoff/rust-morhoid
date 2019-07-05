@@ -4,6 +4,7 @@ use std::env;
 
 use api::methods::*;
 
+
 fn main() -> std::io::Result<()> {
     println!("------------------------------------");
 
@@ -24,6 +25,7 @@ fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .service(web::resource("/reset").route(web::get().to(api_reset_world)))
             .service(web::resource("/world/get").route(web::get().to(api_get_world)))
+            .service(web::resource("/entity/{x}/{y}").route(web::get().to(api_get_cell)))
             .service(
                 actix_files::Files::new("/", "./static/").index_file("index.html"),
             )

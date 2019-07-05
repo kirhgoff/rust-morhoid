@@ -86,6 +86,17 @@ impl Projection for GeneTypesProjection {
     }
 }
 
+// TODO: need better name
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CellInfo {
+    pub x: i32,
+    pub y: i32,
+    pub health: i32,
+    pub direction: usize,
+    pub genome_id: u64,
+    pub genome: Vec<usize>
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
