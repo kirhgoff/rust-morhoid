@@ -115,6 +115,7 @@ pub fn api_get_cell(path: Path<CellCoordsParams>) -> Result<Json<Option<CellInfo
 
             })
         },
+        //TODO: what to return if there is no cell
         _ => None
     };
 
