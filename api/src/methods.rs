@@ -4,8 +4,6 @@ use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
 
-use core::mem;
-
 use rand::{Rng};
 use rand::prelude::ThreadRng;
 
@@ -79,10 +77,17 @@ pub fn initialize_world() {
     });
 }
 
-pub fn api_reset_world(_req: HttpRequest) -> impl Responder {
+pub fn api_update_settings(_req: HttpRequest) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
 
-    mem::replace(&mut *world, build_new_world());
+    let new_settings = SettingsBuilder::prod()
+        .with_photosynthesis_adds(1)
+        .with_attack_damage(10000)
+        .with_reproduce_cost(1000)
+        .build();
+
+    world.update_settings(new_settings);
+
     HttpResponse::Ok()
 }
 

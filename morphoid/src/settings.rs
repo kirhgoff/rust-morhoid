@@ -1,7 +1,6 @@
 use crate::types::*;
 
 impl Settings {
-    // TODO: add builder
 
     pub fn prod() -> Settings {
         Settings {
@@ -117,7 +116,7 @@ impl SettingsBuilder {
     pub fn with_corpse_initial(&mut self, value: HealthType) -> &mut SettingsBuilder {
         self.settings.corpse_initial = value; self
     }
-
+    // TODO: make it consume itself
     pub fn build(&mut self) -> Settings {
         self.settings.clone()
     }

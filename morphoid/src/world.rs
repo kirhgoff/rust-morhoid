@@ -25,6 +25,10 @@ impl World {
         }
     }
 
+    pub fn update_settings(&mut self, new_settings: Settings) {
+        self.settings = new_settings;
+    }
+
     // TODO: synchronize?
     pub fn tick(&mut self, processor: &mut Processor) {
         //let start_time = PreciseTime::now();
