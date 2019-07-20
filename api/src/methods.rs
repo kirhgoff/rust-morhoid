@@ -77,15 +77,24 @@ pub fn initialize_world() {
     });
 }
 
-pub fn api_update_settings(_req: HttpRequest) -> impl Responder {
+
+
+
+pub fn api_get_settings(_req: HttpRequest) -> Result<Json<SettingsInfo>>{
+    let world = WORLD.lock().expect("Could not lock mutex");
+    let settings = world.get_settings();
+    Ok(Json(SettingsInfo::from(&settings)))
+}
+
+
+pub fn api_update_settings(json: Json<SettingsInfo>) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
 
     let new_settings = SettingsBuilder::prod()
-        .with_photosynthesis_adds(1)
-        .with_attack_damage(10000)
-        .with_reproduce_cost(1000)
+        .with_reproduce_threshold(json.reproduce_threshold)
         .build();
 
+    println!("New settings: {:?}", new_settings);
     world.update_settings(new_settings);
 
     HttpResponse::Ok()
@@ -94,7 +103,6 @@ pub fn api_update_settings(_req: HttpRequest) -> impl Responder {
 pub fn api_get_world(_req: HttpRequest) -> Result<Json<WorldInfo>> {
     let world = WORLD.lock().unwrap();
     let projection = GeneTypesProjection {};
-
     Ok(Json(WorldInfo::from(&world, &projection)))
 }
 

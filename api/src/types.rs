@@ -86,6 +86,19 @@ impl Projection for GeneTypesProjection {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SettingsInfo {
+    pub reproduce_threshold: HealthType
+}
+
+impl SettingsInfo {
+    pub fn from(settings: &Settings) -> SettingsInfo {
+        SettingsInfo {
+            reproduce_threshold: settings.reproduce_threshold
+        }
+    }
+}
+
 // TODO: need better name
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CellInfo {

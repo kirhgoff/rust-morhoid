@@ -23,7 +23,8 @@ fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(middleware::Logger::default())
-            .service(web::resource("/update_settings").route(web::get().to(api_update_settings)))
+            .service(web::resource("/world/settings/get").route(web::get().to(api_get_settings)))
+            .service(web::resource("/world/settings/update").route(web::post().to(api_update_settings)))
             .service(web::resource("/world/get").route(web::get().to(api_get_world)))
             .service(web::resource("/entity/{x}/{y}").route(web::get().to(api_get_cell)))
             .service(
