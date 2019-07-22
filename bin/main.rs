@@ -7,7 +7,6 @@ use api::methods::*;
 
 fn main() -> std::io::Result<()> {
     println!("------------------------------------");
-
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 

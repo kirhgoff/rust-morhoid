@@ -77,12 +77,12 @@ pub fn initialize_world() {
     });
 }
 
-
-
+// ---------------------- API -------------------------
 
 pub fn api_get_settings(_req: HttpRequest) -> Result<Json<SettingsInfo>>{
     let world = WORLD.lock().expect("Could not lock mutex");
     let settings = world.get_settings();
+    println!("API_GET_SETTINGS: settings: {:?}", settings);
     Ok(Json(SettingsInfo::from(&settings)))
 }
 
@@ -90,13 +90,10 @@ pub fn api_get_settings(_req: HttpRequest) -> Result<Json<SettingsInfo>>{
 pub fn api_update_settings(json: Json<SettingsInfo>) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
 
-    let new_settings = SettingsBuilder::prod()
-        .with_reproduce_threshold(json.reproduce_threshold)
-        .build();
+    let new_settings = json.as_settings();
 
-    println!("New settings: {:?}", new_settings);
+    println!("API_UPDATE_SETTINGS: new settings: {:?}", new_settings);
     world.update_settings(new_settings);
-
     HttpResponse::Ok()
 }
 

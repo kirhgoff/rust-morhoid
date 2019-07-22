@@ -38,7 +38,7 @@ pub struct SettingsBuilder {
 pub struct Settings {
     pub steps_per_turn: usize,
     pub reproduce_cost: HealthType,
-    pub reproduce_threshold: HealthType,
+    pub reproduce_threshold: HealthType, // TODO: not used
     pub photosynthesis_adds: HealthType,
     pub initial_cell_health: HealthType,
     pub attack_damage: HealthType,

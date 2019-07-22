@@ -8,7 +8,7 @@ pub struct WorldInfo {
     pub height: Coords,
     // TODO: how to have any struct here
     pub data: Vec<Vec<String>>,
-    pub meta: Vec<ProjectionRawMeta>
+    pub meta: Vec<ProjectionRowMeta>
 }
 
 impl WorldInfo {
@@ -29,15 +29,15 @@ impl WorldInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ProjectionRawMeta {
+pub struct ProjectionRowMeta {
     name: String,
     comment: String,
     required: bool
 }
 
-impl ProjectionRawMeta {
-    pub fn new(name: &str, comment: &str, required: bool) -> ProjectionRawMeta {
-        ProjectionRawMeta {
+impl ProjectionRowMeta {
+    pub fn new(name: &str, comment: &str, required: bool) -> ProjectionRowMeta {
+        ProjectionRowMeta {
             name: name.into(),
             comment: comment.into(),
             required
@@ -49,20 +49,20 @@ impl ProjectionRawMeta {
 // which could be anything or part of enum
 pub trait Projection {
     fn from(&self, entity: &Entity, world: &World) -> Vec<String>;
-    fn meta(&self) -> Vec<ProjectionRawMeta>;
+    fn meta(&self) -> Vec<ProjectionRowMeta>;
 }
 
 pub struct GeneTypesProjection;
 impl Projection for GeneTypesProjection {
-    fn meta(&self) -> Vec<ProjectionRawMeta> {
+    fn meta(&self) -> Vec<ProjectionRowMeta> {
         // TODO: make constant
         vec![
-            ProjectionRawMeta::new("type", "Type of cell", true),
-            ProjectionRawMeta::new("reproduces", "Number of reproducing genes", false),
-            ProjectionRawMeta::new("attacks", "Number of attacking genes", false),
-            ProjectionRawMeta::new("photosynthesis", "Number of genes, using solr power", false),
-            ProjectionRawMeta::new("defiles", "Number of defiling genes", false),
-            ProjectionRawMeta::new("health", "Current cell health", false)
+            ProjectionRowMeta::new("type", "Type of cell", true),
+            ProjectionRowMeta::new("reproduces", "Number of reproducing genes", false),
+            ProjectionRowMeta::new("attacks", "Number of attacking genes", false),
+            ProjectionRowMeta::new("photosynthesis", "Number of genes, using solr power", false),
+            ProjectionRowMeta::new("defiles", "Number of defiling genes", false),
+            ProjectionRowMeta::new("health", "Current cell health", false)
         ]
     }
 
@@ -88,14 +88,56 @@ impl Projection for GeneTypesProjection {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SettingsInfo {
-    pub reproduce_threshold: HealthType
+    pub reproduce_cost: HealthType,
+    //pub reproduce_threshold: HealthType,
+    pub photosynthesis_adds: HealthType,
+    pub initial_cell_health: HealthType,
+    pub attack_damage: HealthType,
+    pub defile_damage: HealthType,
+    pub attack_cost: HealthType,
+    pub move_cost: HealthType,
+    pub turn_cost: HealthType,
+    pub sense_cost: HealthType,
+    pub defile_cost: HealthType,
+    pub corpse_decay: HealthType,
+    pub corpse_initial: HealthType,
 }
 
 impl SettingsInfo {
     pub fn from(settings: &Settings) -> SettingsInfo {
         SettingsInfo {
-            reproduce_threshold: settings.reproduce_threshold
+            reproduce_cost: settings.reproduce_cost,
+            //reproduce_threshold: settings.reproduce_threshold,
+            photosynthesis_adds: settings.photosynthesis_adds,
+            initial_cell_health: settings.initial_cell_health,
+            attack_damage: settings.attack_damage,
+            defile_damage: settings.defile_damage,
+            attack_cost: settings.attack_cost,
+            move_cost: settings.move_cost,
+            turn_cost: settings.turn_cost,
+            sense_cost: settings.sense_cost,
+            defile_cost: settings.defile_cost,
+            corpse_decay: settings.corpse_decay,
+            corpse_initial: settings.corpse_initial,
         }
+    }
+
+    pub fn as_settings(&self) -> Settings {
+        SettingsBuilder::prod()
+            .with_reproduce_cost(self.reproduce_cost)
+            //.with_reproduce_threshold(self.reproduce_threshold)
+            .with_photosynthesis_adds(self.photosynthesis_adds)
+            .with_initial_cell_health(self.initial_cell_health)
+            .with_attack_damage(self.attack_damage)
+            .with_defile_damage(self.defile_damage)
+            .with_attack_cost(self.attack_cost)
+            .with_move_cost(self.move_cost)
+            .with_turn_cost(self.turn_cost)
+            .with_sense_cost(self.sense_cost)
+            .with_defile_cost(self.defile_cost)
+            .with_corpse_decay(self.corpse_decay)
+            .with_corpse_initial(self.corpse_initial)
+            .build()
     }
 }
 
