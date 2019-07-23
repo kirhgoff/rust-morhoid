@@ -1,5 +1,7 @@
 use lazy_static::lazy_static;
 
+use core::mem;
+
 use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
@@ -79,9 +81,19 @@ pub fn initialize_world() {
 
 // ---------------------- API -------------------------
 
+pub fn api_reset_world(_req: HttpRequest) -> impl Responder {
+    let mut world = WORLD.lock().expect("Could not lock mutex");
+
+    println!("API_RESET_WORLD: done");
+
+    mem::replace(&mut *world, build_new_world());
+    HttpResponse::Ok()
+}
+
 pub fn api_get_settings(_req: HttpRequest) -> Result<Json<SettingsInfo>>{
     let world = WORLD.lock().expect("Could not lock mutex");
     let settings = world.get_settings();
+
     println!("API_GET_SETTINGS: settings: {:?}", settings);
     Ok(Json(SettingsInfo::from(&settings)))
 }
@@ -89,7 +101,6 @@ pub fn api_get_settings(_req: HttpRequest) -> Result<Json<SettingsInfo>>{
 
 pub fn api_update_settings(json: Json<SettingsInfo>) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
-
     let new_settings = json.as_settings();
 
     println!("API_UPDATE_SETTINGS: new settings: {:?}", new_settings);
