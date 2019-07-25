@@ -65,7 +65,6 @@ impl Processor {
                     index += 1
                 },
                 TURN => {
-                    // TODO: extract normalize
                     let new_direction = genome.genes[self.normalize_index(index + 1)] % Direction::SIZE;
                     actions.push(Box::new(RotateAction::new(x, y, new_direction)));
                     index += 2

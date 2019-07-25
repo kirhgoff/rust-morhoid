@@ -101,6 +101,7 @@ pub struct SettingsInfo {
     pub defile_cost: HealthType,
     pub corpse_decay: HealthType,
     pub corpse_initial: HealthType,
+    pub mutation_probability: f64,
 }
 
 impl SettingsInfo {
@@ -119,6 +120,7 @@ impl SettingsInfo {
             defile_cost: settings.defile_cost,
             corpse_decay: settings.corpse_decay,
             corpse_initial: settings.corpse_initial,
+            mutation_probability: settings.mutation_probability,
         }
     }
 
@@ -137,6 +139,7 @@ impl SettingsInfo {
             .with_defile_cost(self.defile_cost)
             .with_corpse_decay(self.corpse_decay)
             .with_corpse_initial(self.corpse_initial)
+            .with_mutation_probability(self.mutation_probability)
             .build()
     }
 }

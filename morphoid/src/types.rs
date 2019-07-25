@@ -50,6 +50,7 @@ pub struct Settings {
     pub defile_cost: HealthType,
     pub corpse_decay: HealthType,
     pub corpse_initial: HealthType,
+    pub mutation_probability: f64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
