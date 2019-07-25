@@ -1,10 +1,10 @@
 use lazy_static::lazy_static;
 
+use core::mem;
+
 use std::thread;
 use std::time::Duration;
 use std::sync::Mutex;
-
-use core::mem;
 
 use rand::{Rng};
 use rand::prelude::ThreadRng;
@@ -16,6 +16,8 @@ use serde::{Deserialize};
 
 use morphoid::types::*;
 use crate::types::*;
+
+const SLEEP_BETWEEN_TICKS: u64 = 25;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -72,24 +74,44 @@ pub fn initialize_world() {
     thread::spawn(|| {
         loop {
             // TODO: wtf?! is it really a solution?
-            thread::sleep(Duration::from_millis(50));
-            WORLD.lock().unwrap()
-                .tick(&mut PROCESSOR.lock().unwrap());
+            thread::sleep(Duration::from_millis(SLEEP_BETWEEN_TICKS));
+            WORLD.lock().unwrap().tick(&mut PROCESSOR.lock().unwrap());
         }
     });
 }
 
+// ---------------------- API -------------------------
+
 pub fn api_reset_world(_req: HttpRequest) -> impl Responder {
     let mut world = WORLD.lock().expect("Could not lock mutex");
 
+    println!("API_RESET_WORLD: done");
+
     mem::replace(&mut *world, build_new_world());
+    HttpResponse::Ok()
+}
+
+pub fn api_get_settings(_req: HttpRequest) -> Result<Json<SettingsInfo>>{
+    let world = WORLD.lock().expect("Could not lock mutex");
+    let settings = world.get_settings();
+
+    println!("API_GET_SETTINGS: settings: {:?}", settings);
+    Ok(Json(SettingsInfo::from(&settings)))
+}
+
+
+pub fn api_update_settings(json: Json<SettingsInfo>) -> impl Responder {
+    let mut world = WORLD.lock().expect("Could not lock mutex");
+    let new_settings = json.as_settings();
+
+    println!("API_UPDATE_SETTINGS: new settings: {:?}", new_settings);
+    world.update_settings(new_settings);
     HttpResponse::Ok()
 }
 
 pub fn api_get_world(_req: HttpRequest) -> Result<Json<WorldInfo>> {
     let world = WORLD.lock().unwrap();
     let projection = GeneTypesProjection {};
-
     Ok(Json(WorldInfo::from(&world, &projection)))
 }
 

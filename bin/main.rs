@@ -7,7 +7,6 @@ use api::methods::*;
 
 fn main() -> std::io::Result<()> {
     println!("------------------------------------");
-
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 
@@ -23,9 +22,11 @@ fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(middleware::Logger::default())
-            .service(web::resource("/reset").route(web::get().to(api_reset_world)))
+            .service(web::resource("/world/settings/get").route(web::get().to(api_get_settings)))
+            .service(web::resource("/world/settings/update").route(web::post().to(api_update_settings)))
             .service(web::resource("/world/get").route(web::get().to(api_get_world)))
             .service(web::resource("/entity/{x}/{y}").route(web::get().to(api_get_cell)))
+            .service(web::resource("/world/reset").route(web::post().to(api_reset_world)))
             .service(
                 actix_files::Files::new("/", "./static/").index_file("index.html"),
             )

@@ -63,8 +63,6 @@ ol, ul {
 
 .legend div {
   margin: 5px;
-  /*max-width: 200px; TODO: Why this does not work?*/
-
 }
 
 .legend span {
@@ -76,7 +74,6 @@ ol, ul {
 
 .main-view {
   display: flex;
-  /*justify-content: space-evenly;*/
 }
 
 .main-view div {
@@ -105,6 +102,15 @@ ol, ul {
   width: 100%;
 }
 
+.palette-chooser {
+  display: flex;
+}
+
+.palette-chooser div {
+  margin: 1em;
+}
+
+/* Colors */
 .defile {
   background-color: #F0B8F0;
 }
@@ -133,3 +139,14 @@ ol, ul {
   background-color: #DBD8D4;
 }
 
+h1 {
+  text-align: center;
+}
+
+hr {
+  border: solid black 1px;
+}
+
+.selected {
+  font-weight: bolder;
+}

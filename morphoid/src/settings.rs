@@ -1,7 +1,6 @@
 use crate::types::*;
 
 impl Settings {
-    // TODO: add builder
 
     pub fn prod() -> Settings {
         Settings {
@@ -18,7 +17,8 @@ impl Settings {
             sense_cost: -5,
             defile_cost: -1,
             corpse_decay: -2,
-            corpse_initial: 20
+            corpse_initial: 20,
+            mutation_probability: 0.5,
         }
     }
 
@@ -36,6 +36,7 @@ impl Settings {
     pub fn defile_damage(&self) -> HealthType { self.defile_damage }
     pub fn corpse_decay(&self) -> HealthType { self.corpse_decay }
     pub fn corpse_initial(&self) -> HealthType { self.corpse_initial }
+    pub fn mutation_probability(&self) -> f64 { self.mutation_probability }
 }
 
 impl SettingsBuilder {
@@ -59,6 +60,7 @@ impl SettingsBuilder {
             .with_defile_damage(0)
             .with_corpse_decay(0)
             .with_corpse_initial(0)
+            .with_mutation_probability(0.0)
             .build()
     }
 
@@ -118,6 +120,11 @@ impl SettingsBuilder {
         self.settings.corpse_initial = value; self
     }
 
+    pub fn with_mutation_probability(&mut self, value: f64) -> &mut SettingsBuilder {
+        self.settings.mutation_probability = value; self
+    }
+
+    // TODO: make it consume itself
     pub fn build(&mut self) -> Settings {
         self.settings.clone()
     }
@@ -142,6 +149,7 @@ mod tests {
             .with_corpse_decay(10)
             .with_corpse_initial(11)
             .with_defile_cost(12)
+            .with_mutation_probability(0.13)
             .build();
 
         assert_eq!(1, settings.reproduce_cost());
@@ -156,5 +164,6 @@ mod tests {
         assert_eq!(10, settings.corpse_decay());
         assert_eq!(11, settings.corpse_initial());
         assert_eq!(12, settings.defile_cost());
+        assert_eq!(0.13, settings.mutation_probability());
     }
 }

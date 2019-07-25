@@ -25,6 +25,14 @@ impl World {
         }
     }
 
+    pub fn update_settings(&mut self, new_settings: Settings) {
+        self.settings = new_settings;
+    }
+
+    pub fn get_settings(&self) -> Settings {
+        self.settings.clone()
+    }
+
     // TODO: synchronize?
     pub fn tick(&mut self, processor: &mut Processor) {
         //let start_time = PreciseTime::now();
@@ -308,9 +316,9 @@ impl Affector for World {
 
     fn build_child_genome_for(&self, parent_genome_id: GenomeId) -> Option<Genome> {
         let mut rng = rand::thread_rng();
+        let probability = self.settings.mutation_probability();
 
-        // TODO: move all that stats to settings
-        let probability = rng.gen_bool(0.5);
+        let probability = rng.gen_bool(probability);
         let index = rng.gen_range(0, GENOME_LENGTH);
         let new_gene = rng.gen_range(0, GENE_COUNT);
 

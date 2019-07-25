@@ -34,11 +34,11 @@ pub struct SettingsBuilder {
     pub settings: Settings
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Settings {
     pub steps_per_turn: usize,
     pub reproduce_cost: HealthType,
-    pub reproduce_threshold: HealthType,
+    pub reproduce_threshold: HealthType, // TODO: not used
     pub photosynthesis_adds: HealthType,
     pub initial_cell_health: HealthType,
     pub attack_damage: HealthType,
@@ -50,6 +50,7 @@ pub struct Settings {
     pub defile_cost: HealthType,
     pub corpse_decay: HealthType,
     pub corpse_initial: HealthType,
+    pub mutation_probability: f64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
