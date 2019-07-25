@@ -17,7 +17,7 @@ use serde::{Deserialize};
 use morphoid::types::*;
 use crate::types::*;
 
-const FREQUENCY:u64 = 50;
+const SLEEP_BETWEEN_TICKS: u64 = 25;
 
 lazy_static! {
     static ref PROCESSOR: Mutex<Processor> = Mutex::new(Processor::new());
@@ -74,9 +74,8 @@ pub fn initialize_world() {
     thread::spawn(|| {
         loop {
             // TODO: wtf?! is it really a solution?
-            thread::sleep(Duration::from_millis(FREQUENCY));
-            WORLD.lock().unwrap()
-                .tick(&mut PROCESSOR.lock().unwrap());
+            thread::sleep(Duration::from_millis(SLEEP_BETWEEN_TICKS));
+            WORLD.lock().unwrap().tick(&mut PROCESSOR.lock().unwrap());
         }
     });
 }
