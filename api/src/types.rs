@@ -1,29 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-use morphoid::types::*;
+use morphoid::{Coords, Entity, HealthType, Settings, World};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WorldInfo {
     pub width: Coords,
     pub height: Coords,
-    // TODO: how to have any struct here
     pub data: Vec<Vec<String>>,
-    pub meta: Vec<ProjectionRowMeta>
+    pub meta: Vec<ProjectionRowMeta>,
 }
 
-impl WorldInfo {
-    pub fn from<P : Projection>(world: &World, projection: &P) -> WorldInfo {
-        let entities_info = world
-            .entities
-            .iter()
-            .map(|entity| projection.from(entity, &world))
-            .collect();
-
+impl From<&World> for WorldInfo {
+    fn from(world: &World) -> WorldInfo {
         WorldInfo {
             width: world.width,
             height: world.height,
-            data: entities_info,
-            meta: projection.meta()
+            data: world
+                .entities
+                .iter()
+                .map(|entity| entity_row(entity, world))
+                .collect(),
+            meta: row_meta(),
         }
     }
 }
@@ -32,7 +29,7 @@ impl WorldInfo {
 pub struct ProjectionRowMeta {
     name: String,
     comment: String,
-    required: bool
+    required: bool,
 }
 
 impl ProjectionRowMeta {
@@ -40,56 +37,43 @@ impl ProjectionRowMeta {
         ProjectionRowMeta {
             name: name.into(),
             comment: comment.into(),
-            required
+            required,
         }
     }
 }
 
-// Projection actually could return the whole entity info object
-// which could be anything or part of enum
-pub trait Projection {
-    fn from(&self, entity: &Entity, world: &World) -> Vec<String>;
-    fn meta(&self) -> Vec<ProjectionRowMeta>;
+fn row_meta() -> Vec<ProjectionRowMeta> {
+    vec![
+        ProjectionRowMeta::new("type", "Type of cell", true),
+        ProjectionRowMeta::new("reproduces", "Number of reproducing genes", false),
+        ProjectionRowMeta::new("attacks", "Number of attacking genes", false),
+        ProjectionRowMeta::new("photosynthesis", "Number of genes, using solr power", false),
+        ProjectionRowMeta::new("defiles", "Number of defiling genes", false),
+        ProjectionRowMeta::new("health", "Current cell health", false),
+    ]
 }
 
-pub struct GeneTypesProjection;
-impl Projection for GeneTypesProjection {
-    fn meta(&self) -> Vec<ProjectionRowMeta> {
-        // TODO: make constant
-        vec![
-            ProjectionRowMeta::new("type", "Type of cell", true),
-            ProjectionRowMeta::new("reproduces", "Number of reproducing genes", false),
-            ProjectionRowMeta::new("attacks", "Number of attacking genes", false),
-            ProjectionRowMeta::new("photosynthesis", "Number of genes, using solr power", false),
-            ProjectionRowMeta::new("defiles", "Number of defiling genes", false),
-            ProjectionRowMeta::new("health", "Current cell health", false)
-        ]
-    }
-
-    fn from(&self, entity: &Entity, world: &World) -> Vec<String> {
-        match entity {
-            Entity::Nothing => vec![String::from("nothing")],
-            Entity::Cell(genome_id) => {
-                let state = world.get_state(*genome_id);
-                let desc = world.genomes.describe(*genome_id).unwrap();
-                vec![
-                    String::from("cell"),
-                    desc.reproduces.to_string(),
-                    desc.attacks.to_string(),
-                    desc.photosynthesis.to_string(),
-                    desc.defiles.to_string(),
-                    state.health.to_string()
-                ]
-            },
-            Entity::Corpse(_) => vec![String::from("corpse")]
+fn entity_row(entity: &Entity, world: &World) -> Vec<String> {
+    match entity {
+        Entity::Nothing => vec![String::from("nothing")],
+        Entity::Cell(genome_id) => {
+            let cell = world.cell(*genome_id);
+            vec![
+                String::from("cell"),
+                cell.desc.reproduces.to_string(),
+                cell.desc.attacks.to_string(),
+                cell.desc.photosynthesis.to_string(),
+                cell.desc.defiles.to_string(),
+                cell.health.to_string(),
+            ]
         }
+        Entity::Corpse(_) => vec![String::from("corpse")],
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SettingsInfo {
     pub reproduce_cost: HealthType,
-    //pub reproduce_threshold: HealthType,
     pub photosynthesis_adds: HealthType,
     pub initial_cell_health: HealthType,
     pub attack_damage: HealthType,
@@ -104,11 +88,10 @@ pub struct SettingsInfo {
     pub mutation_probability: f64,
 }
 
-impl SettingsInfo {
-    pub fn from(settings: &Settings) -> SettingsInfo {
+impl From<&Settings> for SettingsInfo {
+    fn from(settings: &Settings) -> SettingsInfo {
         SettingsInfo {
             reproduce_cost: settings.reproduce_cost,
-            //reproduce_threshold: settings.reproduce_threshold,
             photosynthesis_adds: settings.photosynthesis_adds,
             initial_cell_health: settings.initial_cell_health,
             attack_damage: settings.attack_damage,
@@ -123,28 +106,29 @@ impl SettingsInfo {
             mutation_probability: settings.mutation_probability,
         }
     }
+}
 
-    pub fn as_settings(&self) -> Settings {
-        SettingsBuilder::prod()
-            .with_reproduce_cost(self.reproduce_cost)
-            //.with_reproduce_threshold(self.reproduce_threshold)
-            .with_photosynthesis_adds(self.photosynthesis_adds)
-            .with_initial_cell_health(self.initial_cell_health)
-            .with_attack_damage(self.attack_damage)
-            .with_defile_damage(self.defile_damage)
-            .with_attack_cost(self.attack_cost)
-            .with_move_cost(self.move_cost)
-            .with_turn_cost(self.turn_cost)
-            .with_sense_cost(self.sense_cost)
-            .with_defile_cost(self.defile_cost)
-            .with_corpse_decay(self.corpse_decay)
-            .with_corpse_initial(self.corpse_initial)
-            .with_mutation_probability(self.mutation_probability)
-            .build()
+impl From<&SettingsInfo> for Settings {
+    fn from(info: &SettingsInfo) -> Settings {
+        Settings {
+            reproduce_cost: info.reproduce_cost,
+            photosynthesis_adds: info.photosynthesis_adds,
+            initial_cell_health: info.initial_cell_health,
+            attack_damage: info.attack_damage,
+            defile_damage: info.defile_damage,
+            attack_cost: info.attack_cost,
+            move_cost: info.move_cost,
+            turn_cost: info.turn_cost,
+            sense_cost: info.sense_cost,
+            defile_cost: info.defile_cost,
+            corpse_decay: info.corpse_decay,
+            corpse_initial: info.corpse_initial,
+            mutation_probability: info.mutation_probability,
+            ..Settings::prod()
+        }
     }
 }
 
-// TODO: need better name
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CellInfo {
     pub x: i32,
@@ -152,12 +136,13 @@ pub struct CellInfo {
     pub health: i32,
     pub direction: usize,
     pub genome_id: u64,
-    pub genome: Vec<usize>
+    pub genome: Vec<usize>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use morphoid::Genome;
 
     #[test]
     fn test_world_info() {
@@ -171,20 +156,30 @@ mod tests {
         world.set_cell(1, 1, Genome::new_yeast());
         world.set_cell(2, 1, Genome::new_defiler());
 
-        let projection = GeneTypesProjection {};
-
-        let world_info = WorldInfo::from(&world, &projection);
+        let world_info = WorldInfo::from(&world);
 
         assert_eq!(world_info.width, 3);
         assert_eq!(world_info.height, 2);
 
-        assert_eq!(world_info.data[0], fixture(vec!["cell", "0", "0", "64", "0"]));
+        assert_eq!(
+            world_info.data[0],
+            fixture(vec!["cell", "0", "0", "64", "0", "10"])
+        );
         assert_eq!(world_info.data[1], fixture(vec!["corpse"]));
         assert_eq!(world_info.data[2], fixture(vec!["nothing"]));
 
-        assert_eq!(world_info.data[3], fixture(vec!["cell", "0", "64", "0", "0"]));
-        assert_eq!(world_info.data[4], fixture(vec!["cell", "64", "0", "0", "0"]));
-        assert_eq!(world_info.data[5], fixture(vec!["cell", "0", "0", "0", "64"]));
+        assert_eq!(
+            world_info.data[3],
+            fixture(vec!["cell", "0", "64", "0", "0", "10"])
+        );
+        assert_eq!(
+            world_info.data[4],
+            fixture(vec!["cell", "64", "0", "0", "0", "10"])
+        );
+        assert_eq!(
+            world_info.data[5],
+            fixture(vec!["cell", "0", "0", "0", "64", "10"])
+        );
     }
 
     fn fixture(source: Vec<&str>) -> Vec<String> {

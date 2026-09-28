@@ -1,12 +1,29 @@
-use crate::types::*;
+use crate::genome::{Gene, ATTACK, DEFILE, MOVE, REPRODUCE, SENSE, TURN};
+use crate::world::HealthType;
+
+#[derive(Debug, Clone)]
+pub struct Settings {
+    pub steps_per_turn: usize,
+    pub reproduce_cost: HealthType,
+    pub photosynthesis_adds: HealthType,
+    pub initial_cell_health: HealthType,
+    pub attack_damage: HealthType,
+    pub defile_damage: HealthType,
+    pub attack_cost: HealthType,
+    pub move_cost: HealthType,
+    pub turn_cost: HealthType,
+    pub sense_cost: HealthType,
+    pub defile_cost: HealthType,
+    pub corpse_decay: HealthType,
+    pub corpse_initial: HealthType,
+    pub mutation_probability: f64,
+}
 
 impl Settings {
-
     pub fn prod() -> Settings {
         Settings {
             steps_per_turn: 1,
             reproduce_cost: -10,
-            reproduce_threshold: 20,
             photosynthesis_adds: 5,
             initial_cell_health: 10,
             attack_damage: 100,
@@ -22,148 +39,65 @@ impl Settings {
         }
     }
 
-    pub fn steps_per_turn(&self) -> usize { self.steps_per_turn }
-    pub fn reproduce_cost(&self) -> HealthType { self.reproduce_cost }
-    pub fn reproduce_threshold(&self) -> HealthType { self.reproduce_threshold }
-    pub fn photosynthesis_adds(&self) -> HealthType { self.photosynthesis_adds }
-    pub fn initial_cell_health(&self) -> HealthType { self.initial_cell_health }
-    pub fn attack_damage(&self) -> HealthType { self.attack_damage }
-    pub fn attack_cost(&self) -> HealthType { self.attack_cost }
-    pub fn move_cost(&self) -> HealthType { self.move_cost }
-    pub fn turn_cost(&self) -> HealthType { self.turn_cost }
-    pub fn sense_cost(&self) -> HealthType { self.sense_cost }
-    pub fn defile_cost(&self) -> HealthType { self.defile_cost }
-    pub fn defile_damage(&self) -> HealthType { self.defile_damage }
-    pub fn corpse_decay(&self) -> HealthType { self.corpse_decay }
-    pub fn corpse_initial(&self) -> HealthType { self.corpse_initial }
-    pub fn mutation_probability(&self) -> f64 { self.mutation_probability }
-}
-
-impl SettingsBuilder {
-    pub fn prod() -> SettingsBuilder {
-        SettingsBuilder {
-            settings: Settings::prod()
+    pub fn zero() -> Settings {
+        Settings {
+            steps_per_turn: 1,
+            reproduce_cost: 0,
+            photosynthesis_adds: 0,
+            initial_cell_health: 10,
+            attack_damage: 0,
+            defile_damage: 0,
+            attack_cost: 0,
+            move_cost: 0,
+            turn_cost: 0,
+            sense_cost: 0,
+            defile_cost: 0,
+            corpse_decay: 0,
+            corpse_initial: 0,
+            mutation_probability: 0.0,
         }
     }
 
-    pub fn zero() -> Settings {
-        SettingsBuilder::prod()
-            .with_reproduce_cost(0)
-            .with_reproduce_threshold(0)
-            .with_photosynthesis_adds(0)
-            .with_attack_damage(0)
-            .with_attack_cost(0)
-            .with_move_cost(0)
-            .with_turn_cost(0)
-            .with_sense_cost(0)
-            .with_defile_cost(0)
-            .with_defile_damage(0)
-            .with_corpse_decay(0)
-            .with_corpse_initial(0)
-            .with_mutation_probability(0.0)
-            .build()
-    }
-
-    pub fn with_steps_per_turn(&mut self, value: usize) -> &mut SettingsBuilder {
-        self.settings.steps_per_turn = value; self
-    }
-
-    pub fn with_attack_damage(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.attack_damage = value; self
-    }
-
-    pub fn with_attack_cost(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.attack_cost = value; self
-    }
-
-    pub fn with_reproduce_cost(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.reproduce_cost = value; self
-    }
-
-    pub fn with_reproduce_threshold(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.reproduce_threshold = value; self
-    }
-
-    pub fn with_photosynthesis_adds(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.photosynthesis_adds = value; self
-    }
-
-    pub fn with_initial_cell_health(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.initial_cell_health = value; self
-    }
-
-    pub fn with_move_cost(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.move_cost = value; self
-    }
-
-    pub fn with_turn_cost(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.turn_cost = value; self
-    }
-
-    pub fn with_sense_cost(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.sense_cost = value; self
-    }
-
-    pub fn with_defile_cost(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.defile_cost = value; self
-    }
-
-    pub fn with_defile_damage(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.defile_damage = value; self
-    }
-
-    pub fn with_corpse_decay(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.corpse_decay = value; self
-    }
-
-    pub fn with_corpse_initial(&mut self, value: HealthType) -> &mut SettingsBuilder {
-        self.settings.corpse_initial = value; self
-    }
-
-    pub fn with_mutation_probability(&mut self, value: f64) -> &mut SettingsBuilder {
-        self.settings.mutation_probability = value; self
-    }
-
-    // TODO: make it consume itself
-    pub fn build(&mut self) -> Settings {
-        self.settings.clone()
+    pub fn cost_of(&self, gene: Gene) -> HealthType {
+        match gene {
+            SENSE => self.sense_cost,
+            TURN => self.turn_cost,
+            MOVE => self.move_cost,
+            ATTACK => self.attack_cost,
+            REPRODUCE => self.reproduce_cost,
+            DEFILE => self.defile_cost,
+            _ => 0,
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::genome::PHOTOSYNTHESIS;
 
     #[test]
-    fn test_builder() {
-        let settings = SettingsBuilder::prod()
-            .with_reproduce_cost(1)
-            .with_reproduce_threshold(2)
-            .with_photosynthesis_adds(3)
-            .with_attack_damage(4)
-            .with_attack_cost(5)
-            .with_move_cost(6)
-            .with_turn_cost(7)
-            .with_sense_cost(8)
-            .with_defile_damage(9)
-            .with_corpse_decay(10)
-            .with_corpse_initial(11)
-            .with_defile_cost(12)
-            .with_mutation_probability(0.13)
-            .build();
+    fn cost_of_uses_prod_costs() {
+        let settings = Settings::prod();
 
-        assert_eq!(1, settings.reproduce_cost());
-        assert_eq!(2, settings.reproduce_threshold());
-        assert_eq!(3, settings.photosynthesis_adds());
-        assert_eq!(4, settings.attack_damage());
-        assert_eq!(5, settings.attack_cost());
-        assert_eq!(6, settings.move_cost());
-        assert_eq!(7, settings.turn_cost());
-        assert_eq!(8, settings.sense_cost());
-        assert_eq!(9, settings.defile_damage());
-        assert_eq!(10, settings.corpse_decay());
-        assert_eq!(11, settings.corpse_initial());
-        assert_eq!(12, settings.defile_cost());
-        assert_eq!(0.13, settings.mutation_probability());
+        assert_eq!(settings.sense_cost, settings.cost_of(SENSE));
+        assert_eq!(settings.turn_cost, settings.cost_of(TURN));
+        assert_eq!(settings.move_cost, settings.cost_of(MOVE));
+        assert_eq!(settings.attack_cost, settings.cost_of(ATTACK));
+        assert_eq!(settings.reproduce_cost, settings.cost_of(REPRODUCE));
+        assert_eq!(settings.defile_cost, settings.cost_of(DEFILE));
+        assert_eq!(0, settings.cost_of(PHOTOSYNTHESIS));
+    }
+
+    #[test]
+    fn zero_has_no_costs() {
+        let settings = Settings::zero();
+
+        assert_eq!(0, settings.cost_of(SENSE));
+        assert_eq!(0, settings.cost_of(TURN));
+        assert_eq!(0, settings.cost_of(MOVE));
+        assert_eq!(0, settings.cost_of(ATTACK));
+        assert_eq!(0, settings.cost_of(REPRODUCE));
+        assert_eq!(0, settings.cost_of(DEFILE));
     }
 }

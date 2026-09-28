@@ -1,26 +1,26 @@
-[![Build Status](https://travis-ci.org/emk/rust-buildpack-example-actix.svg?branch=master)](https://travis-ci.org/emk/rust-buildpack-example-actix)
+# Morphoid
 
-To deploy this application to Heroku, use this button:
+Artificial life simulation: a 40x40 grid of cells, each driven by a 64-gene program
+(photosynthesis, attack, reproduce, move, turn, sense, defile). The world ticks every
+25 ms in a background thread; a prebuilt UI (`static/bundle.js`) polls it over HTTP.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+## Run
 
-Or, if you'd prefer to use the command line, try running:
-
-``` sh
-git clone https://github.com/emk/rust-buildpack-example-actix.git
-cd rust-buildpack-example-actix
-heroku create --buildpack emk/rust
-git push heroku master
+```sh
+cargo run            # http://localhost:8080
+PORT=8088 cargo run
+cargo test --workspace
 ```
 
-This should make a local copy of this application and deploy it to Heroku.
+`RUST_LOG` is respected (default `actix_web=info`).
 
-For further instructions, see the [page for this buildpack][buildpack].
+## Endpoints
 
-[buildpack]: https://github.com/emk/heroku-buildpack-rust
-
-### Does this work with the latest version of Rust?
-
-This application works with version 1.31 of Rust, which theoretically means
-that it should run on any future 1.x release of Rust.  If it doesn't work,
-please file a bug.
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | UI |
+| GET | `/world/get` | `{width, height, data, meta}`; each cell row is `[type, reproduces, attacks, photosynthesis, defiles, health]` as strings, non-cells are `["nothing"]` / `["corpse"]` |
+| GET | `/entity/{x}/{y}` | `{x, y, health, direction, genome_id, genome}` or `null` |
+| GET | `/world/settings/get` | Current settings |
+| POST | `/world/settings/update` | Same JSON as settings get; `400` if `mutation_probability` is outside `[0, 1]` |
+| POST | `/world/reset` | Regenerate a random world |

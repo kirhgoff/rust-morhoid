@@ -1,13 +1,15 @@
-pub mod types;
-pub mod world;
-pub mod processor;
-pub mod genome;
-pub mod settings;
-
 mod action;
-mod genome_storage;
-mod genome_desc;
-mod cell_state_storage;
-mod cell_state;
 mod direction;
+mod genome;
+mod processor;
+mod settings;
+mod world;
 
+pub use action::Action;
+pub use direction::Direction;
+pub use genome::{
+    Gene, Genome, GenomeDesc, GenomeId, ATTACK, DEFILE, GENE_COUNT, GENOME_LENGTH, MOVE,
+    PHOTOSYNTHESIS, REPRODUCE, SENSE, TURN,
+};
+pub use settings::Settings;
+pub use world::{Cell, Coords, Entity, HealthType, World};

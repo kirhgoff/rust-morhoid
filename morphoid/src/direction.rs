@@ -1,9 +1,24 @@
-use crate::types::*;
+use rand::Rng;
+
+use crate::genome::Gene;
+use crate::world::Coords;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Direction {
+    North = 0,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest,
+}
 
 impl Direction {
     pub const SIZE: usize = 8;
 
-    const DIRECTIONS: [Direction;  Direction::SIZE] = [
+    const DIRECTIONS: [Direction; Direction::SIZE] = [
         Direction::North,
         Direction::NorthEast,
         Direction::East,
@@ -28,13 +43,16 @@ impl Direction {
         }
     }
 
-    /// value is Gene because it is passed from genome
     pub fn rotate(&self, value: Gene) -> Direction {
         Direction::by_value(*self as usize + value)
     }
 
     pub fn by_value(value: Gene) -> Direction {
         Direction::DIRECTIONS[value % Direction::SIZE]
+    }
+
+    pub fn random(rng: &mut impl Rng) -> Direction {
+        Direction::by_value(rng.gen_range(0..Direction::SIZE))
     }
 }
 
@@ -46,7 +64,10 @@ mod tests {
     fn test_rotate() {
         assert_eq!(Direction::NorthEast, Direction::North.rotate(1));
         assert_eq!(Direction::East, Direction::North.rotate(2));
-        assert_eq!(Direction::SouthEast, Direction::NorthEast.rotate(1).rotate(1));
+        assert_eq!(
+            Direction::SouthEast,
+            Direction::NorthEast.rotate(1).rotate(1)
+        );
         assert_eq!(Direction::South, Direction::North.rotate(12));
     }
 }
