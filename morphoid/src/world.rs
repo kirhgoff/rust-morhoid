@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::vec::Vec;
 
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 use crate::action::Action;
 use crate::direction::Direction;
@@ -34,6 +35,7 @@ pub struct World {
     pub settings: Settings,
     pub entities: Vec<Entity>,
     pub cells: HashMap<GenomeId, Cell>,
+    rng: StdRng,
 }
 
 const CELL_DENSITY: (u32, u32) = (1, 3);
@@ -43,15 +45,14 @@ impl World {
         World::new(width, height, Settings::prod())
     }
 
-    pub fn random(width: Coords, height: Coords, settings: Settings) -> World {
-        let mut rng = rand::thread_rng();
-        let mut world = World::new(width, height, settings);
+    pub fn random(width: Coords, height: Coords, settings: Settings, seed: u64) -> World {
+        let mut world = World::seeded(width, height, settings, seed);
 
         for x in 0..width {
             for y in 0..height {
-                if rng.gen_ratio(CELL_DENSITY.0, CELL_DENSITY.1) {
-                    let genome = Genome::random(&mut rng);
-                    let direction = Direction::random(&mut rng);
+                if world.rng.gen_ratio(CELL_DENSITY.0, CELL_DENSITY.1) {
+                    let genome = Genome::random(&mut world.rng);
+                    let direction = Direction::random(&mut world.rng);
                     world.set_cell_facing(x, y, genome, direction);
                 } else {
                     world.set_nothing(x, y);
@@ -62,6 +63,10 @@ impl World {
     }
 
     pub fn new(width: Coords, height: Coords, settings: Settings) -> World {
+        World::seeded(width, height, settings, 0)
+    }
+
+    pub fn seeded(width: Coords, height: Coords, settings: Settings, seed: u64) -> World {
         let entities = (0..width * height).map(|_| Entity::Nothing).collect();
 
         World {
@@ -70,6 +75,7 @@ impl World {
             settings,
             entities,
             cells: HashMap::new(),
+            rng: StdRng::seed_from_u64(seed),
         }
     }
 
@@ -282,18 +288,17 @@ impl World {
     }
 
     fn reproduce(&mut self, x: Coords, y: Coords) {
-        let new_genome = self.cell_at(x, y).map(|cell| {
-            cell.genome
-                .offspring(self.settings.mutation_probability, &mut rand::thread_rng())
-        });
+        let Entity::Cell(id) = self.entity_at(x, y) else {
+            return;
+        };
+        let new_genome = self.cells[&id]
+            .genome
+            .offspring(self.settings.mutation_probability, &mut self.rng);
 
-        if let Some(new_genome) = new_genome {
-            if let Some((new_x, new_y)) = self.looking_at(x, y) {
-                if !matches!(self.entity_at(new_x, new_y), Entity::Cell(_)) {
-                    let mut rng = rand::thread_rng();
-                    let direction = Direction::random(&mut rng);
-                    self.set_cell_facing(new_x, new_y, new_genome, direction);
-                }
+        if let Some((new_x, new_y)) = self.looking_at(x, y) {
+            if !matches!(self.entity_at(new_x, new_y), Entity::Cell(_)) {
+                let direction = Direction::random(&mut self.rng);
+                self.set_cell_facing(new_x, new_y, new_genome, direction);
             }
         }
     }
@@ -450,7 +455,7 @@ mod tests {
 
     #[test]
     fn random_world_has_cells() {
-        let world = World::random(40, 40, Settings::prod());
+        let world = World::random(40, 40, Settings::prod(), 1);
         assert!(!world.cells.is_empty());
     }
 

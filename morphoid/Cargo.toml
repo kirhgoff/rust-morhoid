@@ -3,6 +3,7 @@ name = "morphoid"
 version = "0.1.0"
 authors = ["Kirill Lastovirya <kirill.lastovirya@gmail.au>"]
 edition = "2021"
+license = "MIT"
 
 [dependencies]
-rand = "0.8"
+rand = { version = "0.8", default-features = false, features = ["std_rng"] }

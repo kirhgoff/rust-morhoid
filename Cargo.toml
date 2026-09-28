@@ -3,6 +3,7 @@ name = "rust-morphoid"
 version = "0.1.0"
 authors = ["Kirill Lastovirya <kirill.lastovirya@gmail.com>"]
 edition = "2021"
+license = "MIT"
 
 [dependencies]
 actix-web = "4"
@@ -14,7 +15,8 @@ api = { path = "./api" }
 [workspace]
 members = [
     "morphoid",
-    "api"
+    "api",
+    "wasm"
 ]
 
 [[bin]]
