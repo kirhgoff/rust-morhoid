@@ -108,6 +108,16 @@ impl From<&Settings> for SettingsInfo {
     }
 }
 
+impl SettingsInfo {
+    pub fn validate(&self) -> Result<(), &'static str> {
+        if (0.0..=1.0).contains(&self.mutation_probability) {
+            Ok(())
+        } else {
+            Err("mutation_probability must be within [0, 1]")
+        }
+    }
+}
+
 impl From<&SettingsInfo> for Settings {
     fn from(info: &SettingsInfo) -> Settings {
         Settings {
@@ -137,6 +147,20 @@ pub struct CellInfo {
     pub direction: usize,
     pub genome_id: u64,
     pub genome: Vec<usize>,
+}
+
+impl CellInfo {
+    pub fn at(world: &World, x: Coords, y: Coords) -> Option<CellInfo> {
+        let cell = world.cell_at(x, y)?;
+        Some(CellInfo {
+            x,
+            y,
+            health: cell.health,
+            direction: cell.direction as usize,
+            genome_id: cell.genome.id,
+            genome: cell.genome.genes.to_vec(),
+        })
+    }
 }
 
 #[cfg(test)]

@@ -152,6 +152,8 @@ impl GenomeDesc {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::rngs::StdRng;
+    use rand::SeedableRng;
 
     #[test]
     fn partial_eq_impl() {
@@ -178,7 +180,7 @@ mod tests {
     #[test]
     fn offspring_gets_new_id() {
         let genome1 = Genome::new_plant();
-        let genome2 = genome1.offspring(0.0, &mut rand::thread_rng());
+        let genome2 = genome1.offspring(0.0, &mut StdRng::seed_from_u64(1));
         assert_ne!(genome1.id, genome2.id);
         assert_eq!(genome1, genome2);
     }
@@ -186,7 +188,7 @@ mod tests {
     #[test]
     fn mutate() {
         let genome1 = Genome::new_plant();
-        let mut genome2 = genome1.offspring(0.0, &mut rand::thread_rng());
+        let mut genome2 = genome1.offspring(0.0, &mut StdRng::seed_from_u64(1));
         assert_eq!(genome1, genome2);
         genome2.mutate(0, REPRODUCE);
         assert_ne!(genome1, genome2);
@@ -194,7 +196,7 @@ mod tests {
 
     #[test]
     fn random_genome_is_valid() {
-        let genome = Genome::random(&mut rand::thread_rng());
+        let genome = Genome::random(&mut StdRng::seed_from_u64(1));
         assert!(genome.genes.iter().all(|&gene| gene < GENE_COUNT));
         assert_eq!(PHOTOSYNTHESIS, genome.genes[GENOME_LENGTH - 1]);
     }
