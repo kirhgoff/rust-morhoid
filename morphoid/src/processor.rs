@@ -1,202 +1,173 @@
-use crate::types::*;
-use std::collections::HashMap;
+use crate::action::Action;
+use crate::direction::Direction;
+use crate::genome::{
+    GenomeId, ATTACK, DEFILE, GENOME_LENGTH, MOVE, PHOTOSYNTHESIS, REPRODUCE, SENSE, TURN,
+};
+use crate::world::{Coords, Entity, World};
 
-impl Processor {
-    pub fn new() -> Processor {
-        Processor { genome_states: HashMap::new() }
-    }
+pub fn run_genome(world: &World, x: Coords, y: Coords, id: GenomeId) -> (Vec<Action>, usize) {
+    let cell = world.cell(id);
+    let genes = &cell.genome.genes;
+    let settings = &world.settings;
 
-    pub fn process_entity(&mut self, x:Coords, y:Coords, entity: Entity, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
-        let mut all_actions:Vec<Box<dyn Action>> = Vec::new();
-        match entity {
-            Entity::Cell(genome_id) => {
-                //println!("DEBUG: Processor.process_entity [cell] ---- x: {:?} y:{:?}, genome: {:?}", x, y, genome_id);
-                let mut actions = self.execute(x, y, genome_id, perceptor, settings);
-                all_actions.append(&mut actions);
-            },
-            Entity::Corpse(_) => {
-                all_actions.push(Box::new(DecayAction::new(x, y, settings.corpse_decay())));
-            },
-            _ => {
-                //println!("DEBUG: Processor.process_entity [other] {:?}", otherwise);
-            },
-        };
-        all_actions
-    }
+    let mut actions: Vec<Action> = Vec::new();
+    let mut index = cell.gene_index;
 
-    // TODO: move to world
-    pub fn apply(&self, actions: &Vec<Box<dyn Action>>, affector: &mut Affector) {
-        for action in actions.iter() {
-            action.execute(affector);
-        }
-    }
+    for _ in 0..settings.steps_per_turn {
+        let gene = genes[index];
 
-    pub fn execute(&mut self, x:Coords, y:Coords, genome_id: GenomeId, perceptor: &Perceptor, settings: &Settings) -> Vec<Box<dyn Action>> {
-        let mut actions:Vec<Box<dyn Action>> = Vec::new();
-
-        let genome = perceptor.get_genome(genome_id).unwrap(); // should never happen
-        let start_index = self.get_genome_index(genome_id);
-
-        let mut index = start_index;
-        for _ in 0..settings.steps_per_turn() {
-            let gene = genome.genes[index];
-//            println!("DEBUG: Processor.execute x:{:?} y:{:?} genome_id: {:?} index={:?} gene: {:?}",
-//                     x, y, genome_id, index, gene);
-
-            match gene {
-                DEFILE => {
-                    actions.push(Box::new(DefileAction::new(x, y, settings.defile_damage())));
-                    index += 1
-                },
-                ATTACK => {
-                    actions.push(Box::new(AttackAction::new(x, y, settings.attack_damage())));
-                    index += 1
-                },
-                REPRODUCE => {
-                    actions.push(Box::new(ReproduceAction::new(x, y)));
-                    index += 1
-                },
-                PHOTOSYNTHESIS => {
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.photosynthesis_adds())));
-                    index += 1
-                },
-                MOVE => {
-                    actions.push(Box::new(MoveAction::new(x, y)));
-                    index += 1
-                },
-                TURN => {
-                    let new_direction = genome.genes[self.normalize_index(index + 1)] % Direction::SIZE;
-                    actions.push(Box::new(RotateAction::new(x, y, new_direction)));
-                    index += 2
-                },
-                SENSE => {
-                    actions.push(Box::new(UpdateHealthAction::new(x, y, settings.sense_cost())));
-                    if let Some((target_x, target_y)) = perceptor.looking_at(x, y) {
-                        // This is just a conditional operator
-                        index += match perceptor.get_entity(target_x, target_y) {
-                            Entity::Nothing => 1,
-                            Entity::Cell(_) => 2,
-                            Entity::Corpse(_) => 3
-                        }
-                    }
-                },
-                _ => {
-                    // Goto
-                    index = gene;
+        match gene {
+            DEFILE => {
+                actions.push(Action::Defile {
+                    x,
+                    y,
+                    damage: settings.defile_damage,
+                });
+                index += 1
+            }
+            ATTACK => {
+                actions.push(Action::Attack {
+                    x,
+                    y,
+                    damage: settings.attack_damage,
+                });
+                index += 1
+            }
+            REPRODUCE => {
+                actions.push(Action::Reproduce { x, y });
+                index += 1
+            }
+            PHOTOSYNTHESIS => {
+                actions.push(Action::UpdateHealth {
+                    x,
+                    y,
+                    delta: settings.photosynthesis_adds,
+                });
+                index += 1
+            }
+            MOVE => {
+                actions.push(Action::Move { x, y });
+                index += 1
+            }
+            TURN => {
+                let new_direction = genes[normalize_index(index + 1)] % Direction::SIZE;
+                actions.push(Action::Rotate {
+                    x,
+                    y,
+                    by: new_direction,
+                });
+                index += 2
+            }
+            SENSE => {
+                actions.push(Action::UpdateHealth {
+                    x,
+                    y,
+                    delta: settings.sense_cost,
+                });
+                let target = world
+                    .looking_at(x, y)
+                    .map(|(tx, ty)| world.entity_at(tx, ty));
+                index = match target {
+                    Some(Entity::Nothing) => genes[normalize_index(index + 1)],
+                    Some(Entity::Cell(_)) => genes[normalize_index(index + 2)],
+                    _ => index + 3,
                 }
             }
-
-            if index >= GENOME_LENGTH {
-                index = self.normalize_index(index)
+            _ => {
+                index = gene;
             }
         }
-        self.update_genome_index(genome_id, index);
 
-//        println!("DEBUG: Processor.execute gene: {:?} start: {:?} steps: {:?} end: {:?}",
-//                 genome_id, start_index, settings.steps_per_turn(), index);
-
-        actions
+        if index >= GENOME_LENGTH {
+            index = normalize_index(index)
+        }
     }
 
-    fn normalize_index(&mut self, index: GeneIndex) -> GeneIndex {
-        index % GENOME_LENGTH
-    }
-
-    fn get_genome_state(&mut self, genome_id: GenomeId) -> &mut GenomeState {
-        self.genome_states
-            .entry(genome_id)
-            .or_insert(GenomeState { current_gene: 0 })
-    }
-
-    fn get_genome_index(&mut self, genome_id: GenomeId) -> GeneIndex {
-        self.get_genome_state(genome_id).current_gene
-    }
-
-    fn update_genome_index(&mut self, genome_id: GenomeId, new_index: GeneIndex)  {
-        let genome_state = self.get_genome_state(genome_id);
-        //let old_index = genome_state.current_gene;
-        genome_state.current_gene = new_index;
-
-//        println!("DEBUG: Processor.update_genome_index gene: {:?} old: {:?} new: {:?}",
-//            genome_id, old_index, new_index);
-    }
+    (actions, index)
 }
 
+fn normalize_index(index: usize) -> usize {
+    index % GENOME_LENGTH
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::genome::Genome;
+    use crate::settings::Settings;
 
     #[test]
     fn integration_updates_genome_states() {
-        let settings = SettingsBuilder::prod()
-            .with_steps_per_turn(5)
-            .with_reproduce_cost(0)
-            .with_reproduce_threshold(4) // it will reproduce on first step
-            .with_attack_damage(4)
-            .build();
+        let settings = Settings {
+            steps_per_turn: 5,
+            reproduce_cost: 0,
+            attack_damage: 4,
+            ..Settings::prod()
+        };
 
-        let mut processor = Processor::new();
         let mut world = World::new(2, 1, settings);
 
         let plant = Genome::new_plant();
-        let hash = plant.id();
+        let hash = plant.id;
         world.set_cell(0, 0, plant);
 
         let plant2 = Genome::new_plant();
-        let hash2 = plant2.id();
+        let hash2 = plant2.id;
         world.set_cell(1, 0, plant2);
 
         for i in 0..10 {
-            world.tick(&mut processor);
-            assert_eq!(processor.get_genome_index(hash), 5 * (i + 1));
-            assert_eq!(processor.get_genome_index(hash2), 5 * (i + 1));
+            world.tick();
+            assert_eq!(world.cell(hash).gene_index, 5 * (i + 1));
+            assert_eq!(world.cell(hash2).gene_index, 5 * (i + 1));
         }
 
-        // make sure it is going around the genes array and not crash
         for _ in 0..GENOME_LENGTH {
-            world.tick(&mut processor);
+            world.tick();
         }
     }
 
     #[test]
-    fn integration_test_kill_action() {
-        let mut world = World::prod(1, 1);
-        let plant = Genome::new_plant();
-        let hash = plant.id();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
+    fn sense_jumps_by_target() {
+        let settings = Settings::zero();
+        let mut world = World::new(2, 1, settings);
 
-        match world.get_entity(0, 0) {
-            Entity::Cell(old_hash) => assert_eq!(*old_hash, hash),
-            _ => panic!()
-        }
+        let mut genome = Genome::new_plant();
+        genome.mutate(0, SENSE);
+        genome.mutate(1, 40);
+        genome.mutate(2, 50);
+        let hash = genome.id;
+        world.set_cell_facing(0, 0, genome, Direction::East);
 
-        Processor::new().apply(
-            &vec![Box::new(KillAction::new(0, 0))],
-            &mut world
-        );
+        world.set_nothing(1, 0);
+        world.tick();
+        assert_eq!(world.cell(hash).gene_index, 40);
 
-        match world.get_entity(0, 0) {
-            Entity::Corpse(_) =>  {},
-            _ => panic!()
-        }
+        world.cells.get_mut(&hash).unwrap().gene_index = 0;
+        world.set_cell(1, 0, Genome::new_plant());
+        world.tick();
+        assert_eq!(world.cell(hash).gene_index, 50);
+
+        world.cells.get_mut(&hash).unwrap().gene_index = 0;
+        world.set_corpse(1, 0, 10);
+        world.tick();
+        assert_eq!(world.cell(hash).gene_index, 3);
     }
 
     #[test]
     fn integration_test_update_health() {
         let mut world = World::prod(1, 1);
         let plant = Genome::new_plant();
-        let hash = plant.id();
-        world.set_entity(0, 0, Entity::Cell(hash), Some(plant), Some(CellState::default()));
+        world.set_cell(0, 0, plant);
 
-        Processor::new().apply(
-            &vec![Box::new(UpdateHealthAction::new(0, 0, -100))],
-            &mut world
-        );
+        world.apply(&[Action::UpdateHealth {
+            x: 0,
+            y: 0,
+            delta: -100,
+        }]);
 
-        match world.get_entity(0, 0) {
-            Entity::Corpse(_) =>  {},
-            _ => panic!("Cell should be dead here")
+        match world.entity_at(0, 0) {
+            Entity::Corpse(_) => {}
+            _ => panic!("cell should be dead here"),
         }
     }
 }
