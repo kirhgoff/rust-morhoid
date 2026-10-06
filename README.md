@@ -5,7 +5,7 @@ Artificial life simulation: a 40x40 grid of cells, each driven by a 64-gene prog
 25 ms; a prebuilt UI (`static/bundle.js`) polls it over HTTP. It runs either as a local
 actix server or entirely in the browser via WebAssembly.
 
-Live: https://morphoid.kirill-lastovirya.workers.dev/
+Live: https://morphoid.kirhgoff.me/
 
 ## Layout
 
