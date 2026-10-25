@@ -9,10 +9,7 @@ local fast = new Mapping<String, Step> {
     }
     ["typos"] = Builtins.typos
     ["actionlint"] = Builtins.actionlint
-    ["zizmor"] {
-        glob = List(".github/workflows/*.yml", ".github/workflows/*.yaml", ".github/dependabot.yml")
-        check = "zizmor {{ files }}"
-    }
+    ["zizmor"] = Builtins.zizmor
     ["cargo-fmt"] {
         glob = rustGlobs
         check = "cargo fmt --all --check"
