@@ -1,0 +1,69 @@
+amends "package://github.com/jdx/hk/releases/download/v2.8.1/hk@2.8.1#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.8.1/hk@2.8.1#/Builtins.pkl"
+
+local rustGlobs = List("**/*.rs", "Cargo.toml", "**/Cargo.toml", "Cargo.lock")
+
+local fast = new Mapping<String, Step> {
+    ["betterleaks"] {
+        check = "betterleaks git --pre-commit --staged --redact"
+    }
+    ["typos"] = Builtins.typos
+    ["actionlint"] = Builtins.actionlint
+    ["zizmor"] {
+        glob = List(".github/workflows/*.yml", ".github/workflows/*.yaml", ".github/dependabot.yml")
+        check = "zizmor {{ files }}"
+    }
+    ["cargo-fmt"] {
+        glob = rustGlobs
+        check = "cargo fmt --all --check"
+        fix = "cargo fmt --all"
+    }
+}
+
+local all = (fast) {
+    ["betterleaks"] {
+        check = "betterleaks git --redact"
+    }
+    ["cargo-clippy"] {
+        glob = rustGlobs
+        check = "cargo clippy --workspace --all-targets -- -D warnings"
+    }
+    ["cargo-build"] {
+        glob = rustGlobs
+        check = "cargo build --workspace"
+    }
+    ["cargo-test"] {
+        glob = rustGlobs
+        check = "cargo test --workspace"
+    }
+    ["cargo-deny"] {
+        glob = List("Cargo.toml", "**/Cargo.toml", "Cargo.lock", "deny.toml")
+        check = "cargo deny check licenses bans sources"
+    }
+    ["cargo-machete"] {
+        glob = List("Cargo.toml", "**/Cargo.toml", "**/*.rs")
+        check = "cargo machete"
+    }
+    ["wasm"] {
+        glob = List("**/*.rs", "Cargo.toml", "**/Cargo.toml", "Cargo.lock", "static/**", "scripts/*")
+        check = "./scripts/build-web.sh && node scripts/check-wasm.mjs"
+    }
+}
+
+hooks {
+    ["pre-commit"] {
+        fix = true
+        stash = "git"
+        steps = fast
+    }
+    ["pre-push"] {
+        steps = all
+    }
+    ["check"] {
+        steps = all
+    }
+    ["fix"] {
+        fix = true
+        steps = all
+    }
+}
