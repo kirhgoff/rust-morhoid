@@ -3,21 +3,16 @@ on:
   push:
     branches: [master]
   pull_request:
+permissions: {}
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          targets: wasm32-unknown-unknown
-          components: rustfmt, clippy
-      - run: cargo fmt --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo build --workspace
-      - run: cargo test --workspace
-      - run: ./scripts/build-web.sh
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: node scripts/check-wasm.mjs
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+      - run: mise run check
