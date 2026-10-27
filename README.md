@@ -41,6 +41,10 @@ npx wrangler deploy             # deploy to Cloudflare
 In the browser build, `wasm-shim.js` intercepts the same `fetch` calls `bundle.js`
 makes and answers them from the in-page wasm simulation — each tab runs its own world.
 
+## Checks
+
+`mise run setup` installs the git hooks; `mise run check` runs every check (fmt, clippy, build, test, wasm build and check, cargo-deny, cargo-machete, typos, secrets, workflow lint). CI runs the same command; advisories run in a weekly workflow.
+
 ## Endpoints
 
 | Method | Path | Description |
