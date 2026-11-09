@@ -1,0 +1,7 @@
+# Morphoid
+
+> Artificial life simulation: a 40x40 grid of cells, each driven by a 64-gene program (photosynthesis, attack, reproduce, move, turn, sense, defile). The world ticks every 25 ms and runs entirely in the browser via WebAssembly (Rust).
+
+- [Live simulation](https://morphoid.kirhgoff.me/)
+- [Source code](https://github.com/kirhgoff/rust-morhoid)
+- [Author: Kirill Lastovirya](https://kirhgoff.me)
