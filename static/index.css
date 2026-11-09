@@ -150,3 +150,8 @@ hr {
 .selected {
   font-weight: bolder;
 }
+
+.site-footer {
+  margin-top: 20px;
+  color: #555;
+}

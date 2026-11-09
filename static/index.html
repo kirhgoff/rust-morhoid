@@ -1,12 +1,53 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
-    <title>Morphoid::v.1.0</title>
-     <link rel="stylesheet" type="text/css" href="index.css">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Morphoid - artificial life simulation in your browser</title>
+    <meta name="description" content="Morphoid is an artificial life simulation: a 40x40 grid of cells run evolving 64-gene programs to photosynthesise, hunt and reproduce, in WebAssembly."/>
+    <link rel="canonical" href="https://morphoid.kirhgoff.me/"/>
+    <meta name="robots" content="index, follow, max-image-preview:large"/>
+    <meta name="theme-color" content="#1b5e20"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:site_name" content="Morphoid"/>
+    <meta property="og:url" content="https://morphoid.kirhgoff.me/"/>
+    <meta property="og:title" content="Morphoid - artificial life simulation in your browser"/>
+    <meta property="og:description" content="A 40x40 grid of cells run evolving 64-gene programs to photosynthesise, hunt and reproduce, in WebAssembly."/>
+    <meta property="og:image" content="https://morphoid.kirhgoff.me/og.png"/>
+    <meta property="og:image:width" content="1200"/>
+    <meta property="og:image:height" content="630"/>
+    <meta property="og:image:alt" content="Morphoid simulation: a grid of evolving cells"/>
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:creator" content="@kirhgoff"/>
+    <meta name="twitter:title" content="Morphoid - artificial life simulation in your browser"/>
+    <meta name="twitter:description" content="A 40x40 grid of cells run evolving 64-gene programs to photosynthesise, hunt and reproduce, in WebAssembly."/>
+    <meta name="twitter:image" content="https://morphoid.kirhgoff.me/og.png"/>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Morphoid",
+      "url": "https://morphoid.kirhgoff.me/",
+      "description": "Artificial life simulation where cells run evolving 64-gene programs to photosynthesise, hunt and reproduce, running in the browser via WebAssembly.",
+      "applicationCategory": "SimulationApplication",
+      "operatingSystem": "Any",
+      "codeRepository": "https://github.com/kirhgoff/rust-morhoid",
+      "sameAs": ["https://github.com/kirhgoff/rust-morhoid"],
+      "author": {
+        "@type": "Person",
+        "name": "Kirill Lastovirya",
+        "url": "https://kirhgoff.me",
+        "sameAs": ["https://github.com/kirhgoff", "https://www.linkedin.com/in/kirhgoff", "https://x.com/kirhgoff"]
+      }
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <footer class="site-footer">Made by <a href="https://kirhgoff.me">Kirill Lastovirya</a></footer>
     <script src="/bundle.js"></script>
   </body>
 </html>
